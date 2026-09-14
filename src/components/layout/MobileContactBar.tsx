@@ -34,8 +34,9 @@ export async function MobileContactBar() {
           className="flex min-h-[58px] flex-col items-center justify-center gap-1 border-x border-navy-700 bg-line-500 py-2 text-navy-950"
           data-analytics="sticky-line"
         >
-          <Icon name="line" className="h-5 w-5" />
-          <span className="text-[0.8125rem] font-semibold">LINE</span>
+          {/* Green ground — see LineIcon: the official mark is not placed on
+              LINE green. The cell's colour and label carry the channel. */}
+          <span className="text-body font-semibold">LINE</span>
         </a>
 
         <Link

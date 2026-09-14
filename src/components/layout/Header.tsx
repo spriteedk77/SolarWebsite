@@ -39,8 +39,9 @@ export async function Header() {
               rel="noopener noreferrer"
               className="inline-flex h-11 items-center gap-1.5 rounded-lg bg-line-500 px-3 text-caption font-semibold text-navy-950 sm:px-4 xl:hidden"
             >
-              <Icon name="line" className="h-5 w-5" />
-              <span className="hidden sm:inline">LINE</span>
+              {/* Green ground — see LineIcon: the official mark is not placed
+                  on LINE green. */}
+              <span>LINE</span>
               <span className="sr-only">
                 แชตกับ NP88 Solar ทาง LINE {contact.lineId}
               </span>

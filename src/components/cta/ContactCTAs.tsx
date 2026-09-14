@@ -67,7 +67,9 @@ export function LineCTA({
       fullWidth={fullWidth}
       data-analytics="cta-line"
     >
-      <Icon name="line" className="h-5 w-5" />
+      {/* No mark here: this button's ground is LINE green, and the official
+          brand icon's own green square would disappear into it. The label
+          already carries the channel. */}
       <span>{label ?? `LINE ${contact.lineId}`}</span>
     </ButtonLink>
   );

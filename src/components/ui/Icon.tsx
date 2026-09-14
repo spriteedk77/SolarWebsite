@@ -12,7 +12,6 @@ import type { IconName } from '@/content/types';
 export type GlyphName =
   | IconName
   | 'phone'
-  | 'line'
   | 'facebook'
   | 'arrow-right'
   | 'check'
@@ -156,24 +155,6 @@ const paths: Record<GlyphName, React.ReactNode> = {
   ),
   phone: (
     <path d="M7 3h3l1.5 4-2 1.5a11 11 0 0 0 5 5L16 11l4 1.5v3a2 2 0 0 1-2.2 2A16.5 16.5 0 0 1 4 6.2 2 2 0 0 1 6 4z" />
-  ),
-  // The LINE bubble, with the wordmark inside it.
-  //
-  // The letters carry their own stroke and caps: at the icon's 1.6 weight four
-  // letters in a 24-unit box merge into a solid block, and round caps overhang
-  // far enough that the E runs into the bubble. 1.3 with butt caps keeps the
-  // E's three bars apart and still holds up at the 18px used in contact rows.
-  //
-  // ⚠️ All four letters must be complete. This previously ended at
-  // `M18.5 8.5h1.6` — a lone top bar where the E should be — so the mark read
-  // "LIN" everywhere it appeared.
-  line: (
-    <>
-      <path d="M21 10.2c0-4-4-7.2-9-7.2s-9 3.2-9 7.2c0 3.6 3.2 6.6 7.5 7.1.3.1.7.2.8.5.1.3 0 .7 0 1l-.1.8c0 .3-.2 1 .9.6 1-.5 5.7-3.4 7.8-5.8A6.4 6.4 0 0 0 21 10.2z" />
-      <g strokeWidth={1.3} strokeLinecap="butt">
-        <path d="M6.1 7.3V13.2M6.1 13.2h2.2M10 7.3V13.2M11.8 13.2V7.3l2.5 5.9V7.3M16.3 7.3V13.2M16.3 7.3h2.3M16.3 10.25h2M16.3 13.2h2.3" />
-      </g>
-    </>
   ),
   facebook: (
     <>

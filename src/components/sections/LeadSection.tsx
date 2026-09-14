@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Section, SectionHeading } from '@/components/ui/Section';
 import { Icon } from '@/components/ui/Icon';
+import { LineIcon } from '@/components/brand/LineIcon';
 import { ContactActions } from '@/components/cta/ContactCTAs';
 import { LeadForm } from '@/components/forms/LeadForm';
 import { quoteLinks } from '@/lib/site';
@@ -103,7 +104,7 @@ export async function LeadSection({
                   rel="noopener noreferrer"
                   className="flex items-center gap-2.5 font-semibold text-navy-900 hover:text-solar-700"
                 >
-                  <Icon name="line" className="h-5 w-5 text-line-500" />
+                  <LineIcon />
                   LINE {contact.lineId}
                 </a>
               </p>

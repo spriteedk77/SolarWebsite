@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { PageHero } from '@/components/layout/PageHero';
 import { Section } from '@/components/ui/Section';
 import { Icon } from '@/components/ui/Icon';
+import { LineIcon } from '@/components/brand/LineIcon';
 import { LineCTA, PhoneCTA } from '@/components/cta/ContactCTAs';
 import { FaqSection } from '@/components/sections/FaqSection';
 import { LeadSection } from '@/components/sections/LeadSection';
@@ -72,10 +73,7 @@ export default async function ContactPage() {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <Icon
-                    name="line"
-                    className="h-5 w-5 shrink-0 text-line-500"
-                  />
+                  <LineIcon />
                   <span className="break-all">LINE {contact.lineId}</span>
                 </a>
               </div>

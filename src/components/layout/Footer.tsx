@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Logo } from '@/components/brand/Logo';
+import { LineIcon } from '@/components/brand/LineIcon';
 import { Container } from '@/components/ui/Container';
 import { Icon } from '@/components/ui/Icon';
 import { copyrightYear, footerNav } from '@/lib/site';
@@ -46,10 +47,7 @@ export async function Footer() {
                 </a>
               </p>
               <p className="flex items-center gap-2.5">
-                <Icon
-                  name="line"
-                  className="h-4.5 w-4.5 shrink-0 text-line-500"
-                />
+                <LineIcon />
                 <a
                   href={contact.lineUrl}
                   target="_blank"

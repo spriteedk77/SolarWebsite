@@ -1,6 +1,7 @@
 import { Container } from '@/components/ui/Container';
 import { ButtonLink } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
+import { LineIcon } from '@/components/brand/LineIcon';
 import { quoteLinks } from '@/lib/site';
 import { getSiteData } from '@/cms/site';
 import { TrustStrip } from '@/components/home/TrustStrip';
@@ -30,7 +31,8 @@ export async function Hero({ image }: { image?: HeroImage } = {}) {
       key: 'line' as const,
       href: contact.lineUrl,
       label: `LINE ${contact.lineId}`,
-      iconClass: 'text-line-500',
+      // Rendered with the official brand mark, which carries its own colour.
+      iconClass: '',
       external: true,
     },
     {
@@ -95,10 +97,14 @@ export async function Hero({ image }: { image?: HeroImage } = {}) {
                   data-analytics={`hero-${channel.key}`}
                   className="inline-flex min-h-11 items-center gap-2.5 text-body font-medium text-white underline-offset-4 hover:underline"
                 >
-                  <Icon
-                    name={channel.key}
-                    className={`h-5 w-5 shrink-0 ${channel.iconClass}`}
-                  />
+                  {channel.key === 'line' ? (
+                    <LineIcon />
+                  ) : (
+                    <Icon
+                      name={channel.key}
+                      className={`h-5 w-5 shrink-0 ${channel.iconClass}`}
+                    />
+                  )}
                   <span className="break-words">{channel.label}</span>
                 </a>
               </li>
