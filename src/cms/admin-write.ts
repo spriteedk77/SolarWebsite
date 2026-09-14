@@ -41,6 +41,7 @@ export function adminWriteClient(): WriteConfig {
       // Content just written must be readable immediately; a CDN cache would
       // show the editor what the page looked like before they saved.
       useCdn: false,
+      perspective: 'raw',
     }),
   };
 }

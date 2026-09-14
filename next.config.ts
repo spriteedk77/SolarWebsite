@@ -57,6 +57,12 @@ if (isProductionLaunch) {
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  experimental: {
+    // CMS images cross a Server Action so the write token never reaches the
+    // browser. Keep this below Netlify's request ceiling; application code
+    // applies the stricter 3 MiB per-image limit before uploading to Sanity.
+    serverActions: { bodySizeLimit: '4mb' },
+  },
   // GitHub Pages is used only as a frontend preview. Normal builds keep the
   // full Next.js server for the later CMS and private form deployment.
   ...(isGitHubPages

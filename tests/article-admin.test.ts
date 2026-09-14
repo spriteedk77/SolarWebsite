@@ -1,0 +1,63 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {
+  articleFieldsModel,
+  tagsFromText,
+  textBlock,
+  validateBlocks,
+} from '../src/admin/articles/model';
+import { articleModel } from '../src/cms/models';
+
+const fields = {
+  title: 'วิธีเลือกแผงโซลาร์',
+  slug: 'how-to-choose-solar',
+  summary: 'ข้อมูลที่ควรดูก่อนเลือกแผงโซลาร์',
+  category: 'พื้นฐาน Solar' as const,
+  tags: 'แผงโซลาร์, Solar, แผงโซลาร์',
+  author: '',
+  publishedAt: '2026-09-15T08:30',
+  seoTitle: '',
+  seoDescription: '',
+  featured: false,
+};
+
+test('article fields reject a URL the public router cannot serve', () => {
+  assert.equal(articleFieldsModel.safeParse(fields).success, true);
+  for (const slug of ['ภาษาไทย', 'Upper-Case', 'two words', '../secret'])
+    assert.equal(articleFieldsModel.safeParse({ ...fields, slug }).success, false, slug);
+});
+
+test('article tags are trimmed, empty values removed and duplicates collapsed', () => {
+  assert.deepEqual(tagsFromText(fields.tags), ['แผงโซลาร์', 'Solar']);
+});
+
+test('an inline article image without alt text cannot be published', () => {
+  assert.deepEqual(
+    validateBlocks([{ kind: 'image', key: 'photo', assetId: 'image-test', alt: '', caption: '' }]),
+    ['รูปในเนื้อหาลำดับที่ 1 ต้องมีคำอธิบายภาพ'],
+  );
+});
+
+test('the publish model accepts the same text and inline-image blocks the editor writes', () => {
+  const date = '2026-09-15T08:30:00.000Z';
+  const image = {
+    src: 'https://cdn.sanity.io/images/mtnue2wm/production/example-1200x800.jpg',
+    alt: 'ช่างกำลังตรวจแผงโซลาร์บนหลังคา',
+    width: 1200,
+    height: 800,
+  };
+  const result = articleModel.safeParse({
+    id: 'article-test',
+    title: fields.title,
+    slug: fields.slug,
+    summary: fields.summary,
+    category: fields.category,
+    tags: [],
+    publishedAt: date,
+    updatedAt: date,
+    featuredImage: image,
+    featured: false,
+    richContent: [textBlock('intro', 'normal', 'เนื้อหา'), { _type: 'siteImage', _key: 'photo', ...image }],
+  });
+  assert.equal(result.success, true);
+});

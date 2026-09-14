@@ -1,0 +1,229 @@
+'use server';
+
+import { randomUUID } from 'node:crypto';
+import type { SanityClient } from '@sanity/client';
+import { fileTypeFromBuffer } from 'file-type';
+import { revalidatePath, revalidateTag } from 'next/cache';
+import { redirect } from 'next/navigation';
+import { articleFieldsModel, textBlock, tagsFromText, validateBlocks, type EditorBlock } from '@/admin/articles/model';
+import { adminWriteClient, draftId } from '@/cms/admin-write';
+import { articleProjection } from '@/cms/content';
+import { articleModel } from '@/cms/models';
+import { requireSignedIn } from '@/lib/admin-session';
+
+const MAX_CMS_IMAGE_BYTES = 3 * 1024 * 1024;
+const IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
+
+export type ArticleActionState = { status: 'idle' | 'error'; message?: string; errors?: string[] };
+
+export type ArticleEditorData = {
+  id: string;
+  title: string;
+  slug: string;
+  summary: string;
+  category: string;
+  tags: string;
+  author: string;
+  publishedAt: string;
+  seoTitle: string;
+  seoDescription: string;
+  featured: boolean;
+  featuredImage?: { assetId: string; src: string; alt: string; caption: string };
+  blocks: EditorBlock[];
+  published: boolean;
+};
+
+type RawBlock = Record<string, unknown> & {
+  _type?: string; _key?: string; style?: string; children?: { text?: string }[];
+  assetId?: string; src?: string; width?: number; height?: number; alt?: string; caption?: string;
+};
+
+const editorProjection = `{
+  _id,title,"slug":slug.current,summary,category,"tags":coalesce(tags,[]),author,publishedAt,seoTitle,seoDescription,featured,
+  "featuredImage": featuredImage{"assetId":asset->_id,"src":asset->url,alt,caption},
+  content[]{...,"assetId":asset->_id,"src":asset->url,"width":asset->metadata.dimensions.width,"height":asset->metadata.dimensions.height}
+}`;
+
+const baseId = (id: string) => id.replace(/^drafts\./, '');
+
+export async function listArticles() {
+  await requireSignedIn();
+  const config = adminWriteClient();
+  if (!config.ready) return { ready: false as const, missing: config.missing, articles: [] };
+  const documents = await config.client.fetch<Array<{ _id: string; title?: string; slug?: string; publishedAt?: string }>>(
+    `*[_type == "article"] | order(_updatedAt desc){_id,title,"slug":slug.current,publishedAt}`,
+  );
+  const grouped = new Map<string, { id: string; title: string; slug: string; publishedAt?: string; draft: boolean; published: boolean }>();
+  for (const document of documents) {
+    const id = baseId(document._id);
+    const current = grouped.get(id) ?? { id, title: document.title || 'ยังไม่มีชื่อ', slug: document.slug || '', publishedAt: document.publishedAt, draft: false, published: false };
+    if (document._id.startsWith('drafts.')) {
+      current.draft = true;
+      current.title = document.title || current.title;
+      current.slug = document.slug || current.slug;
+      current.publishedAt = document.publishedAt || current.publishedAt;
+    } else current.published = true;
+    grouped.set(id, current);
+  }
+  return { ready: true as const, missing: [], articles: [...grouped.values()] };
+}
+
+export async function loadArticle(id: string): Promise<ArticleEditorData | null> {
+  await requireSignedIn();
+  const config = adminWriteClient();
+  if (!config.ready) return null;
+  const cleanId = baseId(id);
+  const [draft, published] = await Promise.all([
+    config.client.fetch<RawBlock | null>(`*[_id == $id][0] ${editorProjection}`, { id: draftId(cleanId) }),
+    config.client.fetch<RawBlock | null>(`*[_id == $id][0] ${editorProjection}`, { id: cleanId }),
+  ]);
+  const document = draft ?? published;
+  if (!document) return null;
+  const content = Array.isArray(document.content) ? (document.content as RawBlock[]) : [];
+  return {
+    id: cleanId,
+    title: String(document.title ?? ''),
+    slug: String(document.slug ?? ''),
+    summary: String(document.summary ?? ''),
+    category: String(document.category ?? 'พื้นฐาน Solar'),
+    tags: Array.isArray(document.tags) ? document.tags.join(', ') : '',
+    author: String(document.author ?? ''),
+    publishedAt: String(document.publishedAt ?? new Date().toISOString()).slice(0, 16),
+    seoTitle: String(document.seoTitle ?? ''),
+    seoDescription: String(document.seoDescription ?? ''),
+    featured: document.featured === true,
+    featuredImage: toEditorImage(document.featuredImage),
+    blocks: content.map(toEditorBlock).filter((block): block is EditorBlock => Boolean(block)),
+    published: Boolean(published),
+  };
+}
+
+function toEditorImage(value: unknown) {
+  if (!value || typeof value !== 'object') return undefined;
+  const image = value as Record<string, unknown>;
+  if (typeof image.assetId !== 'string' || typeof image.src !== 'string') return undefined;
+  return { assetId: image.assetId, src: image.src, alt: String(image.alt ?? ''), caption: String(image.caption ?? '') };
+}
+
+function toEditorBlock(block: RawBlock): EditorBlock | null {
+  const key = block._key || randomUUID();
+  if (block._type === 'siteImage' && block.assetId && block.src)
+    return { kind: 'image', key, assetId: block.assetId, src: block.src, width: block.width, height: block.height, alt: block.alt || '', caption: block.caption || '' };
+  if (block._type === 'block') {
+    const style = ['normal', 'h2', 'h3', 'blockquote'].includes(block.style || '') ? block.style as 'normal' | 'h2' | 'h3' | 'blockquote' : 'normal';
+    return { kind: 'text', key, style, text: Array.isArray(block.children) ? block.children.map((child) => child.text || '').join('') : '' };
+  }
+  return null;
+}
+
+export async function saveArticleAction(_previous: ArticleActionState, formData: FormData): Promise<ArticleActionState> {
+  await requireSignedIn();
+  const config = adminWriteClient();
+  if (!config.ready) return { status: 'error', message: `ยังตั้งค่าไม่ครบ: ${config.missing.join(', ')}` };
+
+  const parsed = articleFieldsModel.safeParse({
+    title: formData.get('title'), slug: formData.get('slug'), summary: formData.get('summary'),
+    category: formData.get('category'), tags: formData.get('tags') || '', author: formData.get('author') || '',
+    publishedAt: formData.get('publishedAt'), seoTitle: formData.get('seoTitle') || '',
+    seoDescription: formData.get('seoDescription') || '', featured: formData.get('featured') === 'yes',
+  });
+  if (!parsed.success) return { status: 'error', message: 'ยังบันทึกไม่ได้', errors: parsed.error.issues.map((issue) => issue.message) };
+
+  const id = baseId(String(formData.get('id') || `article-${randomUUID()}`));
+  const duplicate = await config.client.fetch<number>(`count(*[_type == "article" && slug.current == $slug && !(_id in [$id,$draftId])])`, { slug: parsed.data.slug, id, draftId: draftId(id) });
+  if (duplicate) return { status: 'error', message: 'URL นี้มีบทความอื่นใช้แล้ว กรุณาเปลี่ยนชื่อใน URL' };
+
+  const blocks = readEditorBlocks(formData);
+  const blockErrors = validateBlocks(blocks);
+  if (blockErrors.length) return { status: 'error', message: 'เนื้อหาบทความยังไม่ครบ', errors: blockErrors };
+
+  let destination = '';
+  try {
+    const featuredImage = await resolveImage(config.client, formData.get('featuredImageFile'), String(formData.get('featuredAssetId') || ''), String(formData.get('featuredAlt') || ''), String(formData.get('featuredCaption') || ''));
+    if (!featuredImage) return { status: 'error', message: 'กรุณาเลือกรูปหน้าปกและใส่คำอธิบายภาพ' };
+    const content = [];
+    for (const block of blocks) {
+      if (block.kind === 'text') content.push(textBlock(block.key, block.style, block.text));
+      else {
+        const image = await resolveImage(config.client, formData.get(`body.file.${block.key}`), block.assetId || '', block.alt, block.caption);
+        if (!image) return { status: 'error', message: `กรุณาเลือกรูปสำหรับส่วน "${block.alt || block.key}"` };
+        content.push({ _key: block.key, ...image });
+      }
+    }
+    const now = new Date().toISOString();
+    const document = {
+      _id: draftId(id), _type: 'article', title: parsed.data.title, slug: { _type: 'slug', current: parsed.data.slug },
+      summary: parsed.data.summary, category: parsed.data.category, tags: tagsFromText(parsed.data.tags), author: parsed.data.author || undefined,
+      publishedAt: new Date(parsed.data.publishedAt).toISOString(), updatedAt: now, seoTitle: parsed.data.seoTitle || undefined,
+      seoDescription: parsed.data.seoDescription || undefined, featured: parsed.data.featured, featuredImage, content,
+      approvedForPublication: false,
+    };
+    await config.client.createOrReplace(document);
+
+    const intent = String(formData.get('intent') || 'save');
+    if (intent === 'publish') {
+      if (formData.get('confirm') !== 'yes') return { status: 'error', message: 'ติ๊กยืนยันข้อมูลและสิทธิ์ใช้รูปก่อนเผยแพร่' };
+      const projected = await config.client.fetch<unknown>(`*[_id == $id][0] ${articleProjection}`, { id: draftId(id) });
+      const checked = articleModel.safeParse(projected);
+      if (!checked.success) return { status: 'error', message: 'เว็บไซต์ยังแสดงบทความนี้ไม่ได้', errors: checked.error.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`) };
+      const liveDocument = { ...document, _id: id, approvedForPublication: true };
+      await config.client.transaction().createOrReplace(liveDocument).delete(draftId(id)).commit();
+      revalidateTag('cms', 'max');
+      revalidatePath('/knowledge', 'layout');
+      destination = '/admin/articles?published=1';
+    } else {
+      destination = `/admin/articles/${id}?saved=1`;
+    }
+  } catch (error) {
+    return { status: 'error', message: error instanceof Error ? `บันทึกไม่สำเร็จ: ${error.message}` : 'บันทึกไม่สำเร็จ' };
+  }
+  redirect(destination);
+}
+
+function readEditorBlocks(formData: FormData): EditorBlock[] {
+  const keys = [...formData.keys()].map((key) => /^body\.(\d+)\.kind$/.exec(key)?.[1]).filter((value): value is string => Boolean(value));
+  return [...new Set(keys)].sort((a, b) => Number(a) - Number(b)).map((index) => {
+    const kind = String(formData.get(`body.${index}.kind`));
+    const key = String(formData.get(`body.${index}.key`) || randomUUID());
+    if (kind === 'image') return { kind: 'image' as const, key, assetId: String(formData.get(`body.${index}.assetId`) || ''), alt: String(formData.get(`body.${index}.alt`) || ''), caption: String(formData.get(`body.${index}.caption`) || '') };
+    const rawStyle = String(formData.get(`body.${index}.style`) || 'normal');
+    const style = ['normal', 'h2', 'h3', 'blockquote'].includes(rawStyle) ? rawStyle as 'normal' | 'h2' | 'h3' | 'blockquote' : 'normal';
+    return { kind: 'text' as const, key, style, text: String(formData.get(`body.${index}.text`) || '') };
+  }).map((block) => {
+    if (block.kind === 'image') {
+      const index = keys.find((candidate) => String(formData.get(`body.${candidate}.key`)) === block.key);
+      if (index) formData.set(`body.file.${block.key}`, formData.get(`body.${index}.file`) || '');
+    }
+    return block;
+  });
+}
+
+async function resolveImage(client: SanityClient, upload: FormDataEntryValue | null, existingAssetId: string, alt: string, caption: string) {
+  if (!alt.trim()) return null;
+  let assetId = existingAssetId;
+  if (upload instanceof File && upload.size > 0) {
+    if (upload.size > MAX_CMS_IMAGE_BYTES) throw new Error('รูปต้องมีขนาดไม่เกิน 3 MB');
+    const buffer = Buffer.from(await upload.arrayBuffer());
+    const detected = await fileTypeFromBuffer(buffer);
+    if (!detected || !IMAGE_TYPES.has(detected.mime)) throw new Error('รองรับเฉพาะรูป JPG, PNG และ WebP ที่เป็นไฟล์จริง');
+    const asset = await client.assets.upload('image', buffer, { filename: upload.name, contentType: detected.mime });
+    assetId = asset._id;
+  }
+  if (!assetId) return null;
+  return { _type: 'siteImage', asset: { _type: 'reference', _ref: assetId }, alt: alt.trim(), caption: caption.trim() || undefined };
+}
+
+export async function deleteArticleAction(formData: FormData) {
+  await requireSignedIn();
+  if (formData.get('confirmDelete') !== 'yes') throw new Error('กรุณาติ๊กยืนยันก่อนลบบทความ');
+  const config = adminWriteClient();
+  if (!config.ready) throw new Error(`ยังตั้งค่าไม่ครบ: ${config.missing.join(', ')}`);
+  const id = baseId(String(formData.get('id') || ''));
+  if (!/^[a-zA-Z0-9][a-zA-Z0-9._-]+$/.test(id)) throw new Error('รหัสบทความไม่ถูกต้อง');
+  const isArticle = await config.client.fetch<boolean>(`count(*[_type == "article" && _id in [$id,$draftId]]) > 0`, { id, draftId: draftId(id) });
+  if (!isArticle) throw new Error('ไม่พบบทความที่ต้องการลบ');
+  await config.client.transaction().delete(id).delete(draftId(id)).commit();
+  revalidateTag('cms', 'max');
+  revalidatePath('/knowledge', 'layout');
+  redirect('/admin/articles?deleted=1');
+}

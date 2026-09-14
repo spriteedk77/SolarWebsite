@@ -1,6 +1,7 @@
 import { Container } from '@/components/ui/Container';
 import { Logo } from '@/components/brand/Logo';
 import { signOutAction } from '@/app/admin/actions';
+import Link from 'next/link';
 
 /**
  * The frame around every admin screen.
@@ -31,14 +32,16 @@ export function AdminShell({
             </div>
 
             {signedIn && (
-              <form action={signOutAction}>
-                <button
-                  type="submit"
-                  className="inline-flex min-h-11 items-center rounded-lg border border-hairline px-4 text-body font-semibold text-navy-900 hover:border-solar-400"
-                >
-                  ออกจากระบบ
-                </button>
-              </form>
+              <div className="flex flex-wrap items-center gap-2">
+                <nav aria-label="เมนูจัดการเนื้อหา" className="flex flex-wrap gap-1">
+                  <Link href="/admin" className="inline-flex min-h-11 items-center rounded-lg px-3 text-caption font-semibold text-navy-900 hover:bg-soft">ข้อมูลเว็บไซต์</Link>
+                  <Link href="/admin/articles" className="inline-flex min-h-11 items-center rounded-lg px-3 text-caption font-semibold text-navy-900 hover:bg-soft">บทความ</Link>
+                  <Link href="/admin/images" className="inline-flex min-h-11 items-center rounded-lg px-3 text-caption font-semibold text-navy-900 hover:bg-soft">รูปภาพ</Link>
+                </nav>
+                <form action={signOutAction}>
+                  <button type="submit" className="inline-flex min-h-11 items-center rounded-lg border border-hairline px-4 text-caption font-semibold text-navy-900 hover:border-solar-400">ออกจากระบบ</button>
+                </form>
+              </div>
             )}
           </div>
         </Container>

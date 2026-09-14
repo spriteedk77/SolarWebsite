@@ -16,8 +16,9 @@ export const imageProjection = `{
   "height": coalesce(asset->metadata.dimensions.height, 900),
   "placeholder": !defined(asset)
 }`;
-const bodyProjection = `content[]{..., _type == "siteImage" => ${imageProjection}}`;
+export const bodyProjection = `content[]{..., _type == "siteImage" => ${imageProjection}}`;
 const shared = `"id": _id, title, "slug": slug.current, summary, publishedAt, "updatedAt": coalesce(updatedAt,_updatedAt), seoTitle,seoDescription,"richContent": ${bodyProjection}`;
+export const articleProjection = `{${shared},category,"tags":coalesce(tags,[]),"featuredImage":featuredImage ${imageProjection},author,featured,"related":related[]->slug.current,faq}`;
 export const getSanityProjects = cache(async (): Promise<Project[]> => {
   const docs = await queryPublished<
     unknown[]
@@ -38,9 +39,7 @@ export const getSanityProjects = cache(async (): Promise<Project[]> => {
 export const getSanityArticles = cache(async (): Promise<Article[]> => {
   const docs = await queryPublished<
     unknown[]
-  >(`*[_type == "article" && approvedForPublication == true && defined(slug.current) && publishedAt <= now()] | order(publishedAt desc){
-    ${shared},category,"tags":coalesce(tags,[]),"featuredImage":featuredImage ${imageProjection},author,featured,"related":related[]->slug.current,faq
-  }`);
+  >(`*[_type == "article" && approvedForPublication == true && defined(slug.current) && publishedAt <= now()] | order(publishedAt desc) ${articleProjection}`);
   return docs.map((doc) => ({ ...articleModel.parse(doc), content: [] }));
 });
 export async function getSanityPromotions() {

@@ -83,16 +83,17 @@ export const projectModel = z.object({
     .nullish()
     .transform((v) => v ?? undefined),
 });
+export const ARTICLE_CATEGORIES = [
+  'พื้นฐาน Solar',
+  'สำหรับบ้าน',
+  'สำหรับธุรกิจ',
+  'เทคโนโลยี',
+  'ความคุ้มค่า',
+  'ในพื้นที่ภาคเหนือ',
+] as const;
 export const articleModel = z.object({
   ...common,
-  category: z.enum([
-    'พื้นฐาน Solar',
-    'สำหรับบ้าน',
-    'สำหรับธุรกิจ',
-    'เทคโนโลยี',
-    'ความคุ้มค่า',
-    'ในพื้นที่ภาคเหนือ',
-  ]),
+  category: z.enum(ARTICLE_CATEGORIES),
   tags: z.array(z.string()).default([]),
   featuredImage: imageModel,
   author: optionalText,
