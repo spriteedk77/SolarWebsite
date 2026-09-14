@@ -1,6 +1,6 @@
 # การเชื่อม Sanity และย้ายขึ้นระบบจริง
 
-สถานะที่ตกลง: ใช้ GitHub Actions ตรวจและเผยแพร่ GitHub Pages preview ก่อน ยังไม่มีบัญชี Sanity หรือ Vercel ที่เชื่อมกับงานนี้
+สถานะที่ตกลง: ใช้ GitHub Actions ตรวจและเผยแพร่ GitHub Pages preview ก่อน Sanity project `mtnue2wm` dataset `production` (public) และ Netlify project `np88solar` สร้างแล้ว แต่ยังไม่ได้ต่อเข้ากับเว็บไซต์ Pages ยังเป็น preview ที่ใช้งานจริงจนกว่า replacement จะผ่านการทดสอบ
 
 ## สถาปัตยกรรม
 
@@ -20,8 +20,8 @@ GitHub Pages ไม่รัน API/ISR และไม่อัปเดตต�
 3. สำรอง dataset ก่อนนำเข้า รัน `npm run cms:seed` เพื่อตรวจแผนโดยไม่เชื่อมเครือข่าย เมื่อพร้อมตั้ง `SANITY_PROJECT_ID`, `SANITY_DATASET`, `SANITY_WRITE_TOKEN` ใน shell ส่วนตัว แล้วรัน `npm run cms:seed -- --write` (tsx ไม่โหลด `.env.local` อัตโนมัติ)
 4. สคริปต์เตรียม 19 drafts: บริษัท 1, Settings 1, โครงการ 4, บทความ 12, โปรโมชั่น 1 อัปโหลดภาพจริง แปลงเนื้อหาเป็น rich text ไม่ publish และข้าม ID ที่มี draft/published อยู่แล้ว ไม่เขียนทับงานบรรณาธิการ
 5. ตรวจและ publish บริษัทก่อน Settings แล้วตรวจเนื้อหาทีละรายการ เติมผู้เขียน ภาพจริง และสิทธิ์ใช้งานที่ขาด รูป SVG เก็บไว้เพื่ออ้างอิง แต่ Studio ต้องมีภาพอัปโหลดก่อน publish โปรโมชั่นนำเข้าเป็น inactive และยังขาดเงื่อนไขโดยตั้งใจ
-6. สร้าง Vercel preview ภายหลัง ตั้ง `CONTENT_SOURCE=sanity` และตัวแปรตาม `.env.example` ล้าง `GITHUB_PAGES`, `NEXT_PUBLIC_STATIC_PREVIEW`, `NEXT_PUBLIC_BASE_PATH`, `LEAD_TEST_MODE` ใช้ canonical origin ของ deployment ที่ทดสอบ
-7. ต่อ receiver ที่เก็บ lead/ไฟล์เป็นส่วนตัว และ Turnstile ที่อนุญาต hostname นี้ เมื่อเปิดจริงตั้ง `PRODUCTION_LAUNCH=1` (Vercel production บังคับอัตโนมัติ) build จะหยุดหากขาด CMS, receiver หรือ spam protection
+6. ตั้งค่า deployment host (Netlify — ดู `netlify.toml`) ตั้ง `CONTENT_SOURCE=sanity` และตัวแปรตาม `.env.example` ล้าง `GITHUB_PAGES`, `NEXT_PUBLIC_STATIC_PREVIEW`, `NEXT_PUBLIC_BASE_PATH`, `LEAD_TEST_MODE` ใช้ canonical origin ของ deployment ที่ทดสอบ
+7. ต่อ receiver ที่เก็บ lead/ไฟล์เป็นส่วนตัว และ Turnstile ที่อนุญาต hostname นี้ เมื่อเปิดจริงตั้ง `PRODUCTION_LAUNCH=1` (Netlify `CONTEXT=production` และ Vercel production บังคับอัตโนมัติอยู่แล้ว) build จะหยุดหากขาด CMS, receiver หรือ spam protection
 8. ทดสอบรายการด้านล่างครบ แล้วค่อยเปลี่ยน DNS/canonical ห้ามถอด Pages ก่อน replacement ใช้งานได้ ยกเลิก write token หลังนำเข้าจบ
 
 ไม่ใส่ secret ใน `NEXT_PUBLIC_*` / `SANITY_STUDIO_*` และไม่ใส่ write token บน host ของเว็บไซต์
@@ -30,7 +30,7 @@ GitHub Pages ไม่รัน API/ISR และไม่อัปเดตต�
 
 `POST /api/lead` ตรวจชื่อ โทร consent (ไม่เลือกไว้ก่อน), honeypot, origin, MIME และลายเซ็นไฟล์ อ่าน body แบบจำกัดขนาด รองรับ PDF/JPEG/PNG/WebP/HEIC/HEIF การตรวจชนิดไฟล์ไม่ใช่การสแกนไวรัส
 
-ขีดจำกัด: request 4 MiB, ไฟล์รวม 3 MiB, ต่อไฟล์ 3 MiB, สูงสุด 8 ไฟล์ เพื่อเผื่อจาก [Vercel payload limit 4.5 MB](https://vercel.com/docs/functions/limitations) หากต้องรับไฟล์ใหญ่ในอนาคต ให้ใช้ private object storage ผ่าน signed upload พร้อมตรวจสิทธิ์และไฟล์
+ขีดจำกัด: request 4 MiB, ไฟล์รวม 3 MiB, ต่อไฟล์ 3 MiB, สูงสุด 8 ไฟล์ เพื่อเผื่อจากเพดาน payload ของ host ทั้งสองแบบ — [Netlify 6 MB ซึ่งเหลือราว 4.5 MB เมื่อไฟล์ถูก base64](https://docs.netlify.com/build/functions/configuration/) และ [Vercel 4.5 MB](https://vercel.com/docs/functions/limitations) หากต้องรับไฟล์ใหญ่ในอนาคต ให้ใช้ private object storage ผ่าน signed upload พร้อมตรวจสิทธิ์และไฟล์
 
 Receiver รับ HTTPS POST JSON: ข้อมูลติดต่อ, `receivedAt`, `consent`, `source` และ `attachments[]` มี `field`, `filename`, `type`, `size`, `contentBase64` ต้อง decode และเก็บ bytes เป็นส่วนตัวก่อนตอบ 2xx ตั้งระยะลบข้อมูลตามที่ NP88 ยืนยัน ห้ามเก็บบิล/เอกสารส่วนตัวใน Sanity image assets ที่ใช้เผยแพร่ภาพเว็บไซต์
 

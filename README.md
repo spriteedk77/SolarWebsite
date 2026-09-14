@@ -6,7 +6,7 @@ Next.js App Router · TypeScript · Tailwind CSS · Prompt · Sanity integration
 
 ## สถานะปัจจุบัน
 
-ใช้ [GitHub Pages preview](https://spriteedk77.github.io/SolarWebsite/) ผ่าน GitHub Actions ตามที่เจ้าของโปรเจกต์เลือก ยังไม่มีบัญชี Sanity/Vercel ที่เชื่อมจริง ฟอร์มบน Pages ปิดรับข้อมูล ส่วนโทร/LINE ใช้ได้
+ใช้ [GitHub Pages preview](https://spriteedk77.github.io/SolarWebsite/) ผ่าน GitHub Actions ตามที่เจ้าของโปรเจกต์เลือก Sanity project และ Netlify project สร้างแล้วแต่ยังไม่ได้ต่อเข้ากับเว็บไซต์ ฟอร์มบน Pages ปิดรับข้อมูล ส่วนโทร/LINE ใช้ได้
 
 โค้ดรองรับ Sanity Studio และ server-rendered CMS แล้ว การ login, publish และรับ lead จริงยังต้องทดสอบกับบัญชีและปลายทางจริงก่อนเรียกว่า production-ready
 

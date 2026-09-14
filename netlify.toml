@@ -1,0 +1,24 @@
+# Netlify build settings for the NP88 Solar website.
+#
+# Netlify detects Next.js and installs the OpenNext adapter itself, which is
+# what provisions the SSR functions, the image CDN and the route cache. The
+# adapter is deliberately not pinned here — Netlify verifies it against each
+# stable Next.js release, and pinning a version only freezes that work out.
+#
+# The `headers()` block in next.config.ts still applies: the adapter serves it,
+# so the security headers are not restated here and cannot drift out of sync
+# with the ones the GitHub Pages preview is checked against.
+#
+# No secrets in this file — it is public. SANITY_*, LEAD_* and TURNSTILE_* are
+# set in Site configuration → Environment variables, where the values stay out
+# of the repository.
+
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  # Matches the Node the GitHub Actions checks run on, so a green CI run and a
+  # green Netlify build mean the same toolchain produced both. Next.js 16 needs
+  # 20.9 or newer regardless.
+  NODE_VERSION = "22"
