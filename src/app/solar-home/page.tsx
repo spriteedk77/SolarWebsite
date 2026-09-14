@@ -14,8 +14,14 @@ import { JsonLd } from '@/components/seo/JsonLd';
 
 import { getArticles, getFaqs } from '@/content';
 import { buildMetadata } from '@/lib/seo';
-import { breadcrumbSchema, faqSchema, graph, serviceSchema } from '@/lib/schema';
-import { cta, disclaimers, quoteLinks } from '@/lib/site';
+import {
+  breadcrumbSchema,
+  faqSchema,
+  graph,
+  serviceSchema,
+} from '@/lib/schema';
+import { disclaimers, quoteLinks } from '@/lib/site';
+import { getSiteData } from '@/cms/site';
 
 const crumbs = [
   { name: 'หน้าแรก', path: '/' },
@@ -82,13 +88,18 @@ const suitability = [
 ];
 
 export default async function SolarHomePage() {
+  const { cta } = await getSiteData();
   const [articles, faqs] = await Promise.all([getArticles(), getFaqs()]);
 
-  const homeFaqs = faqs.filter((faq) => ['ทั่วไป', 'การใช้งาน', 'ขนาดระบบ'].includes(faq.topic));
+  const homeFaqs = faqs.filter((faq) =>
+    ['ทั่วไป', 'การใช้งาน', 'ขนาดระบบ'].includes(faq.topic),
+  );
   const homeArticles = articles.filter((article) =>
-    ['home-solar-sizing-by-electricity-bill', 'is-solar-battery-necessary', 'what-is-solar-rooftop'].includes(
-      article.slug,
-    ),
+    [
+      'home-solar-sizing-by-electricity-bill',
+      'is-solar-battery-necessary',
+      'what-is-solar-rooftop',
+    ].includes(article.slug),
   );
 
   return (
@@ -164,7 +175,10 @@ export default async function SolarHomePage() {
               </h3>
               <ul className="mt-5 space-y-3">
                 {group.items.map((item) => (
-                  <li key={item} className="flex items-start gap-3 text-body text-ink-700">
+                  <li
+                    key={item}
+                    className="flex items-start gap-3 text-body text-ink-700"
+                  >
                     <span
                       aria-hidden="true"
                       className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-ink-500"
@@ -178,12 +192,18 @@ export default async function SolarHomePage() {
         </div>
 
         <Note tone="info" label="ยังไม่แน่ใจ?" className="mt-8">
-          {disclaimers.sizing} ส่งบิลค่าไฟและรูปหลังคาให้ทีมงานดูก่อนได้ ไม่มีค่าใช้จ่ายและยังไม่ต้องตัดสินใจ
+          {disclaimers.sizing} ส่งบิลค่าไฟและรูปหลังคาให้ทีมงานดูก่อนได้
+          ไม่มีค่าใช้จ่ายและยังไม่ต้องตัดสินใจ
         </Note>
       </Section>
 
       {/* Promotional package */}
-      <Section tone="white" labelledBy="package-title" width="wide" id="package">
+      <Section
+        tone="white"
+        labelledBy="package-title"
+        width="wide"
+        id="package"
+      >
         <div className="grid gap-10 lg:grid-cols-12 lg:gap-12">
           <div className="lg:col-span-5">
             <SectionHeading
@@ -200,7 +220,10 @@ export default async function SolarHomePage() {
                 'ราคาและเงื่อนไขเป็นไปตามโปรโมชั่นในช่วงเวลาที่กำหนด',
               ].map((item) => (
                 <li key={item} className="flex items-start gap-3">
-                  <Icon name="check" className="mt-1.5 h-5 w-5 shrink-0 text-flare-600" />
+                  <Icon
+                    name="check"
+                    className="mt-1.5 h-5 w-5 shrink-0 text-flare-600"
+                  />
                   {item}
                 </li>
               ))}
@@ -234,7 +257,7 @@ export default async function SolarHomePage() {
         id="schema-solar-home"
         data={graph(
           breadcrumbSchema(crumbs),
-          serviceSchema({
+          await serviceSchema({
             name: 'Solar Rooftop สำหรับบ้านพักอาศัย',
             description:
               'ออกแบบและติดตั้งระบบ Solar และ Solar + Battery สำหรับบ้านพักอาศัย พร้อมระบบติดตามพลังงานและบริการหลังการขาย',

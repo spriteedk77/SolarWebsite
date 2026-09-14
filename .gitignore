@@ -15,3 +15,6 @@ next-env.d.ts
 
 # Lead submissions written by the local file fallback in /api/lead
 /.data/
+studio/dist/
+studio/.sanity/
+studio/schema.json

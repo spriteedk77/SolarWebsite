@@ -52,6 +52,10 @@ export type SpecRow = {
 };
 
 export type Project = {
+  richContent?: import('@/cms/models').RichBlock[];
+  updatedAt?: string;
+  seoTitle?: string;
+  seoDescription?: string;
   id: string;
   slug: string;
   title: string;
@@ -114,6 +118,11 @@ export type ArticleCategory =
   | 'ในพื้นที่ภาคเหนือ';
 
 export type Article = {
+  richContent?: import('@/cms/models').RichBlock[];
+  author?: string;
+  featured?: boolean;
+  seoTitle?: string;
+  seoDescription?: string;
   id: string;
   slug: string;
   title: string;
@@ -131,11 +140,7 @@ export type Article = {
 };
 
 export type ProductCategory =
-  | 'แผงโซลาร์'
-  | 'อินเวอร์เตอร์'
-  | 'แบตเตอรี่'
-  | 'Optimizer'
-  | 'Monitoring';
+  'แผงโซลาร์' | 'อินเวอร์เตอร์' | 'แบตเตอรี่' | 'Optimizer' | 'Monitoring';
 
 export type Product = {
   id: string;

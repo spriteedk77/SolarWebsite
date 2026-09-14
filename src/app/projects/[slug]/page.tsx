@@ -1,3 +1,4 @@
+import { RichContent } from '@/components/knowledge/RichContent';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -14,10 +15,15 @@ import { LeadSection } from '@/components/sections/LeadSection';
 import { JsonLd } from '@/components/seo/JsonLd';
 
 import { getProject, getProjects } from '@/content';
-import { customerTypeLabels, type Project, type SpecRow } from '@/content/types';
+import {
+  customerTypeLabels,
+  type Project,
+  type SpecRow,
+} from '@/content/types';
 import { buildMetadata } from '@/lib/seo';
 import { breadcrumbSchema, graph, projectSchema } from '@/lib/schema';
-import { cta, disclaimers, quoteLinks } from '@/lib/site';
+import { disclaimers, quoteLinks } from '@/lib/site';
+import { getSiteData } from '@/cms/site';
 import { formatKw, formatThb } from '@/lib/utils';
 
 type Params = { params: Promise<{ slug: string }> };
@@ -30,12 +36,20 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params;
   const project = await getProject(slug);
-  if (!project) return buildMetadata({ title: 'ไม่พบโครงการ', description: '', path: '/projects', noIndex: true });
+  if (!project)
+    return buildMetadata({
+      title: 'ไม่พบโครงการ',
+      description: '',
+      path: '/projects',
+      noIndex: true,
+    });
 
   return buildMetadata({
     // The project title is already long; the layout appends the brand.
-    title: project.title,
-    description: `${project.summary} ดูสเปกระบบ อุปกรณ์ที่ใช้ และรายละเอียดการติดตั้งของโครงการใน${project.province}`,
+    title: project.seoTitle || project.title,
+    description:
+      project.seoDescription ||
+      `${project.summary} ดูสเปกระบบ อุปกรณ์ที่ใช้ และรายละเอียดการติดตั้งของโครงการใน${project.province}`,
     path: `/projects/${project.slug}`,
     image: project.gallery[0]
       ? {
@@ -51,21 +65,34 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 /** Builds the specification table from whatever the project actually has. */
 function specRows(project: Project): SpecRow[] {
   const rows: SpecRow[] = [
-    { label: 'กำลังติดตั้ง', value: `${formatKw(project.systemCapacityKw)} kW` },
+    {
+      label: 'กำลังติดตั้ง',
+      value: `${formatKw(project.systemCapacityKw)} kW`,
+    },
     { label: 'ระบบไฟฟ้า', value: project.phase },
     { label: 'รูปแบบระบบ', value: project.systemType },
     { label: 'แผงโซลาร์', value: project.solarPanel },
     { label: 'จำนวนแผง', value: `${project.panelQuantity} แผง` },
   ];
 
-  if (project.inverter) rows.push({ label: 'อินเวอร์เตอร์', value: project.inverter });
-  if (project.battery) rows.push({ label: 'แบตเตอรี่', value: project.battery });
-  if (project.optimizer) rows.push({ label: 'Optimizer', value: project.optimizer });
-  rows.push({ label: 'Zero Export', value: project.zeroExport ? 'มี' : 'ไม่มี' });
-  if (project.monitoring) rows.push({ label: 'Monitoring', value: project.monitoring });
+  if (project.inverter)
+    rows.push({ label: 'อินเวอร์เตอร์', value: project.inverter });
+  if (project.battery)
+    rows.push({ label: 'แบตเตอรี่', value: project.battery });
+  if (project.optimizer)
+    rows.push({ label: 'Optimizer', value: project.optimizer });
+  rows.push({
+    label: 'Zero Export',
+    value: project.zeroExport ? 'มี' : 'ไม่มี',
+  });
+  if (project.monitoring)
+    rows.push({ label: 'Monitoring', value: project.monitoring });
   rows.push({ label: 'สถานที่', value: project.location });
   if (project.customerType)
-    rows.push({ label: 'ประเภทลูกค้า', value: customerTypeLabels[project.customerType] });
+    rows.push({
+      label: 'ประเภทลูกค้า',
+      value: customerTypeLabels[project.customerType],
+    });
 
   return rows;
 }
@@ -76,8 +103,14 @@ function NarrativeBlock({ title, items }: { title: string; items: string[] }) {
       <h2 className="text-h2">{title}</h2>
       <ul className="mt-5 space-y-3">
         {items.map((item) => (
-          <li key={item} className="flex items-start gap-3 text-body text-ink-700">
-            <Icon name="check" className="mt-1.5 h-5 w-5 shrink-0 text-flare-600" />
+          <li
+            key={item}
+            className="flex items-start gap-3 text-body text-ink-700"
+          >
+            <Icon
+              name="check"
+              className="mt-1.5 h-5 w-5 shrink-0 text-flare-600"
+            />
             <span>{item}</span>
           </li>
         ))}
@@ -87,6 +120,7 @@ function NarrativeBlock({ title, items }: { title: string; items: string[] }) {
 }
 
 export default async function ProjectPage({ params }: Params) {
+  const { cta } = await getSiteData();
   const { slug } = await params;
   const project = await getProject(slug);
   if (!project) notFound();
@@ -149,23 +183,49 @@ export default async function ProjectPage({ params }: Params) {
           <div className="space-y-12 lg:col-span-7">
             <ProjectGallery images={project.gallery} />
 
-            <section>
-              <h2 className="text-h2">ภาพรวมโครงการ</h2>
-              <p className="mt-4 text-body text-ink-700">{project.overview}</p>
-            </section>
+            {project.richContent ? (
+              <RichContent blocks={project.richContent} />
+            ) : (
+              <>
+                <section>
+                  <h2 className="text-h2">ภาพรวมโครงการ</h2>
+                  <p className="mt-4 text-body text-ink-700">
+                    {project.overview}
+                  </p>
+                </section>
 
-            <NarrativeBlock title="โจทย์และเป้าหมาย" items={project.objective} />
-            <NarrativeBlock title="ระบบที่ออกแบบ" items={project.solution} />
-            <NarrativeBlock title="รายละเอียดการติดตั้ง" items={project.installation} />
-            <NarrativeBlock title="ประโยชน์ที่ได้รับ" items={project.benefits} />
+                <NarrativeBlock
+                  title="โจทย์และเป้าหมาย"
+                  items={project.objective}
+                />
+                <NarrativeBlock
+                  title="ระบบที่ออกแบบ"
+                  items={project.solution}
+                />
+                <NarrativeBlock
+                  title="รายละเอียดการติดตั้ง"
+                  items={project.installation}
+                />
+                <NarrativeBlock
+                  title="ประโยชน์ที่ได้รับ"
+                  items={project.benefits}
+                />
+              </>
+            )}
 
             {project.standards && project.standards.length > 0 && (
               <section>
                 <h2 className="text-h2">มาตรฐานที่ใช้พิจารณา</h2>
                 <ul className="mt-5 space-y-3">
                   {project.standards.map((standard) => (
-                    <li key={standard} className="flex items-start gap-3 text-body text-ink-700">
-                      <Icon name="shield" className="mt-0.5 h-5 w-5 shrink-0 text-solar-600" />
+                    <li
+                      key={standard}
+                      className="flex items-start gap-3 text-body text-ink-700"
+                    >
+                      <Icon
+                        name="shield"
+                        className="mt-0.5 h-5 w-5 shrink-0 text-solar-600"
+                      />
                       {standard}
                     </li>
                   ))}
@@ -182,13 +242,16 @@ export default async function ProjectPage({ params }: Params) {
                     {formatThb(project.estimatedSavingsThbPerMonth)} บาทต่อเดือน
                   </strong>
                 </p>
-                <Note tone="caution" label="โปรดอ่านก่อนนำไปเปรียบเทียบ" className="mt-5">
+                <Note
+                  tone="caution"
+                  label="โปรดอ่านก่อนนำไปเปรียบเทียบ"
+                  className="mt-5"
+                >
                   {disclaimers.savings} ตัวเลขนี้ไม่ใช่การรับประกันผลลัพธ์
                   และไม่ควรนำไปใช้ประเมินสถานที่อื่นโดยตรง
                 </Note>
               </section>
             )}
-
           </div>
 
           {/* Specification sidebar */}
@@ -200,26 +263,34 @@ export default async function ProjectPage({ params }: Params) {
                 </h2>
                 <dl className="divide-y divide-hairline">
                   {specRows(project).map((row) => (
-                    <div key={row.label} className="flex flex-wrap gap-x-4 gap-y-1 px-6 py-3.5">
-                      <dt className="min-w-32 text-caption text-ink-600">{row.label}</dt>
-                      <dd className="flex-1 text-body font-medium text-navy-900">{row.value}</dd>
+                    <div
+                      key={row.label}
+                      className="flex flex-wrap gap-x-4 gap-y-1 px-6 py-3.5"
+                    >
+                      <dt className="min-w-32 text-caption text-ink-600">
+                        {row.label}
+                      </dt>
+                      <dd className="flex-1 text-body font-medium text-navy-900">
+                        {row.value}
+                      </dd>
                     </div>
                   ))}
                 </dl>
               </div>
 
-              {project.servicesIncluded && project.servicesIncluded.length > 0 && (
-                <div className="mt-6 rounded-card border border-hairline bg-paper-soft p-6">
-                  <h2 className="text-h3">ขอบเขตงานที่ให้บริการ</h2>
-                  <ul className="mt-4 flex flex-wrap gap-2">
-                    {project.servicesIncluded.map((service) => (
-                      <li key={service}>
-                        <Badge tone="solar">{service}</Badge>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+              {project.servicesIncluded &&
+                project.servicesIncluded.length > 0 && (
+                  <div className="mt-6 rounded-card border border-hairline bg-paper-soft p-6">
+                    <h2 className="text-h3">ขอบเขตงานที่ให้บริการ</h2>
+                    <ul className="mt-4 flex flex-wrap gap-2">
+                      {project.servicesIncluded.map((service) => (
+                        <li key={service}>
+                          <Badge tone="solar">{service}</Badge>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
 
               {project.warranty && project.warranty.length > 0 && (
                 <div className="mt-6 rounded-card border border-hairline bg-white p-6 shadow-card">
@@ -227,7 +298,9 @@ export default async function ProjectPage({ params }: Params) {
                   <dl className="mt-4 space-y-3">
                     {project.warranty.map((row) => (
                       <div key={row.label}>
-                        <dt className="text-caption text-ink-600">{row.label}</dt>
+                        <dt className="text-caption text-ink-600">
+                          {row.label}
+                        </dt>
                         <dd className="text-body font-semibold text-navy-900">
                           {row.value}
                           {row.note && (
@@ -239,7 +312,9 @@ export default async function ProjectPage({ params }: Params) {
                       </div>
                     ))}
                   </dl>
-                  <Disclaimer className="mt-4">{disclaimers.warranty}</Disclaimer>
+                  <Disclaimer className="mt-4">
+                    {disclaimers.warranty}
+                  </Disclaimer>
                 </div>
               )}
 

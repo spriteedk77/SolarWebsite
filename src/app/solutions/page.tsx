@@ -12,7 +12,12 @@ import { JsonLd } from '@/components/seo/JsonLd';
 
 import { getFaqs, getSolutions } from '@/content';
 import { buildMetadata } from '@/lib/seo';
-import { breadcrumbSchema, faqSchema, graph, serviceSchema } from '@/lib/schema';
+import {
+  breadcrumbSchema,
+  faqSchema,
+  graph,
+  serviceSchema,
+} from '@/lib/schema';
 
 const crumbs = [
   { name: 'หน้าแรก', path: '/' },
@@ -20,11 +25,17 @@ const crumbs = [
 ];
 
 export const metadata: Metadata = buildMetadata({
-  title: 'โซลูชัน Solar — On-Grid, Hybrid, Solar + Battery, Zero Export และ Monitoring',
+  title:
+    'โซลูชัน Solar — On-Grid, Hybrid, Solar + Battery, Zero Export และ Monitoring',
   description:
     'เปรียบเทียบระบบ Solar แต่ละแบบว่าเหมาะกับใคร แก้ปัญหาอะไร และต้องพิจารณาอะไรก่อนเลือก ทั้งสำหรับบ้าน ธุรกิจ และโรงงาน โดย NP88 Solar เชียงใหม่',
   path: '/solutions',
-  keywords: ['Solar Battery', 'Zero Export', 'Hybrid Solar', 'Solar สำหรับธุรกิจ'],
+  keywords: [
+    'Solar Battery',
+    'Zero Export',
+    'Hybrid Solar',
+    'Solar สำหรับธุรกิจ',
+  ],
 });
 
 const comparison = [
@@ -74,7 +85,12 @@ export default async function SolutionsPage() {
       />
 
       {/* Quick chooser */}
-      <Section tone="white" labelledBy="chooser-title" width="wide" spacing="tight">
+      <Section
+        tone="white"
+        labelledBy="chooser-title"
+        width="wide"
+        spacing="tight"
+      >
         <SectionHeading
           id="chooser-title"
           title="เริ่มจากสถานการณ์ของคุณ"
@@ -98,7 +114,12 @@ export default async function SolutionsPage() {
         </ul>
       </Section>
 
-      <SolutionsGrid solutions={solutions} withHeading={false} withCta={false} tone="soft" />
+      <SolutionsGrid
+        solutions={solutions}
+        withHeading={false}
+        withCta={false}
+        tone="soft"
+      />
 
       <ProcessSection />
 
@@ -110,13 +131,15 @@ export default async function SolutionsPage() {
         id="schema-solutions"
         data={graph(
           breadcrumbSchema(crumbs),
-          ...solutions.map((solution) =>
-            serviceSchema({
-              name: solution.title,
-              description: `${solution.problem} ${solution.outcome}`,
-              path: `/solutions#${solution.slug}`,
-            }),
-          ),
+          ...(await Promise.all(
+            solutions.map((solution) =>
+              serviceSchema({
+                name: solution.title,
+                description: `${solution.problem} ${solution.outcome}`,
+                path: `/solutions#${solution.slug}`,
+              }),
+            ),
+          )),
           faqSchema(faqs),
         )}
       />

@@ -1,3 +1,4 @@
+import { RichContent, RichToc } from '@/components/knowledge/RichContent';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -15,8 +16,14 @@ import { JsonLd } from '@/components/seo/JsonLd';
 
 import { getArticle, getArticles, getRelatedArticles } from '@/content';
 import { buildMetadata } from '@/lib/seo';
-import { articleSchema, breadcrumbSchema, faqSchema, graph } from '@/lib/schema';
-import { contact, cta, quoteLinks } from '@/lib/site';
+import {
+  articleSchema,
+  breadcrumbSchema,
+  faqSchema,
+  graph,
+} from '@/lib/schema';
+import { quoteLinks } from '@/lib/site';
+import { getSiteData } from '@/cms/site';
 import { formatThaiDate } from '@/lib/utils';
 
 type Params = { params: Promise<{ slug: string }> };
@@ -38,8 +45,8 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     });
 
   return buildMetadata({
-    title: article.title,
-    description: article.summary,
+    title: article.seoTitle || article.title,
+    description: article.seoDescription || article.summary,
     path: `/knowledge/${article.slug}`,
     type: 'article',
     publishedTime: article.publishedAt,
@@ -55,12 +62,15 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 }
 
 export default async function ArticlePage({ params }: Params) {
+  const { contact, cta } = await getSiteData();
   const { slug } = await params;
   const article = await getArticle(slug);
   if (!article) notFound();
 
   const related = await getRelatedArticles(article.related);
-  const others = related.filter((item) => item.slug !== article.slug).slice(0, 3);
+  const others = related
+    .filter((item) => item.slug !== article.slug)
+    .slice(0, 3);
 
   const crumbs = [
     { name: 'หน้าแรก', path: '/' },
@@ -70,16 +80,26 @@ export default async function ArticlePage({ params }: Params) {
 
   return (
     <>
-      <PageHero crumbs={crumbs} eyebrow={article.category} title={article.title} lead={article.summary}>
+      <PageHero
+        crumbs={crumbs}
+        eyebrow={article.category}
+        title={article.title}
+        lead={article.summary}
+      >
         <p className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2 text-caption text-navy-200">
+          {article.author && <span>โดย {article.author}</span>}
           <span>
             เผยแพร่{' '}
-            <time dateTime={article.publishedAt}>{formatThaiDate(article.publishedAt)}</time>
+            <time dateTime={article.publishedAt}>
+              {formatThaiDate(article.publishedAt)}
+            </time>
           </span>
           <span aria-hidden="true">·</span>
           <span>
             อัปเดตล่าสุด{' '}
-            <time dateTime={article.updatedAt}>{formatThaiDate(article.updatedAt)}</time>
+            <time dateTime={article.updatedAt}>
+              {formatThaiDate(article.updatedAt)}
+            </time>
           </span>
         </p>
       </PageHero>
@@ -95,11 +115,19 @@ export default async function ArticlePage({ params }: Params) {
             />
 
             <div className="mt-8 lg:hidden">
-              <ArticleToc blocks={article.content} id="toc-title-inline" />
+              {article.richContent ? (
+                <RichToc blocks={article.richContent} id="toc-title-inline" />
+              ) : (
+                <ArticleToc blocks={article.content} id="toc-title-inline" />
+              )}
             </div>
 
             <div className="mt-8">
-              <ArticleBody blocks={article.content} />
+              {article.richContent ? (
+                <RichContent blocks={article.richContent} />
+              ) : (
+                <ArticleBody blocks={article.content} />
+              )}
             </div>
 
             {article.faq && article.faq.length > 0 && (
@@ -125,13 +153,21 @@ export default async function ArticlePage({ params }: Params) {
           <aside className="lg:col-span-4">
             <div className="space-y-6 lg:sticky lg:top-28">
               <div className="hidden lg:block">
-                <ArticleToc blocks={article.content} id="toc-title-sidebar" />
+                {article.richContent ? (
+                  <RichToc
+                    blocks={article.richContent}
+                    id="toc-title-sidebar"
+                  />
+                ) : (
+                  <ArticleToc blocks={article.content} id="toc-title-sidebar" />
+                )}
               </div>
 
               <div className="rounded-card border border-navy-700 bg-navy-900 p-6 text-navy-100">
                 <h2 className="text-h3 text-white">อยากได้ตัวเลขของตัวเอง?</h2>
                 <p className="mt-3 text-caption">
-                  บทความช่วยให้เข้าใจหลักการ แต่ตัวเลขจริงต้องมาจากบิลค่าไฟและหลังคาของคุณเอง
+                  บทความช่วยให้เข้าใจหลักการ
+                  แต่ตัวเลขจริงต้องมาจากบิลค่าไฟและหลังคาของคุณเอง
                   ส่งให้ทีมงานประเมินเบื้องต้นได้โดยไม่มีค่าใช้จ่าย
                 </p>
                 <Link

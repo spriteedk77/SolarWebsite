@@ -3,7 +3,8 @@ import { Section, SectionHeading } from '@/components/ui/Section';
 import { Icon } from '@/components/ui/Icon';
 import { ContactActions } from '@/components/cta/ContactCTAs';
 import { LeadForm } from '@/components/forms/LeadForm';
-import { contact, quoteLinks } from '@/lib/site';
+import { quoteLinks } from '@/lib/site';
+import { getSiteData } from '@/cms/site';
 import type { LeadSegment } from '@/lib/quote-params';
 
 /**
@@ -14,7 +15,7 @@ import type { LeadSegment } from '@/lib/quote-params';
  *  - `compact` is the closing band used at the end of every other page: one
  *    primary action plus phone and LINE, and nothing else competing with it.
  */
-export function LeadSection({
+export async function LeadSection({
   variant = 'compact',
   title = 'อยากรู้ว่าระบบแบบไหนเหมาะกับคุณ?',
   lead = 'ส่งบิลค่าไฟ + รูปหลังคา ให้ทีม NP88 Solar วิเคราะห์เบื้องต้น ไม่มีค่าใช้จ่ายและยังไม่ต้องตัดสินใจ',
@@ -35,12 +36,18 @@ export function LeadSection({
   submitted?: boolean;
   submitError?: string;
 }) {
+  const { contact } = await getSiteData();
   if (variant === 'full') {
     return (
       <Section tone="soft" labelledBy="lead-title" width="wide">
         <div className="grid gap-10 lg:grid-cols-12 lg:gap-12">
           <div className="lg:col-span-5">
-            <SectionHeading id="lead-title" eyebrow="ประเมินระบบฟรี" title={title} lead={lead} />
+            <SectionHeading
+              id="lead-title"
+              eyebrow="ประเมินระบบฟรี"
+              title={title}
+              lead={lead}
+            />
 
             <ul className="mt-8 space-y-4">
               {[
@@ -65,15 +72,21 @@ export function LeadSection({
                     <Icon name={step.icon} className="h-5.5 w-5.5" />
                   </span>
                   <div>
-                    <h3 className="text-body font-semibold text-navy-900">{step.title}</h3>
-                    <p className="mt-1 text-caption text-ink-700">{step.body}</p>
+                    <h3 className="text-body font-semibold text-navy-900">
+                      {step.title}
+                    </h3>
+                    <p className="mt-1 text-caption text-ink-700">
+                      {step.body}
+                    </p>
                   </div>
                 </li>
               ))}
             </ul>
 
             <div className="mt-8 rounded-card border border-hairline bg-white p-5">
-              <h3 className="text-body font-semibold text-navy-900">ติดต่อโดยตรง</h3>
+              <h3 className="text-body font-semibold text-navy-900">
+                ติดต่อโดยตรง
+              </h3>
               <p className="mt-3 space-y-2 text-body">
                 <a
                   href={contact.phoneHref}
@@ -120,7 +133,13 @@ export function LeadSection({
     <Section tone="navy" labelledBy="lead-title" width="wide" spacing="tight">
       <div className="grid gap-8 lg:grid-cols-12 lg:items-center">
         <div className="lg:col-span-7">
-          <SectionHeading id="lead-title" tone="dark" title={title} lead={lead} as="h2" />
+          <SectionHeading
+            id="lead-title"
+            tone="dark"
+            title={title}
+            lead={lead}
+            as="h2"
+          />
         </div>
         <div className="lg:col-span-5">
           <ContactActions tone="dark" />

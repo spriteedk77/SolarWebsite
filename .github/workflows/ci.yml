@@ -37,6 +37,10 @@ jobs:
           cache: npm
 
       - run: npm ci
+      - run: npm audit --audit-level=moderate
+      - run: npm run lint
+      - run: npm test
+      - run: npm run cms:seed
       - run: npm run typecheck
       - run: npm run build
 
@@ -85,3 +89,24 @@ jobs:
             verify-report.txt
           if-no-files-found: warn
           retention-days: 14
+
+  studio:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Offline compiler checks only; these identifiers do not create a project.
+    env:
+      SANITY_STUDIO_PROJECT_ID: schematest
+      SANITY_STUDIO_DATASET: schema-test
+      SANITY_CLI_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: studio/package-lock.json
+      - run: npm ci --prefix studio
+      - run: npm audit --prefix studio --audit-level=moderate
+      - run: npm run typecheck --prefix studio
+      - run: npm run schema:extract --prefix studio
+      - run: npm run build --prefix studio

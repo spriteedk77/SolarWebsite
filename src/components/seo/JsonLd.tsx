@@ -9,7 +9,6 @@ export function JsonLd({ data, id }: { data: object; id?: string }) {
     <script
       type="application/ld+json"
       id={id}
-      // eslint-disable-next-line react/no-danger
       dangerouslySetInnerHTML={{
         __html: JSON.stringify(data).replace(/</g, '\\u003c'),
       }}

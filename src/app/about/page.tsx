@@ -4,7 +4,6 @@ import { PageHero } from '@/components/layout/PageHero';
 import { Section, SectionHeading } from '@/components/ui/Section';
 import { Figure } from '@/components/ui/Figure';
 import { Icon } from '@/components/ui/Icon';
-import { Note } from '@/components/ui/Note';
 import { Badge } from '@/components/ui/Badge';
 import { ProcessSection } from '@/components/sections/ProcessSection';
 import { EngineeringSection } from '@/components/sections/EngineeringSection';
@@ -14,7 +13,7 @@ import { JsonLd } from '@/components/seo/JsonLd';
 import { segments } from '@/content/th/pages';
 import { buildMetadata } from '@/lib/seo';
 import { breadcrumbSchema, graph } from '@/lib/schema';
-import { contact, serviceAreas, site } from '@/lib/site';
+import { getSiteData } from '@/cms/site';
 
 const crumbs = [
   { name: 'หน้าแรก', path: '/' },
@@ -51,7 +50,8 @@ const principles = [
   },
 ];
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const { contact, serviceAreas, site } = await getSiteData();
   return (
     <>
       <PageHero
@@ -74,13 +74,15 @@ export default function AboutPage() {
             />
 
             <p className="mt-6 text-body text-ink-700">
-              ก่อนเสนอระบบใด ๆ เราพิจารณาปริมาณการใช้ไฟจริง ค่าไฟ พื้นที่หลังคาที่ใช้ได้
-              รูปแบบการใช้พลังงานในแต่ละช่วงเวลา เป้าหมายทางธุรกิจ ความปลอดภัย
-              มาตรฐานงานวิศวกรรม การบำรุงรักษา และความเป็นไปได้ในการขยายระบบในอนาคต
+              ก่อนเสนอระบบใด ๆ เราพิจารณาปริมาณการใช้ไฟจริง ค่าไฟ
+              พื้นที่หลังคาที่ใช้ได้ รูปแบบการใช้พลังงานในแต่ละช่วงเวลา
+              เป้าหมายทางธุรกิจ ความปลอดภัย มาตรฐานงานวิศวกรรม การบำรุงรักษา
+              และความเป็นไปได้ในการขยายระบบในอนาคต
             </p>
             <p className="mt-4 text-body text-ink-700">
-              ผลลัพธ์ที่ลูกค้าได้รับจึงไม่ใช่แค่ใบเสนอราคา แต่คือเหตุผลว่าทำไมระบบจึงควรเป็นขนาดนี้
-              ทำไมจึงเลือกอุปกรณ์ชุดนี้ และตัวเลขความคุ้มค่ามาจากสมมติฐานอะไรบ้าง
+              ผลลัพธ์ที่ลูกค้าได้รับจึงไม่ใช่แค่ใบเสนอราคา
+              แต่คือเหตุผลว่าทำไมระบบจึงควรเป็นขนาดนี้ ทำไมจึงเลือกอุปกรณ์ชุดนี้
+              และตัวเลขความคุ้มค่ามาจากสมมติฐานอะไรบ้าง
             </p>
           </div>
 
@@ -97,7 +99,9 @@ export default function AboutPage() {
                   <h3 className="mt-3 text-body font-semibold text-navy-900">
                     {principle.title}
                   </h3>
-                  <p className="mt-1.5 text-caption text-ink-700">{principle.body}</p>
+                  <p className="mt-1.5 text-caption text-ink-700">
+                    {principle.body}
+                  </p>
                 </li>
               ))}
             </ul>
@@ -118,7 +122,9 @@ export default function AboutPage() {
           <div className="rounded-card border border-hairline bg-white p-6 shadow-card">
             <h3 className="text-h3">ที่ตั้งสำนักงาน</h3>
             <address className="mt-4 space-y-1 text-body not-italic text-ink-700">
-              <p className="font-semibold text-navy-900">{site.legalNameShort}</p>
+              <p className="font-semibold text-navy-900">
+                {site.legalNameShort}
+              </p>
               {contact.addressLines.map((line) => (
                 <p key={line}>{line}</p>
               ))}
@@ -149,12 +155,20 @@ export default function AboutPage() {
             <h3 className="text-h3">พื้นที่ให้บริการ</h3>
             <ul className="mt-4 space-y-2.5">
               {serviceAreas.map((area) => (
-                <li key={area.slug} className="flex items-center gap-2.5 text-body text-ink-700">
-                  <Icon name="map-pin" className="h-4.5 w-4.5 shrink-0 text-solar-600" />
+                <li
+                  key={area.slug}
+                  className="flex items-center gap-2.5 text-body text-ink-700"
+                >
+                  <Icon
+                    name="map-pin"
+                    className="h-4.5 w-4.5 shrink-0 text-solar-600"
+                  />
                   <span>
                     {area.name}
                     {area.primary && (
-                      <span className="ml-2 text-caption text-ink-600">(สำนักงานหลัก)</span>
+                      <span className="ml-2 text-caption text-ink-600">
+                        (สำนักงานหลัก)
+                      </span>
                     )}
                   </span>
                 </li>
@@ -179,7 +193,8 @@ export default function AboutPage() {
                 with itself (600+ vs 700+). */}
             <p className="mt-5 border-t border-hairline pt-4 text-caption text-ink-600">
               แต่ละประเภทมีรูปแบบการใช้ไฟและข้อจำกัดด้านโครงสร้างต่างกัน
-              เราจึงออกแบบระบบแยกตามลักษณะงาน ไม่ใช้แบบสำเร็จรูปเดียวกับทุกหลังคา
+              เราจึงออกแบบระบบแยกตามลักษณะงาน
+              ไม่ใช้แบบสำเร็จรูปเดียวกับทุกหลังคา
             </p>
           </div>
         </div>

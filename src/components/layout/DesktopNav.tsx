@@ -24,7 +24,7 @@ export function DesktopNav() {
                 href={item.href}
                 aria-current={current ? 'page' : undefined}
                 className={cn(
-                  'relative inline-flex h-12 items-center rounded-md px-2.5 text-[0.95rem] font-medium whitespace-nowrap transition-colors',
+                  'relative inline-flex h-12 items-center rounded-md px-1.5 text-sm 2xl:px-2.5 2xl:text-[0.95rem] font-medium whitespace-nowrap transition-colors',
                   current
                     ? 'text-solar-700'
                     : 'text-ink-700 hover:text-navy-900 hover:bg-navy-50',

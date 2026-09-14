@@ -11,19 +11,30 @@
     "verify:links": "node scripts/verify-links.mjs",
     "verify:metadata": "node scripts/verify-metadata.mjs",
     "verify:lead-api": "node scripts/verify-lead-api.mjs",
-    "verify": "npm run verify:links && npm run verify:metadata && npm run verify:lead-api"
+    "verify": "npm run verify:links && npm run verify:metadata && npm run verify:lead-api",
+    "lint": "eslint src scripts next.config.ts",
+    "test": "tsx --test tests/*.test.ts",
+    "cms:seed": "tsx scripts/seed-sanity.ts"
   },
   "dependencies": {
+    "@portabletext/react": "^8.0.1",
+    "@sanity/client": "^8.6.1",
+    "file-type": "^22.1.0",
     "next": "^16.3.5",
     "react": "^19.3.0",
-    "react-dom": "^19.3.0"
+    "react-dom": "^19.3.0",
+    "server-only": "^0.0.1",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.13",
     "@types/node": "^22.15.0",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^16.3.5",
     "tailwindcss": "^4.1.13",
+    "tsx": "^4.23.13",
     "typescript": "^5.8.3"
   }
 }

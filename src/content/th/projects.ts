@@ -57,11 +57,11 @@ export const projects: Project[] = [
     gallery: [
       // Original media published by NP88 Solar: Facebook photo 122328701426027026.
       photo(
-        '/images/projects/commercial-rooftop-178kw-lampang.jpg',
+        '/images/projects/commercial-rooftop-178kw-lampang.webp',
         'ภาพรวมหลังคาอาคารพาณิชย์ที่ติดตั้งแผงโซลาร์ขนาด 178.56 kW จังหวัดลำปาง',
         'ภาพรวมการติดตั้งแผง 288 แผงบนหลังคาอาคาร',
-        1254,
-        1254,
+        1200,
+        1200,
       ),
       ph(
         '/images/placeholder/project-array-detail.svg',
@@ -130,11 +130,11 @@ export const projects: Project[] = [
     gallery: [
       // Original media published by NP88 Solar: Facebook photo 122328701522027026.
       photo(
-        '/images/projects/solar-rooftop-30kw-mae-taeng.jpg',
+        '/images/projects/solar-rooftop-30kw-mae-taeng.webp',
         'แผงโซลาร์ 48 แผงบนหลังคาอาคารในอำเภอแม่แตง จังหวัดเชียงใหม่',
         'ระบบ 30 kW จำนวน 48 แผงบนหลังคา',
-        1254,
-        1254,
+        1200,
+        1200,
       ),
       ph(
         '/images/placeholder/project-array-detail.svg',
@@ -193,11 +193,11 @@ export const projects: Project[] = [
     gallery: [
       // Original media published by NP88 Solar: Facebook photo 122328701360027026.
       photo(
-        '/images/projects/solar-rooftop-22-5kw-mueang-chiang-mai.jpg',
+        '/images/projects/solar-rooftop-22-5kw-mueang-chiang-mai.webp',
         'แผงโซลาร์ชนิด Bifacial กระจกสองชั้น 36 แผง บนหลังคาในอำเภอเมืองเชียงใหม่',
         'ระบบ 22.50 kW ด้วยแผง Bifacial กระจกสองชั้น',
-        1254,
-        1254,
+        1200,
+        1200,
       ),
       ph(
         '/images/placeholder/equipment-panel.svg',
@@ -239,7 +239,8 @@ export const projects: Project[] = [
   {
     id: 'prj-8items',
     slug: '8items-clinic-solar-battery-chiang-mai',
-    title: 'ระบบ Solar + Battery 10.78 kW พร้อม Zero Export — 8Items Clinic เชียงใหม่',
+    title:
+      'ระบบ Solar + Battery 10.78 kW พร้อม Zero Export — 8Items Clinic เชียงใหม่',
     summary:
       'ระบบ Solar พร้อมแบตเตอรี่สำหรับคลินิก ใช้ Zero Export และติดตามการใช้พลังงานผ่านแอปพลิเคชัน',
     customerType: 'clinic',
@@ -255,7 +256,9 @@ export const projects: Project[] = [
     systemType: 'Hybrid (Solar + Battery) พร้อมระบบ Zero Export',
     zeroExport: true,
     monitoring: 'ติดตามการผลิตและการใช้พลังงานผ่านแอปพลิเคชัน',
-    standards: ['ออกแบบและติดตั้งโดยพิจารณามาตรฐาน วสท. (วิศวกรรมสถานแห่งประเทศไทย)'],
+    standards: [
+      'ออกแบบและติดตั้งโดยพิจารณามาตรฐาน วสท. (วิศวกรรมสถานแห่งประเทศไทย)',
+    ],
     servicesIncluded: [
       'สำรวจหน้างาน',
       'ออกแบบระบบ',
@@ -275,11 +278,11 @@ export const projects: Project[] = [
     gallery: [
       // Original media published by NP88 Solar: Facebook photo 122327022188027026.
       photo(
-        '/images/projects/8items-clinic-solar-battery-chiang-mai.jpg',
+        '/images/projects/8items-clinic-solar-battery-chiang-mai.webp',
         'แผงโซลาร์ AIKO STELLAR จำนวน 14 แผง บนหลังคาคลินิกในตำบลฟ้าฮ่าม เชียงใหม่',
         'ระบบ 10.78 kW บนหลังคาอาคารคลินิก',
-        1920,
-        1920,
+        1200,
+        1200,
       ),
       ph(
         '/images/placeholder/equipment-battery.svg',

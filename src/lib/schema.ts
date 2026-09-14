@@ -6,14 +6,17 @@
  * no certifications, and no openingHours until real hours are supplied.
  */
 
-import { contact, serviceAreas, site } from './site';
+import { site } from './site';
+import { getSiteData } from '@/cms/site';
+import { defaultSiteData, type SiteData } from './site-data';
 import { absoluteUrl, DEFAULT_OG_PATH, socialImageUrl } from './seo';
 import type { Article, Project } from '@/content/types';
 
 const ORG_ID = `${site.url}/#organization`;
 const WEBSITE_ID = `${site.url}/#website`;
 
-export function organizationSchema() {
+export function organizationSchema(data: SiteData = defaultSiteData) {
+  const { contact, site, serviceAreas } = data;
   return {
     '@type': ['Organization', 'LocalBusiness'],
     '@id': ORG_ID,
@@ -44,7 +47,10 @@ export function organizationSchema() {
     knowsLanguage: ['th', 'en'],
     ...(contact.facebookUrl || contact.googleBusinessProfileUrl
       ? {
-          sameAs: [contact.facebookUrl, contact.googleBusinessProfileUrl].filter(Boolean),
+          sameAs: [
+            contact.facebookUrl,
+            contact.googleBusinessProfileUrl,
+          ].filter(Boolean),
         }
       : {}),
     contactPoint: {
@@ -58,7 +64,8 @@ export function organizationSchema() {
   };
 }
 
-export function websiteSchema() {
+export function websiteSchema(data: SiteData = defaultSiteData) {
+  const { site } = data;
   return {
     '@type': 'WebSite',
     '@id': WEBSITE_ID,
@@ -69,12 +76,13 @@ export function websiteSchema() {
   };
 }
 
-export function serviceSchema(input: {
+export async function serviceSchema(input: {
   name: string;
   description: string;
   path: string;
   serviceType?: string;
 }) {
+  const { serviceAreas } = await getSiteData();
   return {
     '@type': 'Service',
     name: input.name,
@@ -130,7 +138,9 @@ export function articleSchema(article: Article) {
     keywords: article.tags.join(', '),
     // Google rejects SVG here, so vector placeholders resolve to the PNG.
     image: socialImageUrl({ url: article.featuredImage.src }),
-    author: { '@id': ORG_ID },
+    author: article.author
+      ? { '@type': 'Person', name: article.author }
+      : { '@id': ORG_ID },
     publisher: { '@id': ORG_ID },
   };
 }

@@ -3,10 +3,11 @@ import { SolutionCard } from '@/components/cards/SolutionCard';
 import { ButtonLink } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import type { Solution } from '@/content/types';
-import { cta, quoteLinks } from '@/lib/site';
+import { quoteLinks } from '@/lib/site';
+import { getSiteData } from '@/cms/site';
 
 /** Shared between the homepage (section 4) and /solutions. */
-export function SolutionsGrid({
+export async function SolutionsGrid({
   solutions,
   withHeading = true,
   withCta = true,
@@ -17,8 +18,13 @@ export function SolutionsGrid({
   withCta?: boolean;
   tone?: 'white' | 'soft';
 }) {
+  const { cta } = await getSiteData();
   return (
-    <Section tone={tone} labelledBy={withHeading ? 'solutions-title' : undefined} width="wide">
+    <Section
+      tone={tone}
+      labelledBy={withHeading ? 'solutions-title' : undefined}
+      width="wide"
+    >
       {withHeading && (
         <SectionHeading
           id="solutions-title"

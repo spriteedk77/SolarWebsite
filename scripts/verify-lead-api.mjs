@@ -1,31 +1,11 @@
 #!/usr/bin/env node
-/**
- * Exercises /api/lead's validation contract without ever delivering a real
- * lead — every case that reaches full validation carries `testMode=1`.
- *
- * Safety gate: the one request shaped as a fully valid submission — the only
- * shape that reaches the delivery step — is sent exactly once, as the first
- * case, and its result gates everything after it. If the server does not echo
- * back `{ok:true, testMode:true}`, the script aborts immediately instead of
- * running the rest of the suite. testMode requires the server's own
- * LEAD_TEST_MODE=1 env var (see src/app/api/lead/route.ts) — every other case
- * below fails validation before reaching delivery, so only this one matters.
- *
- * Residual risk, stated plainly: that one request is real HTTP traffic to
- * /api/lead. If somehow run against a deployment that has LEAD_WEBHOOK_URL
- * set but LEAD_TEST_MODE unset, it would deliver one obviously-fake lead
- * (name "CI ทดสอบระบบ", a fixed dummy phone number) before this script
- * detects the mismatch and stops. Never configure LEAD_WEBHOOK_URL in the
- * environment this script runs in — CI has no reason to hold that secret.
- *
- * Usage:
- *   BASE_URL=http://127.0.0.1:3000 node scripts/verify-lead-api.mjs
- *
- * Run this only against a server started with LEAD_TEST_MODE=1 — never
- * against a real deployment.
- */
+/** Loopback CI validation only. testMode=1 never delivers or stores a lead.
+ * The server must explicitly enable LEAD_TEST_MODE=1; otherwise it rejects 403. */
 
 const BASE = process.env.BASE_URL ?? 'http://127.0.0.1:3000';
+const target = new URL(BASE);
+if (!['127.0.0.1', 'localhost', '[::1]'].includes(target.hostname))
+  throw new Error('Lead verification is restricted to a loopback CI server');
 const URL_ = `${BASE}/api/lead`;
 
 function baseFields(fd) {
@@ -96,7 +76,11 @@ const cases = [
     name: 'disallowed attachment MIME type',
     build: () => {
       const fd = baseFields(new FormData());
-      fd.append('bill', new Blob(['MZ'], { type: 'application/x-msdownload' }), 'a.exe');
+      fd.append(
+        'bill',
+        new Blob(['MZ'], { type: 'application/x-msdownload' }),
+        'a.exe',
+      );
       return fd;
     },
     expectStatus: 415,
@@ -106,7 +90,11 @@ const cases = [
     name: 'attachment over the per-file limit',
     build: () => {
       const fd = baseFields(new FormData());
-      fd.append('bill', new Blob([new Uint8Array(12 * 1024 * 1024)], { type: 'image/png' }), 'big.png');
+      fd.append(
+        'bill',
+        new Blob([new Uint8Array(3 * 1024 * 1024 + 1)], { type: 'image/png' }),
+        'big.png',
+      );
       return fd;
     },
     expectStatus: 413,
@@ -116,7 +104,19 @@ const cases = [
     name: 'valid image attachment accepted',
     build: () => {
       const fd = baseFields(new FormData());
-      fd.append('bill', new Blob([new Uint8Array(4)], { type: 'image/png' }), 'ok.png');
+      fd.append(
+        'bill',
+        new Blob(
+          [
+            Buffer.from(
+              'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=',
+              'base64',
+            ),
+          ],
+          { type: 'image/png' },
+        ),
+        'ok.png',
+      );
       return fd;
     },
     expectStatus: 200,
@@ -124,17 +124,63 @@ const cases = [
   },
 ];
 
+cases.push({
+  name: 'spoofed image rejected',
+  build: () => {
+    const fd = baseFields(new FormData());
+    fd.append(
+      'bill',
+      new Blob(['MZ executable'], { type: 'image/png' }),
+      'fake.png',
+    );
+    return fd;
+  },
+  expectStatus: 415,
+  expectOk: false,
+});
+
+cases.push({
+  name: 'too many attachments rejected before decoding',
+  build: () => {
+    const fd = baseFields(new FormData());
+    for (let i = 0; i < 9; i++)
+      fd.append('bill', new Blob(['x'], { type: 'image/png' }), 'a.png');
+    return fd;
+  },
+  expectStatus: 413,
+  expectOk: false,
+});
+cases.push({
+  name: 'total attachments exceed 3 MiB',
+  build: () => {
+    const fd = baseFields(new FormData());
+    for (let i = 0; i < 2; i++)
+      fd.append(
+        'bill',
+        new Blob([new Uint8Array(1600 * 1024)], { type: 'image/png' }),
+        'a.png',
+      );
+    return fd;
+  },
+  expectStatus: 413,
+  expectOk: false,
+});
+
 let failed = 0;
 for (const c of cases) {
   const { status, body } = await post(c.build());
   const ok = status === c.expectStatus && body?.ok === c.expectOk;
 
   if (c.isSafetyGate && (!ok || body?.testMode !== true)) {
-    console.error(`FAIL  ${c.name.padEnd(38)} expected ${c.expectStatus}/${c.expectOk}, got ${status}/${JSON.stringify(body)}`);
-    console.error('\n[verify-lead-api] SAFETY GATE FAILED — testMode did not engage.');
+    console.error(
+      `FAIL  ${c.name.padEnd(38)} expected ${c.expectStatus}/${c.expectOk}, got ${status}/${JSON.stringify(body)}`,
+    );
+    console.error(
+      '\n[verify-lead-api] SAFETY GATE FAILED — testMode did not engage.',
+    );
     console.error(
       '  This server is not running with LEAD_TEST_MODE=1. Stopping here — running ' +
-        'the remaining cases would risk creating further real deliveries.',
+        'no further requests were sent.',
     );
     process.exit(1);
   }
@@ -151,4 +197,6 @@ if (failed) {
   process.exit(1);
 }
 
-console.log(`[verify-lead-api] OK — all ${cases.length} case(s) passed, nothing delivered.`);
+console.log(
+  `[verify-lead-api] OK — all ${cases.length} case(s) passed, nothing delivered.`,
+);

@@ -16,9 +16,9 @@
   --color-navy-500: #2b5583;
   --color-navy-600: #1b4269;
   --color-navy-700: #123252;
-  --color-navy-800: #0c243d;
-  --color-navy-900: #08192b;
-  --color-navy-950: #04101d;
+  --color-navy-800: #001D78;
+  --color-navy-900: #001D78;
+  --color-navy-950: #001D78;
 
   /* --- Brand: Solar Blue (primary action, links, emphasis) --------------- */
   --color-solar-50: #eff6ff;
@@ -27,8 +27,8 @@
   --color-solar-300: #8ac5fb;
   --color-solar-400: #4fa5f6;
   --color-solar-500: #2183e8;
-  --color-solar-600: #0b63ce;
-  --color-solar-700: #0a4fa6;
+  --color-solar-600: #036DC9;
+  --color-solar-700: #036DC9;
   --color-solar-800: #0d4488;
   --color-solar-900: #113a71;
   --color-solar-950: #0b2447;
@@ -38,13 +38,13 @@
   --color-sky-brand: #3fa9f5;
 
   /* --- Accent: Solar Orange / Golden Yellow (energy, CTA highlight) ------ */
-  --color-amber-brand: #ffc021;
+  --color-amber-brand: #F2A323;
   --color-flare-50: #fff7ed;
   --color-flare-100: #ffedd5;
   --color-flare-200: #fed7aa;
   --color-flare-300: #fdba74;
   --color-flare-400: #fb9a3c;
-  --color-flare-500: #f2861e;
+  --color-flare-500: #F2A323;
   --color-flare-600: #dd6a0c;
   --color-flare-700: #b74e0d;
   --color-flare-800: #933f12;
@@ -55,19 +55,17 @@
   --color-line-600: #05a648;
 
   /* --- Neutrals ---------------------------------------------------------- */
-  --color-ink-900: #0f1720;
+  --color-ink-900: #001D78;
   --color-ink-700: #33414f;
   --color-ink-600: #4c5b6a;
   --color-ink-500: #64748b;
   --color-paper: #ffffff;
-  --color-paper-soft: #f6f8fb;
+  --color-paper-soft: #F4F1F8;
   --color-hairline: #e2e8f0;
 
   /* --- Typography -------------------------------------------------------- */
-  --font-sans: var(--font-noto-thai), 'Noto Sans Thai', 'IBM Plex Sans Thai',
-    -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-display: var(--font-plex-thai), 'IBM Plex Sans Thai', var(--font-noto-thai),
-    'Noto Sans Thai', sans-serif;
+  --font-sans: var(--font-prompt), 'Prompt', system-ui, sans-serif;
+  --font-display: var(--font-prompt), 'Prompt', system-ui, sans-serif;
 
   /* Thai needs more line-height and slightly larger minimums than Latin. */
   --text-caption: 0.875rem; /* 14px — smallest Thai size allowed on this site */
@@ -296,3 +294,8 @@
     background-size: 48px 48px;
   }
 }
+
+/* Prompt composition: comfortable Thai leading and bounded grid children. */
+.hero-headline { font-size: clamp(1.85rem, 3.15vw, 3.4rem); line-height: 1.5; font-weight: 600; letter-spacing: -0.025em; }
+.prose-th { max-width: 72ch; overflow-wrap: anywhere; }
+.prose-th blockquote { border-left: 3px solid var(--color-solar-600); padding-left: 1.25rem; margin-block: 1.5rem; }

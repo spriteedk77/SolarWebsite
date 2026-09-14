@@ -2,8 +2,10 @@ import { ButtonLink } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Icon } from '@/components/ui/Icon';
 import { Disclaimer } from '@/components/ui/Note';
-import { homePackage } from '@/content/th/pages';
-import { cta, disclaimers, quoteLinks } from '@/lib/site';
+import { getPromotions } from '@/content';
+import { getSiteData } from '@/cms/site';
+import { Figure } from '@/components/ui/Figure';
+import { disclaimers, quoteLinks } from '@/lib/site';
 import { formatThb } from '@/lib/utils';
 
 /**
@@ -14,7 +16,34 @@ import { formatThb } from '@/lib/utils';
  * as a standing price list. All values are pending client confirmation
  * (`home-package-promo` in src/lib/pending.ts).
  */
-export function HomePackageCard({ tone = 'light' }: { tone?: 'light' | 'dark' }) {
+export async function HomePackageCard({
+  tone = 'light',
+}: {
+  tone?: 'light' | 'dark';
+}) {
+  const { cta } = await getSiteData();
+  const [promotion] = await getPromotions();
+  if (!promotion)
+    return (
+      <div className="rounded-card border border-hairline bg-white p-6 sm:p-8">
+        <h3 className="text-h3">ประเมินระบบสำหรับบ้านของคุณ</h3>
+        <p className="mt-4 text-body text-ink-700">
+          ขนาดระบบ แผง และแบตเตอรี่ต้องเหมาะกับการใช้ไฟจริง
+          ส่งบิลค่าไฟและรูปหลังคาเพื่อรับข้อเสนอจากทีมงาน
+        </p>
+        <ButtonLink href={quoteLinks.home} variant="primary" className="mt-6">
+          {cta.primary}
+        </ButtonLink>
+      </div>
+    );
+  const homePackage = {
+    name: promotion.title,
+    capacity: `${promotion.systemSize} kW ${promotion.phase}`,
+    panels: `${promotion.solarPanel} จำนวน ${promotion.panelQuantity} แผง`,
+    battery: promotion.battery || 'ไม่รวมแบตเตอรี่',
+    priceThb: promotion.price,
+    includes: promotion.includedServices,
+  };
   const dark = tone === 'dark';
 
   return (
@@ -27,12 +56,19 @@ export function HomePackageCard({ tone = 'light' }: { tone?: 'light' | 'dark' })
     >
       <div className="flex flex-wrap items-center gap-3">
         <Badge tone="flare">โปรโมชั่นปัจจุบัน</Badge>
-        <span className={dark ? 'text-caption text-navy-200' : 'text-caption text-ink-600'}>
+        <span
+          className={
+            dark ? 'text-caption text-navy-200' : 'text-caption text-ink-600'
+          }
+        >
           แพ็กเกจสำหรับบ้านพักอาศัย
         </span>
       </div>
 
-      <h3 className={dark ? 'mt-4 text-h2 text-white' : 'mt-4 text-h2'}>{homePackage.name}</h3>
+      {promotion.image && <Figure image={promotion.image} className="mt-5" />}
+      <h3 className={dark ? 'mt-4 text-h2 text-white' : 'mt-4 text-h2'}>
+        {homePackage.name}
+      </h3>
 
       <dl className="mt-5 grid gap-x-6 gap-y-4 sm:grid-cols-2">
         {[
@@ -42,10 +78,22 @@ export function HomePackageCard({ tone = 'light' }: { tone?: 'light' | 'dark' })
           { label: 'ระบบ', value: 'Solar + Battery สำหรับที่พักอาศัย' },
         ].map((row) => (
           <div key={row.label}>
-            <dt className={dark ? 'text-caption text-navy-200' : 'text-caption text-ink-600'}>
+            <dt
+              className={
+                dark
+                  ? 'text-caption text-navy-200'
+                  : 'text-caption text-ink-600'
+              }
+            >
               {row.label}
             </dt>
-            <dd className={dark ? 'font-semibold text-white' : 'font-semibold text-navy-900'}>
+            <dd
+              className={
+                dark
+                  ? 'font-semibold text-white'
+                  : 'font-semibold text-navy-900'
+              }
+            >
               {row.value}
             </dd>
           </div>
@@ -59,7 +107,11 @@ export function HomePackageCard({ tone = 'light' }: { tone?: 'light' | 'dark' })
             : 'mt-6 border-t border-hairline pt-6'
         }
       >
-        <p className={dark ? 'text-caption text-navy-200' : 'text-caption text-ink-600'}>
+        <p
+          className={
+            dark ? 'text-caption text-navy-200' : 'text-caption text-ink-600'
+          }
+        >
           ราคาโปรโมชั่น
         </p>
         <p className="mt-1 flex items-baseline gap-2">
@@ -72,7 +124,13 @@ export function HomePackageCard({ tone = 'light' }: { tone?: 'light' | 'dark' })
           >
             {formatThb(homePackage.priceThb)}
           </span>
-          <span className={dark ? 'text-body text-navy-200' : 'text-body text-ink-600'}>บาท</span>
+          <span
+            className={
+              dark ? 'text-body text-navy-200' : 'text-body text-ink-600'
+            }
+          >
+            บาท
+          </span>
         </p>
 
         <ul className="mt-5 space-y-2.5">
@@ -85,7 +143,10 @@ export function HomePackageCard({ tone = 'light' }: { tone?: 'light' | 'dark' })
                   : 'flex items-start gap-2.5 text-body text-ink-700'
               }
             >
-              <Icon name="check" className="mt-1.5 h-4.5 w-4.5 shrink-0 text-flare-600" />
+              <Icon
+                name="check"
+                className="mt-1.5 h-4.5 w-4.5 shrink-0 text-flare-600"
+              />
               {item}
             </li>
           ))}
@@ -93,14 +154,19 @@ export function HomePackageCard({ tone = 'light' }: { tone?: 'light' | 'dark' })
       </div>
 
       <div className="mt-7">
-        <ButtonLink href={quoteLinks.package('sigenenergy-neo')} variant="primary" size="lg" fullWidth>
+        <ButtonLink
+          href={quoteLinks.package(promotion.slug)}
+          variant="primary"
+          size="lg"
+          fullWidth
+        >
           {cta.packageEnquiry}
           <Icon name="arrow-right" className="h-5 w-5" />
         </ButtonLink>
       </div>
 
       <Disclaimer className={dark ? 'mt-4 text-navy-200' : 'mt-4'}>
-        {disclaimers.promotion}
+        {promotion.terms} {disclaimers.promotion}
       </Disclaimer>
     </div>
   );

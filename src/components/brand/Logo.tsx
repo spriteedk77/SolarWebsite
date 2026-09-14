@@ -1,3 +1,5 @@
+'use client';
+import { useSiteData } from '@/components/SiteProvider';
 import { cn } from '@/lib/utils';
 
 /**
@@ -22,7 +24,8 @@ export function Logo({
   variant?: 'dark' | 'light';
   showTagline?: boolean;
 }) {
-  const wordColor = variant === 'light' ? '#ffffff' : '#08192b';
+  const { site } = useSiteData();
+  const wordColor = variant === 'light' ? '#ffffff' : 'var(--color-navy-900)';
   const subColor = variant === 'light' ? '#bcdcfd' : '#4c5b6a';
 
   return (
@@ -33,14 +36,18 @@ export function Logo({
         aria-hidden="true"
         focusable="false"
       >
-        <rect width="48" height="48" rx="11" fill="#08192b" />
+        <rect width="48" height="48" rx="11" fill="var(--color-navy-900)" />
         {/* sun */}
-        <circle cx="24" cy="18.5" r="6.5" fill="#ffc021" />
-        <g stroke="#f2861e" strokeWidth="1.8" strokeLinecap="round">
+        <circle cx="24" cy="18.5" r="6.5" fill="var(--color-flare-500)" />
+        <g
+          stroke="var(--color-flare-500)"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+        >
           <path d="M24 6.5v2.4M24 28.1v2.4M11.7 18.5h2.4M33.9 18.5h2.4M15.3 9.8l1.7 1.7M31 26l1.7 1.7M32.7 9.8 31 11.5M17 26l-1.7 1.7" />
         </g>
         {/* array */}
-        <path d="M9 39.5 13.5 29h21L39 39.5z" fill="#0b63ce" />
+        <path d="M9 39.5 13.5 29h21L39 39.5z" fill="var(--color-solar-600)" />
         <g stroke="#8ac5fb" strokeWidth="1.2" strokeLinecap="round">
           <path d="M16.6 29 13.2 39.5M24 29v10.5M31.4 29l3.4 10.5M12.2 33.2h23.6" />
         </g>
@@ -52,14 +59,14 @@ export function Logo({
             minimum; no other orange text on the site relies on that exemption. */}
         <span className="font-display text-[1.35rem] font-bold tracking-tight">
           <span style={{ color: wordColor }}>NP88</span>{' '}
-          <span style={{ color: '#f2861e' }}>Solar</span>
+          <span style={{ color: 'var(--color-flare-500)' }}>Solar</span>
         </span>
         {showTagline && (
           <span
             className="mt-1 text-[0.7rem] font-medium tracking-wide"
             style={{ color: subColor }}
           >
-            Engineering Your Energy Future.
+            {site.tagline}
           </span>
         )}
       </span>

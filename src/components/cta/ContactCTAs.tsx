@@ -1,6 +1,9 @@
+'use client';
+
 import { ButtonLink } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
-import { contact, cta, quoteLinks } from '@/lib/site';
+import { quoteLinks } from '@/lib/site';
+import { useSiteData } from '@/components/SiteProvider';
 import { cn } from '@/lib/utils';
 
 type Size = 'md' | 'lg';
@@ -19,6 +22,7 @@ export function PhoneCTA({
   label?: string;
   fullWidth?: boolean;
 }) {
+  const { contact } = useSiteData();
   return (
     <ButtonLink
       href={contact.phoneHref}
@@ -52,6 +56,7 @@ export function LineCTA({
   label?: string;
   fullWidth?: boolean;
 }) {
+  const { contact } = useSiteData();
   return (
     <ButtonLink
       href={contact.lineUrl}
@@ -74,7 +79,7 @@ export function LineCTA({
  */
 export function ContactActions({
   primaryHref = quoteLinks.general,
-  primaryLabel = cta.primary,
+  primaryLabel,
   tone = 'light',
   className,
 }: {
@@ -83,14 +88,25 @@ export function ContactActions({
   tone?: 'light' | 'dark';
   className?: string;
 }) {
+  const { cta } = useSiteData();
   return (
-    <div className={cn('flex flex-col gap-3 sm:flex-row sm:flex-wrap', className)}>
-      <ButtonLink href={primaryHref} variant="primary" size="lg" data-analytics="cta-quote">
-        {primaryLabel}
+    <div
+      className={cn('flex flex-col gap-3 sm:flex-row sm:flex-wrap', className)}
+    >
+      <ButtonLink
+        href={primaryHref}
+        variant="primary"
+        size="lg"
+        data-analytics="cta-quote"
+      >
+        {primaryLabel ?? cta.primary}
         <Icon name="arrow-right" className="h-5 w-5" />
       </ButtonLink>
       <LineCTA size="lg" />
-      <PhoneCTA size="lg" variant={tone === 'dark' ? 'outline-light' : 'ghost'} />
+      <PhoneCTA
+        size="lg"
+        variant={tone === 'dark' ? 'outline-light' : 'ghost'}
+      />
     </div>
   );
 }

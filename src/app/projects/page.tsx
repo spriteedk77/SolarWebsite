@@ -12,7 +12,8 @@ import { JsonLd } from '@/components/seo/JsonLd';
 import { getProjects } from '@/content';
 import { buildMetadata, absoluteUrl } from '@/lib/seo';
 import { breadcrumbSchema, graph } from '@/lib/schema';
-import { cta, disclaimers, quoteLinks } from '@/lib/site';
+import { disclaimers, quoteLinks } from '@/lib/site';
+import { getSiteData } from '@/cms/site';
 
 const crumbs = [
   { name: 'หน้าแรก', path: '/' },
@@ -32,6 +33,7 @@ export const metadata: Metadata = buildMetadata({
 });
 
 export default async function ProjectsPage() {
+  const { cta } = await getSiteData();
   const projects = await getProjects();
 
   const itemList = {
@@ -52,7 +54,10 @@ export default async function ProjectsPage() {
         eyebrow="ผลงานติดตั้ง"
         title="ระบบที่ติดตั้งจริง พร้อมสเปกที่ตรวจสอบได้"
         lead="แต่ละโครงการแสดงขนาดระบบ รุ่นแผง จำนวนแผง และอุปกรณ์ที่ใช้จริง เพื่อให้คุณเปรียบเทียบกับลักษณะงานของตัวเองได้ ไม่ใช่แค่ดูภาพประกอบ"
-        image={{ src: '/images/placeholder/project-commercial-wide.svg', alt: '' }}
+        image={{
+          src: '/images/placeholder/project-commercial-wide.svg',
+          alt: '',
+        }}
         actions={
           <ButtonLink href={quoteLinks.general} variant="primary" size="lg">
             {cta.primary}
@@ -68,7 +73,11 @@ export default async function ProjectsPage() {
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {projects.map((project, index) => (
-            <ProjectCard key={project.id} project={project} priority={index < 2} />
+            <ProjectCard
+              key={project.id}
+              project={project}
+              priority={index < 2}
+            />
           ))}
         </div>
 
@@ -81,7 +90,10 @@ export default async function ProjectsPage() {
         lead="ส่งบิลค่าไฟและข้อมูลพื้นที่ ทีมงานจะประเมินเบื้องต้นและเสนอแนวทางที่เหมาะกับการใช้ไฟจริงของคุณ"
       />
 
-      <JsonLd id="schema-projects" data={graph(breadcrumbSchema(crumbs), itemList)} />
+      <JsonLd
+        id="schema-projects"
+        data={graph(breadcrumbSchema(crumbs), itemList)}
+      />
     </>
   );
 }

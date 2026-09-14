@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useSyncExternalStore, useState } from 'react';
 import Link from 'next/link';
+import { useHydrated } from '@/lib/use-hydrated';
 import { Button } from '@/components/ui/Button';
 
 /**
@@ -42,23 +43,49 @@ function save(state: ConsentState) {
   } catch {
     /* storage unavailable (private mode) — the banner simply shows again */
   }
-  window.dispatchEvent(new CustomEvent('np88:consent-change', { detail: state }));
+  window.dispatchEvent(
+    new CustomEvent('np88:consent-change', { detail: state }),
+  );
 }
 
+function subscribeConsent(listener: () => void) {
+  window.addEventListener('np88:consent-change', listener);
+  window.addEventListener('storage', listener);
+  return () => {
+    window.removeEventListener('np88:consent-change', listener);
+    window.removeEventListener('storage', listener);
+  };
+}
+function consentSnapshot() {
+  try {
+    return window.localStorage.getItem(STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+export function useConsent() {
+  const raw = useSyncExternalStore(
+    subscribeConsent,
+    consentSnapshot,
+    () => null,
+  );
+  try {
+    return raw ? (JSON.parse(raw) as ConsentState) : null;
+  } catch {
+    return null;
+  }
+}
 export function CookieConsent() {
-  const [visible, setVisible] = useState(false);
+  const consent = useConsent();
+  const mounted = useHydrated();
+  const visible = mounted && !consent;
   const [showDetail, setShowDetail] = useState(false);
   // Optional categories start switched OFF — never pre-checked.
   const [analytics, setAnalytics] = useState(false);
   const [marketing, setMarketing] = useState(false);
 
-  useEffect(() => {
-    if (!getConsent()) setVisible(true);
-  }, []);
-
   const decide = (next: { analytics: boolean; marketing: boolean }) => {
     save({ necessary: true, ...next, decidedAt: new Date().toISOString() });
-    setVisible(false);
   };
 
   if (!visible) return null;
@@ -71,15 +98,22 @@ export function CookieConsent() {
       /* Sized to stay out of the hero's way: a single line of copy and a row of
          buttons, anchored bottom-right on desktop rather than spanning the
          viewport. The full explanation lives on the cookie policy page. */
-      className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-40 px-3 pb-3 xl:inset-x-auto xl:right-6 xl:bottom-6 xl:px-0 xl:pb-0"
+      className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-40 px-3 pb-3 md:inset-x-auto md:right-6 md:bottom-6 xl:px-0 xl:pb-0"
     >
       <div className="mx-auto max-w-xl rounded-card border border-hairline bg-white p-4 shadow-card-hover sm:p-5 xl:max-w-md">
-        <h2 id="cookie-consent-title" className="text-body font-semibold text-navy-900">
+        <h2
+          id="cookie-consent-title"
+          className="text-body font-semibold text-navy-900"
+        >
           เว็บไซต์นี้ใช้คุกกี้
         </h2>
         <p className="mt-1.5 text-caption text-ink-700">
-          ใช้คุกกี้ที่จำเป็นเสมอ ส่วนคุกกี้เพื่อการวิเคราะห์และการตลาดจะใช้เมื่อคุณยินยอมเท่านั้น{' '}
-          <Link href="/cookie-policy" className="text-solar-700 underline underline-offset-2">
+          ใช้คุกกี้ที่จำเป็นเสมอ
+          ส่วนคุกกี้เพื่อการวิเคราะห์และการตลาดจะใช้เมื่อคุณยินยอมเท่านั้น{' '}
+          <Link
+            href="/cookie-policy"
+            className="text-solar-700 underline underline-offset-2"
+          >
             อ่านนโยบายคุกกี้
           </Link>
         </p>
@@ -97,8 +131,10 @@ export function CookieConsent() {
                 className="mt-1 h-5 w-5 accent-solar-600"
               />
               <label htmlFor="cookie-necessary" className="text-caption">
-                <span className="font-semibold text-navy-900">คุกกี้ที่จำเป็น</span> — จำเป็นต่อการทำงานพื้นฐานของเว็บไซต์
-                ไม่สามารถปิดได้
+                <span className="font-semibold text-navy-900">
+                  คุกกี้ที่จำเป็น
+                </span>{' '}
+                — จำเป็นต่อการทำงานพื้นฐานของเว็บไซต์ ไม่สามารถปิดได้
               </label>
             </div>
 
@@ -111,8 +147,10 @@ export function CookieConsent() {
                 className="mt-1 h-5 w-5 accent-solar-600"
               />
               <label htmlFor="cookie-analytics" className="text-caption">
-                <span className="font-semibold text-navy-900">คุกกี้เพื่อการวิเคราะห์</span> —
-                ช่วยให้เราเข้าใจว่าผู้เข้าชมใช้งานเว็บไซต์อย่างไร
+                <span className="font-semibold text-navy-900">
+                  คุกกี้เพื่อการวิเคราะห์
+                </span>{' '}
+                — ช่วยให้เราเข้าใจว่าผู้เข้าชมใช้งานเว็บไซต์อย่างไร
               </label>
             </div>
 
@@ -125,8 +163,10 @@ export function CookieConsent() {
                 className="mt-1 h-5 w-5 accent-solar-600"
               />
               <label htmlFor="cookie-marketing" className="text-caption">
-                <span className="font-semibold text-navy-900">คุกกี้เพื่อการตลาด</span> —
-                ใช้เพื่อวัดผลและนำเสนอเนื้อหาที่เกี่ยวข้อง
+                <span className="font-semibold text-navy-900">
+                  คุกกี้เพื่อการตลาด
+                </span>{' '}
+                — ใช้เพื่อวัดผลและนำเสนอเนื้อหาที่เกี่ยวข้อง
               </label>
             </div>
           </fieldset>

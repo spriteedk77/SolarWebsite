@@ -44,14 +44,15 @@ export const metadata: Metadata = buildMetadata({
 });
 
 export default async function HomePage() {
-  const [solutions, businessTypes, projects, brands, articles, faqs] = await Promise.all([
-    getSolutions(),
-    getBusinessTypes(),
-    getFeaturedProjects(undefined, 3),
-    getBrands(),
-    getArticles(),
-    getFaqs(),
-  ]);
+  const [solutions, businessTypes, projects, brands, articles, faqs] =
+    await Promise.all([
+      getSolutions(),
+      getBusinessTypes(),
+      getFeaturedProjects(undefined, 3),
+      getBrands(),
+      getArticles(),
+      getFaqs(),
+    ]);
 
   return (
     <>
@@ -87,7 +88,12 @@ export default async function HomePage() {
       <BrandsSection brands={brands} />
 
       {/* 11 — Knowledge centre */}
-      <KnowledgeSection articles={articles.slice(0, 3)} />
+      <KnowledgeSection
+        articles={(articles.some((a) => a.featured)
+          ? articles.filter((a) => a.featured)
+          : articles
+        ).slice(0, 3)}
+      />
 
       {/* 12 — FAQ */}
       <FaqSection faqs={faqs} tone="soft" />
@@ -98,7 +104,7 @@ export default async function HomePage() {
       <JsonLd
         id="schema-home"
         data={graph(
-          serviceSchema({
+          await serviceSchema({
             name: 'ออกแบบและติดตั้งระบบ Solar Rooftop',
             description:
               'บริการสำรวจ วิเคราะห์การใช้พลังงาน ออกแบบระบบ ติดตั้ง ดำเนินการด้านเอกสาร และบริการหลังการขาย สำหรับบ้าน ธุรกิจ และโรงงาน',

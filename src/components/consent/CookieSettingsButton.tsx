@@ -1,21 +1,16 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useHydrated } from '@/lib/use-hydrated';
 import { Button } from '@/components/ui/Button';
-import { getConsent, type ConsentState } from './CookieConsent';
+import { useConsent } from './CookieConsent';
 
 /**
  * Lets a visitor revisit their cookie choice from the cookie policy page.
  * Clearing the stored decision brings the consent banner back on next render.
  */
 export function CookieSettingsButton() {
-  const [consent, setConsent] = useState<ConsentState | null>(null);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setConsent(getConsent());
-    setMounted(true);
-  }, []);
+  const consent = useConsent();
+  const mounted = useHydrated();
 
   const reset = () => {
     try {

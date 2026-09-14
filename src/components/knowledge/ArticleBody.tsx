@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { safeContentHref } from '@/cms/models';
 import type { InlineBlock } from '@/content/types';
 import { Note } from '@/components/ui/Note';
 
@@ -16,32 +17,37 @@ import { Note } from '@/components/ui/Note';
 const INLINE = /(\*\*[^*]+\*\*|\[[^\]]+\]\([^)]+\))/g;
 
 function renderInline(text: string, keyPrefix: string): React.ReactNode[] {
-  return text.split(INLINE).filter(Boolean).map((part, index) => {
-    const key = `${keyPrefix}-${index}`;
+  return text
+    .split(INLINE)
+    .filter(Boolean)
+    .map((part, index) => {
+      const key = `${keyPrefix}-${index}`;
 
-    if (part.startsWith('**') && part.endsWith('**')) {
-      return <strong key={key}>{part.slice(2, -2)}</strong>;
-    }
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return <strong key={key}>{part.slice(2, -2)}</strong>;
+      }
 
-    const link = /^\[([^\]]+)\]\(([^)]+)\)$/.exec(part);
-    if (link) {
-      const [, label, href] = link;
-      if (href.startsWith('/')) {
+      const link = /^\[([^\]]+)\]\(([^)]+)\)$/.exec(part);
+      if (link) {
+        const [, label, rawHref] = link;
+        const href = safeContentHref(rawHref);
+        if (!href) return <span key={key}>{label}</span>;
+        if (href.startsWith('/')) {
+          return (
+            <Link key={key} href={href}>
+              {label}
+            </Link>
+          );
+        }
         return (
-          <Link key={key} href={href}>
+          <a key={key} href={href} target="_blank" rel="noopener noreferrer">
             {label}
-          </Link>
+          </a>
         );
       }
-      return (
-        <a key={key} href={href} target="_blank" rel="noopener noreferrer">
-          {label}
-        </a>
-      );
-    }
 
-    return <span key={key}>{part}</span>;
-  });
+      return <span key={key}>{part}</span>;
+    });
 }
 
 export function ArticleBody({ blocks }: { blocks: InlineBlock[] }) {
@@ -65,7 +71,9 @@ export function ArticleBody({ blocks }: { blocks: InlineBlock[] }) {
             return (
               <ul key={key}>
                 {block.items.map((item, itemIndex) => (
-                  <li key={`${key}-${itemIndex}`}>{renderInline(item, `${key}-${itemIndex}`)}</li>
+                  <li key={`${key}-${itemIndex}`}>
+                    {renderInline(item, `${key}-${itemIndex}`)}
+                  </li>
                 ))}
               </ul>
             );
@@ -73,13 +81,19 @@ export function ArticleBody({ blocks }: { blocks: InlineBlock[] }) {
             return (
               <ol key={key}>
                 {block.items.map((item, itemIndex) => (
-                  <li key={`${key}-${itemIndex}`}>{renderInline(item, `${key}-${itemIndex}`)}</li>
+                  <li key={`${key}-${itemIndex}`}>
+                    {renderInline(item, `${key}-${itemIndex}`)}
+                  </li>
                 ))}
               </ol>
             );
           case 'note':
             return (
-              <Note key={key} tone={block.tone ?? 'info'} className="not-prose my-7">
+              <Note
+                key={key}
+                tone={block.tone ?? 'info'}
+                className="not-prose my-7"
+              >
                 {renderInline(block.text, key)}
               </Note>
             );
@@ -102,11 +116,16 @@ export function ArticleBody({ blocks }: { blocks: InlineBlock[] }) {
                         <tr key={`${key}-row-${rowIndex}`}>
                           {row.map((cell, cellIndex) =>
                             cellIndex === 0 ? (
-                              <th key={`${key}-${rowIndex}-${cellIndex}`} scope="row">
+                              <th
+                                key={`${key}-${rowIndex}-${cellIndex}`}
+                                scope="row"
+                              >
                                 {cell}
                               </th>
                             ) : (
-                              <td key={`${key}-${rowIndex}-${cellIndex}`}>{cell}</td>
+                              <td key={`${key}-${rowIndex}-${cellIndex}`}>
+                                {cell}
+                              </td>
                             ),
                           )}
                         </tr>
@@ -136,20 +155,34 @@ export function ArticleBody({ blocks }: { blocks: InlineBlock[] }) {
  * one in the sticky sidebar on large ones), so each needs its own heading id —
  * hence the required `id` prop rather than a hard-coded one.
  */
-export function ArticleToc({ blocks, id }: { blocks: InlineBlock[]; id: string }) {
+export function ArticleToc({
+  blocks,
+  id,
+}: {
+  blocks: InlineBlock[];
+  id: string;
+}) {
   const headings = blocks
     .map((block, index) => ({ block, index }))
-    .filter((entry): entry is { block: Extract<InlineBlock, { type: 'h2' }>; index: number } =>
-      entry.block.type === 'h2',
+    .filter(
+      (
+        entry,
+      ): entry is {
+        block: Extract<InlineBlock, { type: 'h2' }>;
+        index: number;
+      } => entry.block.type === 'h2',
     );
 
   if (headings.length < 3) return null;
 
   return (
-    <nav aria-labelledby={id} className="rounded-card border border-hairline bg-paper-soft p-5">
-      <h2 id={id} className="text-body font-semibold text-navy-900">
+    <nav
+      aria-labelledby={id}
+      className="rounded-card border border-hairline bg-paper-soft p-5"
+    >
+      <p id={id} className="text-body font-semibold text-navy-900">
         หัวข้อในบทความนี้
-      </h2>
+      </p>
       <ol className="mt-3 space-y-2 text-caption">
         {headings.map((entry) => (
           <li key={entry.index}>

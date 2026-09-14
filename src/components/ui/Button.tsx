@@ -15,23 +15,16 @@ type Size = 'sm' | 'md' | 'lg';
 
 const base =
   'inline-flex items-center justify-center gap-2 rounded-lg font-semibold ' +
-  // Thai labels have no spaces to break on cleanly; a wrapped CTA pushes the
-  // header row out of alignment, so buttons never wrap — the layout around
-  // them adapts instead.
-  'whitespace-nowrap transition-colors duration-150 ' +
+  // Long Thai labels can wrap within their container at narrow widths.
+  'max-w-full min-w-0 whitespace-normal text-center transition-colors duration-150 ' +
   'disabled:cursor-not-allowed disabled:opacity-60';
 
-/**
- * Contrast note — both accent buttons carry dark ink rather than white.
- * White on Solar Orange (#f2861e) is 2.6:1 and white on LINE green (#06c755)
- * is 2.3:1: both fail WCAG AA for body-size text. Deep navy on the same
- * backgrounds reads 7.5:1 and 8.5:1, so the brand colours stay exactly as they
- * are and the labels become legible instead of merely visible.
- */
+/** Accent buttons use dark navy text for readable contrast. */
 const variants: Record<Variant, string> = {
   // Solar Orange is the single highest-priority action on any page.
   // Hover/active shades are chosen to stay above 4.5:1 with the same ink.
-  primary: 'bg-flare-500 text-navy-950 hover:bg-flare-400 active:bg-flare-600 shadow-card',
+  primary:
+    'bg-flare-500 text-navy-950 hover:bg-flare-400 active:bg-flare-600 shadow-card',
   secondary: 'bg-solar-600 text-white hover:bg-solar-700 active:bg-solar-800',
   ghost:
     'bg-white text-navy-900 border border-hairline hover:border-solar-400 hover:text-solar-700',
@@ -58,7 +51,10 @@ type CommonProps = {
 type LinkProps = CommonProps & {
   href: string;
   external?: boolean;
-} & Omit<React.ComponentPropsWithoutRef<'a'>, 'href' | 'className' | 'children'>;
+} & Omit<
+    React.ComponentPropsWithoutRef<'a'>,
+    'href' | 'className' | 'children'
+  >;
 
 type ButtonProps = CommonProps &
   Omit<React.ComponentPropsWithoutRef<'button'>, 'className' | 'children'>;
@@ -73,14 +69,22 @@ export function ButtonLink({
   fullWidth,
   ...rest
 }: LinkProps) {
-  const classes = cn(base, variants[variant], sizes[size], fullWidth && 'w-full', className);
+  const classes = cn(
+    base,
+    variants[variant],
+    sizes[size],
+    fullWidth && 'w-full',
+    className,
+  );
 
   if (external || href.startsWith('http') || href.startsWith('tel:')) {
     return (
       <a
         href={href}
         className={classes}
-        {...(href.startsWith('http') ? { rel: 'noopener noreferrer', target: '_blank' } : {})}
+        {...(href.startsWith('http')
+          ? { rel: 'noopener noreferrer', target: '_blank' }
+          : {})}
         {...rest}
       >
         {children}
@@ -107,7 +111,13 @@ export function Button({
   return (
     <button
       type={type}
-      className={cn(base, variants[variant], sizes[size], fullWidth && 'w-full', className)}
+      className={cn(
+        base,
+        variants[variant],
+        sizes[size],
+        fullWidth && 'w-full',
+        className,
+      )}
       {...rest}
     >
       {children}

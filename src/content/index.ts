@@ -1,3 +1,10 @@
+import { usesSanity } from '@/cms/client';
+import {
+  getSanityProjects,
+  getSanityArticles,
+  getSanityPromotions,
+} from '@/cms/content';
+import { getSiteData } from '@/cms/site';
 /**
  * Content loaders.
  *
@@ -13,12 +20,22 @@
  */
 
 import { defaultLocale, type Locale } from '@/lib/i18n';
-import type { Article, Faq, Product, Project, Solution, BusinessType } from './types';
+import type {
+  Article,
+  Faq,
+  Product,
+  Project,
+  Solution,
+  BusinessType,
+} from './types';
 
 import { projects as thProjects } from './th/projects';
 import { articles as thArticles } from './th/articles';
 import { products as thProducts, brands as thBrands } from './th/products';
-import { solutions as thSolutions, businessTypes as thBusinessTypes } from './th/solutions';
+import {
+  solutions as thSolutions,
+  businessTypes as thBusinessTypes,
+} from './th/solutions';
 import { faqs as thFaqs } from './th/faqs';
 
 type Bundle = {
@@ -53,8 +70,12 @@ const byNewest = <T extends { publishedAt: string }>(a: T, b: T) =>
 
 /* ----------------------------------- projects ---------------------------- */
 
-export async function getProjects(locale: Locale = defaultLocale): Promise<Project[]> {
-  return [...bundle(locale).projects].sort(byNewest);
+export async function getProjects(
+  locale: Locale = defaultLocale,
+): Promise<Project[]> {
+  return usesSanity()
+    ? getSanityProjects()
+    : [...bundle(locale).projects].sort(byNewest);
 }
 
 export async function getFeaturedProjects(
@@ -69,20 +90,24 @@ export async function getProject(
   slug: string,
   locale: Locale = defaultLocale,
 ): Promise<Project | undefined> {
-  return bundle(locale).projects.find((p) => p.slug === slug);
+  return (await getProjects(locale)).find((p) => p.slug === slug);
 }
 
 /* ----------------------------------- articles ---------------------------- */
 
-export async function getArticles(locale: Locale = defaultLocale): Promise<Article[]> {
-  return [...bundle(locale).articles].sort(byNewest);
+export async function getArticles(
+  locale: Locale = defaultLocale,
+): Promise<Article[]> {
+  return usesSanity()
+    ? getSanityArticles()
+    : [...bundle(locale).articles].sort(byNewest);
 }
 
 export async function getArticle(
   slug: string,
   locale: Locale = defaultLocale,
 ): Promise<Article | undefined> {
-  return bundle(locale).articles.find((a) => a.slug === slug);
+  return (await getArticles(locale)).find((a) => a.slug === slug);
 }
 
 export async function getRelatedArticles(
@@ -100,26 +125,47 @@ export async function getRelatedArticles(
 
 /* ----------------------------------- products ---------------------------- */
 
-export async function getProducts(locale: Locale = defaultLocale): Promise<Product[]> {
+export async function getProducts(
+  locale: Locale = defaultLocale,
+): Promise<Product[]> {
   return bundle(locale).products;
 }
 
-export async function getBrands(locale: Locale = defaultLocale): Promise<readonly string[]> {
+export async function getBrands(
+  locale: Locale = defaultLocale,
+): Promise<readonly string[]> {
   return bundle(locale).brands;
 }
 
 /* ---------------------------------- solutions ---------------------------- */
 
-export async function getSolutions(locale: Locale = defaultLocale): Promise<Solution[]> {
+export async function getSolutions(
+  locale: Locale = defaultLocale,
+): Promise<Solution[]> {
   return bundle(locale).solutions;
 }
 
-export async function getBusinessTypes(locale: Locale = defaultLocale): Promise<BusinessType[]> {
+export async function getBusinessTypes(
+  locale: Locale = defaultLocale,
+): Promise<BusinessType[]> {
   return bundle(locale).businessTypes;
 }
 
 /* ------------------------------------- faqs ------------------------------ */
 
 export async function getFaqs(locale: Locale = defaultLocale): Promise<Faq[]> {
-  return bundle(locale).faqs;
+  const { contact, serviceAreas } = await getSiteData();
+  return bundle(locale).faqs.map((faq) =>
+    faq.question.includes('ให้บริการพื้นที่ใด')
+      ? {
+          ...faq,
+          answer: `ให้บริการในพื้นที่ ${serviceAreas.map((a) => a.name).join(' ')} สำนักงานตั้งอยู่ที่${contact.addressLines.join(' ')} สอบถามทีมงานได้ที่ ${contact.phone} หรือ LINE ${contact.lineId}`,
+        }
+      : faq,
+  );
+}
+
+export async function getPromotions() {
+  // Unconfirmed snapshot prices remain in the editorial register, not a live promotion.
+  return usesSanity() ? getSanityPromotions() : [];
 }

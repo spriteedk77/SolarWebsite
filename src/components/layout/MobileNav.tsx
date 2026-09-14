@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useHydrated } from '@/lib/use-hydrated';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -8,7 +9,8 @@ import { Logo } from '@/components/brand/Logo';
 import { Icon } from '@/components/ui/Icon';
 import { ButtonLink } from '@/components/ui/Button';
 import { LineCTA, PhoneCTA } from '@/components/cta/ContactCTAs';
-import { cta, primaryNav, quoteLinks, serviceAreas } from '@/lib/site';
+import { primaryNav, quoteLinks } from '@/lib/site';
+import { useSiteData } from '@/components/SiteProvider';
 
 /**
  * Mobile navigation drawer.
@@ -25,20 +27,15 @@ import { cta, primaryNav, quoteLinks, serviceAreas } from '@/lib/site';
  * an ancestor would otherwise become the containing block for `position:fixed`.
  */
 export function MobileNav() {
-  const [open, setOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const { cta, serviceAreas } = useSiteData();
+  const mounted = useHydrated();
   const pathname = usePathname();
+  const [openPath, setOpenPath] = useState<string | null>(null);
+  const open = openPath === pathname;
+  const setOpen = (value: boolean) => setOpenPath(value ? pathname : null);
+  if (openPath && openPath !== pathname) setOpenPath(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const toggleRef = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // Close whenever the route changes.
-  useEffect(() => {
-    setOpen(false);
-  }, [pathname]);
 
   useEffect(() => {
     if (!open) return;
@@ -52,7 +49,7 @@ export function MobileNav() {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         event.preventDefault();
-        setOpen(false);
+        setOpenPath(null);
         toggleRef.current?.focus();
         return;
       }
@@ -89,7 +86,7 @@ export function MobileNav() {
       <button
         ref={toggleRef}
         type="button"
-        onClick={() => setOpen((value) => !value)}
+        onClick={() => setOpen(!open)}
         aria-expanded={open}
         aria-controls="mobile-nav-panel"
         aria-haspopup="dialog"
@@ -103,67 +100,80 @@ export function MobileNav() {
         mounted &&
         createPortal(
           <div className="fixed inset-0 z-50 xl:hidden">
-          <button
-            type="button"
-            aria-label="ปิดเมนู"
-            onClick={() => setOpen(false)}
-            className="absolute inset-0 h-full w-full cursor-default bg-navy-950/60"
-            tabIndex={-1}
-          />
-          <div
-            ref={panelRef}
-            id="mobile-nav-panel"
-            role="dialog"
-            aria-modal="true"
-            aria-label="เมนูหลัก"
-            className="absolute inset-y-0 right-0 flex w-full max-w-sm flex-col overflow-y-auto bg-white shadow-2xl"
-          >
-            <div className="flex items-center justify-between border-b border-hairline px-5 py-4">
-              <Logo />
-              <button
-                type="button"
-                onClick={() => {
-                  setOpen(false);
-                  toggleRef.current?.focus();
-                }}
-                className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-hairline text-navy-900"
-              >
-                <Icon name="close" className="h-6 w-6" />
-                <span className="sr-only">ปิดเมนู</span>
-              </button>
-            </div>
+            <button
+              type="button"
+              aria-label="ปิดเมนู"
+              onClick={() => setOpen(false)}
+              className="absolute inset-0 h-full w-full cursor-default bg-navy-950/60"
+              tabIndex={-1}
+            />
+            <div
+              ref={panelRef}
+              id="mobile-nav-panel"
+              role="dialog"
+              aria-modal="true"
+              aria-label="เมนูหลัก"
+              className="absolute inset-y-0 right-0 flex w-full max-w-sm flex-col overflow-y-auto bg-white shadow-2xl"
+            >
+              <div className="flex items-center justify-between border-b border-hairline px-5 py-4">
+                <Logo />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOpen(false);
+                    toggleRef.current?.focus();
+                  }}
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-hairline text-navy-900"
+                >
+                  <Icon name="close" className="h-6 w-6" />
+                  <span className="sr-only">ปิดเมนู</span>
+                </button>
+              </div>
 
-            <nav aria-label="เมนูหลัก" className="flex-1 px-5 py-4">
-              <ul className="flex flex-col">
-                {primaryNav.map((item) => (
-                  <li key={item.href} className="border-b border-hairline/70 last:border-0">
-                    <Link
-                      href={item.href}
-                      aria-current={isCurrent(item.href) ? 'page' : undefined}
-                      className="flex flex-col gap-0.5 py-3.5 aria-[current=page]:text-solar-700"
+              <nav aria-label="เมนูหลัก" className="flex-1 px-5 py-4">
+                <ul className="flex flex-col">
+                  {primaryNav.map((item) => (
+                    <li
+                      key={item.href}
+                      className="border-b border-hairline/70 last:border-0"
                     >
-                      <span className="font-semibold text-navy-900">{item.label}</span>
-                      {item.hint && (
-                        <span className="text-caption text-ink-600">{item.hint}</span>
-                      )}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+                      <Link
+                        href={item.href}
+                        aria-current={isCurrent(item.href) ? 'page' : undefined}
+                        className="flex flex-col gap-0.5 py-3.5 aria-[current=page]:text-solar-700"
+                      >
+                        <span className="font-semibold text-navy-900">
+                          {item.label}
+                        </span>
+                        {item.hint && (
+                          <span className="text-caption text-ink-600">
+                            {item.hint}
+                          </span>
+                        )}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
 
-              <p className="mt-6 text-caption text-ink-600">
-                พื้นที่ให้บริการ: {serviceAreas.map((a) => a.name).join(' · ')}
-              </p>
-            </nav>
+                <p className="mt-6 text-caption text-ink-600">
+                  พื้นที่ให้บริการ:{' '}
+                  {serviceAreas.map((a) => a.name).join(' · ')}
+                </p>
+              </nav>
 
-            <div className="sticky bottom-0 space-y-2.5 border-t border-hairline bg-white px-5 py-4">
-              <ButtonLink href={quoteLinks.general} variant="primary" size="lg" fullWidth>
-                {cta.primary}
-              </ButtonLink>
-              <LineCTA size="lg" fullWidth />
-              <PhoneCTA size="lg" fullWidth />
+              <div className="sticky bottom-0 space-y-2.5 border-t border-hairline bg-white px-5 py-4">
+                <ButtonLink
+                  href={quoteLinks.general}
+                  variant="primary"
+                  size="lg"
+                  fullWidth
+                >
+                  {cta.primary}
+                </ButtonLink>
+                <LineCTA size="lg" fullWidth />
+                <PhoneCTA size="lg" fullWidth />
+              </div>
             </div>
-          </div>
           </div>,
           document.body,
         )}

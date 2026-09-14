@@ -3,11 +3,13 @@ import { Logo } from '@/components/brand/Logo';
 import { ButtonLink } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { Container } from '@/components/ui/Container';
-import { contact, cta, quoteLinks, serviceAreas } from '@/lib/site';
+import { quoteLinks } from '@/lib/site';
+import { getSiteData } from '@/cms/site';
 import { DesktopNav } from './DesktopNav';
 import { MobileNav } from './MobileNav';
 
-export function Header() {
+export async function Header() {
+  const { contact, cta, serviceAreas } = await getSiteData();
   return (
     // Solid background on purpose: a backdrop-filter here would create a
     // containing block and trap any `position: fixed` descendant (the mobile
@@ -17,7 +19,7 @@ export function Header() {
       <div className="hidden border-b border-hairline bg-navy-900 text-navy-100 xl:block">
         <Container width="wide">
           <div className="flex h-9 items-center justify-between text-caption">
-            <p className="flex items-center gap-2">
+            <p className="flex shrink-0 items-center gap-2">
               <Icon name="map-pin" className="h-4 w-4 text-sky-brand" />
               ให้บริการ {serviceAreas.map((area) => area.name).join(' · ')}
             </p>
@@ -45,7 +47,11 @@ export function Header() {
 
       <Container width="wide">
         <div className="flex h-[4.5rem] items-center justify-between gap-4">
-          <Link href="/" className="shrink-0" aria-label="NP88 Solar — กลับสู่หน้าแรก">
+          <Link
+            href="/"
+            className="shrink-0"
+            aria-label="NP88 Solar — กลับสู่หน้าแรก"
+          >
             <Logo />
           </Link>
 
@@ -61,7 +67,9 @@ export function Header() {
             >
               <Icon name="line" className="h-5 w-5" />
               <span className="hidden sm:inline">LINE</span>
-              <span className="sr-only">แชตกับ NP88 Solar ทาง LINE {contact.lineId}</span>
+              <span className="sr-only">
+                แชตกับ NP88 Solar ทาง LINE {contact.lineId}
+              </span>
             </a>
 
             {/* Visibility lives on a wrapper, not on the button's own class list:
@@ -69,7 +77,7 @@ export function Header() {
                 utilities, so whichever Tailwind emits last would win. */}
             <div className="hidden xl:block">
               <ButtonLink href={quoteLinks.general} variant="primary">
-                {cta.primaryShort}
+                <span className="whitespace-nowrap">{cta.primaryShort}</span>
                 <Icon name="arrow-right" className="h-5 w-5" />
               </ButtonLink>
             </div>

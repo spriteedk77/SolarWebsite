@@ -15,8 +15,14 @@ import { JsonLd } from '@/components/seo/JsonLd';
 
 import { getBusinessTypes, getFaqs, getProjects } from '@/content';
 import { buildMetadata } from '@/lib/seo';
-import { breadcrumbSchema, faqSchema, graph, serviceSchema } from '@/lib/schema';
-import { cta, disclaimers, quoteLinks } from '@/lib/site';
+import {
+  breadcrumbSchema,
+  faqSchema,
+  graph,
+  serviceSchema,
+} from '@/lib/schema';
+import { disclaimers, quoteLinks } from '@/lib/site';
+import { getSiteData } from '@/cms/site';
 
 const crumbs = [
   { name: 'หน้าแรก', path: '/' },
@@ -24,7 +30,8 @@ const crumbs = [
 ];
 
 export const metadata: Metadata = buildMetadata({
-  title: 'Solar Rooftop สำหรับธุรกิจและโรงงาน — ลดค่าไฟด้วยระบบที่ออกแบบจากโหลดจริง',
+  title:
+    'Solar Rooftop สำหรับธุรกิจและโรงงาน — ลดค่าไฟด้วยระบบที่ออกแบบจากโหลดจริง',
   description:
     'ออกแบบและติดตั้ง Solar Rooftop สำหรับโรงงาน คลังสินค้า สำนักงาน ร้านค้า ร้านอาหาร คลินิก และ SME ในเชียงใหม่และภาคเหนือ วิเคราะห์บิลค่าไฟและโหลดจริงก่อนเสนอขนาดระบบ',
   path: '/solar-business',
@@ -80,6 +87,7 @@ const assessmentInputs = [
 ];
 
 export default async function SolarBusinessPage() {
+  const { cta } = await getSiteData();
   const [types, projects, faqs] = await Promise.all([
     getBusinessTypes(),
     getProjects(),
@@ -132,8 +140,12 @@ export default async function SolarBusinessPage() {
                   <span className="inline-flex h-11 w-11 items-center justify-center rounded-lg bg-solar-50 text-solar-700">
                     <Icon name={benefit.icon} className="h-5.5 w-5.5" />
                   </span>
-                  <h3 className="mt-3 text-body font-semibold text-navy-900">{benefit.title}</h3>
-                  <p className="mt-1.5 text-caption text-ink-700">{benefit.body}</p>
+                  <h3 className="mt-3 text-body font-semibold text-navy-900">
+                    {benefit.title}
+                  </h3>
+                  <p className="mt-1.5 text-caption text-ink-700">
+                    {benefit.body}
+                  </p>
                 </li>
               ))}
             </ul>
@@ -169,14 +181,24 @@ export default async function SolarBusinessPage() {
             />
             <ul className="mt-7 space-y-3">
               {assessmentInputs.map((input) => (
-                <li key={input} className="flex items-start gap-3 text-body text-ink-700">
-                  <Icon name="check" className="mt-1.5 h-5 w-5 shrink-0 text-flare-600" />
+                <li
+                  key={input}
+                  className="flex items-start gap-3 text-body text-ink-700"
+                >
+                  <Icon
+                    name="check"
+                    className="mt-1.5 h-5 w-5 shrink-0 text-flare-600"
+                  />
                   {input}
                 </li>
               ))}
             </ul>
             <div className="mt-8">
-              <ButtonLink href={quoteLinks.business} variant="primary" size="lg">
+              <ButtonLink
+                href={quoteLinks.business}
+                variant="primary"
+                size="lg"
+              >
                 {cta.primary}
                 <Icon name="arrow-right" className="h-5 w-5" />
               </ButtonLink>
@@ -210,8 +232,12 @@ export default async function SolarBusinessPage() {
                       {index + 1}
                     </span>
                     <div>
-                      <h4 className="text-body font-semibold text-navy-900">{item.title}</h4>
-                      <p className="mt-1 text-caption text-ink-700">{item.body}</p>
+                      <h4 className="text-body font-semibold text-navy-900">
+                        {item.title}
+                      </h4>
+                      <p className="mt-1 text-caption text-ink-700">
+                        {item.body}
+                      </p>
                     </div>
                   </li>
                 ))}
@@ -230,7 +256,9 @@ export default async function SolarBusinessPage() {
       {/* Three keeps the row complete at every breakpoint; the filter is kept
           so a future residential project does not leak onto the business page. */}
       <FeaturedProjects
-        projects={projects.filter((p) => p.customerType !== 'residential').slice(0, 3)}
+        projects={projects
+          .filter((p) => p.customerType !== 'residential')
+          .slice(0, 3)}
       />
 
       <EngineeringSection />
@@ -247,7 +275,7 @@ export default async function SolarBusinessPage() {
         id="schema-business"
         data={graph(
           breadcrumbSchema(crumbs),
-          serviceSchema({
+          await serviceSchema({
             name: 'Solar Rooftop สำหรับธุรกิจและโรงงาน',
             description:
               'ออกแบบและติดตั้งระบบ Solar Rooftop สำหรับโรงงาน คลังสินค้า สำนักงาน ร้านค้า ร้านอาหาร คลินิก และธุรกิจ SME',

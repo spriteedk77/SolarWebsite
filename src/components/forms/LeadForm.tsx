@@ -5,9 +5,20 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { LineCTA, PhoneCTA } from '@/components/cta/ContactCTAs';
-import { contact, cta, serviceAreas } from '@/lib/site';
-import { packageMessage, segmentPlaceType, type LeadSegment } from '@/lib/quote-params';
+import { useSiteData } from '@/components/SiteProvider';
+import {
+  packageMessage,
+  segmentPlaceType,
+  type LeadSegment,
+} from '@/lib/quote-params';
 import { cn } from '@/lib/utils';
+import {
+  MAX_FILES,
+  MAX_FILE_BYTES,
+  MAX_TOTAL_UPLOAD_BYTES,
+  UPLOAD_ACCEPT,
+} from '@/lib/upload-policy';
+import { SpamChallenge } from './SpamChallenge';
 
 /**
  * Solar assessment request form.
@@ -32,9 +43,8 @@ import { cn } from '@/lib/utils';
  *  the lead to arrive, and a <noscript> panel says so with phone and LINE.
  */
 
-const MAX_FILES = 8;
-const MAX_FILE_MB = 10;
-const ACCEPTED = '.pdf,.jpg,.jpeg,.png,.webp,.heic';
+const MAX_FILE_MB = MAX_FILE_BYTES / 1024 / 1024;
+const ACCEPTED = UPLOAD_ACCEPT;
 
 const placeTypes = [
   'บ้านพักอาศัย',
@@ -79,13 +89,18 @@ export function LeadForm({
   submitted?: boolean;
   submitError?: string;
 }) {
+  const { contact, cta, serviceAreas } = useSiteData();
   const isStaticPreview = process.env.NEXT_PUBLIC_STATIC_PREVIEW === '1';
   const [errors, setErrors] = useState<Errors>({});
   const [status, setStatus] = useState<Status>(
     submitted ? 'success' : submitError ? 'error' : 'idle',
   );
   const [serverMessage, setServerMessage] = useState(submitError ?? '');
-  const [fileNames, setFileNames] = useState<{ bill: string[]; roof: string[] }>({
+  const [challengeKey, setChallengeKey] = useState(0);
+  const [fileNames, setFileNames] = useState<{
+    bill: string[];
+    roof: string[];
+  }>({
     bill: [],
     roof: [],
   });
@@ -106,15 +121,19 @@ export function LeadForm({
     else if (digits.length < 9 || digits.length > 10)
       next.phone = 'กรุณากรอกเบอร์โทรศัพท์ให้ครบ เช่น 095-697-1915';
 
-    if (!data.get('consent')) next.consent = 'กรุณายินยอมให้เก็บและใช้ข้อมูลก่อนส่งแบบฟอร์ม';
+    if (!data.get('consent'))
+      next.consent = 'กรุณายินยอมให้เก็บและใช้ข้อมูลก่อนส่งแบบฟอร์ม';
 
     const files = [...data.getAll('bill'), ...data.getAll('roof')].filter(
       (f): f is File => f instanceof File && f.size > 0,
     );
-    if (files.length > MAX_FILES) next.files = `แนบไฟล์ได้ไม่เกิน ${MAX_FILES} ไฟล์`;
+    if (files.length > MAX_FILES)
+      next.files = `แนบไฟล์ได้ไม่เกิน ${MAX_FILES} ไฟล์`;
     else if (files.some((f) => f.size > MAX_FILE_MB * 1024 * 1024))
       next.files = `แต่ละไฟล์ต้องมีขนาดไม่เกิน ${MAX_FILE_MB} MB`;
 
+    if (files.reduce((total, f) => total + f.size, 0) > MAX_TOTAL_UPLOAD_BYTES)
+      next.files = 'ไฟล์แนบทั้งหมดรวมกันต้องไม่เกิน 3 MB';
     return next;
   };
 
@@ -147,11 +166,16 @@ export function LeadForm({
 
     try {
       const response = await fetch('/api/lead', { method: 'POST', body: data });
-      const result = (await response.json()) as { ok: boolean; message?: string };
+      const result = (await response.json()) as {
+        ok: boolean;
+        message?: string;
+      };
 
       if (!response.ok || !result.ok) {
         setStatus('error');
-        setServerMessage(result.message ?? 'ส่งข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง');
+        setServerMessage(
+          result.message ?? 'ส่งข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง',
+        );
         return;
       }
 
@@ -160,8 +184,11 @@ export function LeadForm({
       setFileNames({ bill: [], roof: [] });
     } catch {
       setStatus('error');
-      setServerMessage('เชื่อมต่อไม่สำเร็จ กรุณาลองใหม่ หรือติดต่อทีมงานทาง LINE หรือโทรศัพท์');
+      setServerMessage(
+        'เชื่อมต่อไม่สำเร็จ กรุณาลองใหม่ หรือติดต่อทีมงานทาง LINE หรือโทรศัพท์',
+      );
     } finally {
+      setChallengeKey((key) => key + 1);
       // Released on every outcome, so a failed attempt can be retried.
       submittingRef.current = false;
     }
@@ -178,7 +205,8 @@ export function LeadForm({
         </span>
         <h2 className="mt-4 text-h2">ได้รับข้อมูลของคุณแล้ว</h2>
         <p className="mt-3 text-body text-ink-700">
-          ทีมงาน NP88 Solar จะตรวจสอบข้อมูลและติดต่อกลับเพื่อสอบถามรายละเอียดเพิ่มเติม
+          ทีมงาน NP88 Solar
+          จะตรวจสอบข้อมูลและติดต่อกลับเพื่อสอบถามรายละเอียดเพิ่มเติม
           หากต้องการคุยกับทีมงานทันที ติดต่อได้ทาง LINE หรือโทรศัพท์
         </p>
         <div className="mt-6 flex flex-col gap-3 sm:flex-row">
@@ -215,15 +243,15 @@ export function LeadForm({
     >
       {isStaticPreview && (
         <div className="rounded-card border border-solar-300 bg-solar-50 p-4 text-caption text-navy-900 sm:p-5">
-          หน้านี้เป็นเว็บไซต์พรีวิวบน GitHub Pages จึงยังไม่เปิดรับข้อมูลผ่านแบบฟอร์ม
-          สามารถติดต่อทีมงานได้ทาง LINE หรือโทรศัพท์ด้านล่าง
+          หน้านี้เป็นเว็บไซต์พรีวิวบน GitHub Pages
+          จึงยังไม่เปิดรับข้อมูลผ่านแบบฟอร์ม สามารถติดต่อทีมงานได้ทาง LINE
+          หรือโทรศัพท์ด้านล่าง
         </div>
       )}
       <noscript>
         <div className="rounded-card border border-flare-300 bg-flare-50 p-4 text-caption text-flare-900">
-          เบราว์เซอร์ของคุณปิดการใช้งาน JavaScript อยู่ — แบบฟอร์มยังส่งได้ตามปกติ
-          แต่จะเปลี่ยนหน้าหลังกดส่งแทนการแจ้งผลในหน้านี้ หากต้องการคุยกับทีมงานทันที
-          โทร{' '}
+          หากปิด JavaScript กรุณาติดต่อทีมงานผ่าน LINE หรือโทรศัพท์
+          เพื่อส่งข้อมูลและรับการประเมิน โทร{' '}
           <a href={contact.phoneHref} className="font-semibold underline">
             {contact.phone}
           </a>{' '}
@@ -237,7 +265,9 @@ export function LeadForm({
       {/* Context carried from the link the visitor arrived on. */}
       <input type="hidden" name="source" value={source} />
       {segment && <input type="hidden" name="segment" value={segment} />}
-      {packageSlug && <input type="hidden" name="package" value={packageSlug} />}
+      {packageSlug && (
+        <input type="hidden" name="package" value={packageSlug} />
+      )}
       {/* Error summary — focusable and announced after a failed submit. */}
       {errorList.length > 0 && (
         <div
@@ -253,7 +283,10 @@ export function LeadForm({
           <ul className="mt-2 list-disc space-y-1 pl-5 text-caption text-flare-900">
             {errorList.map(([field, message]) => (
               <li key={field}>
-                <a href={`#lead-${field}`} className="underline underline-offset-2">
+                <a
+                  href={`#lead-${field}`}
+                  className="underline underline-offset-2"
+                >
                   {message}
                 </a>
               </li>
@@ -263,9 +296,17 @@ export function LeadForm({
       )}
 
       {/* Honeypot — bots fill it, people never see it. */}
-      <div aria-hidden="true" className="absolute -left-[9999px] h-px w-px overflow-hidden">
+      <div
+        aria-hidden="true"
+        className="absolute -left-[9999px] h-px w-px overflow-hidden"
+      >
         <label htmlFor="lead-company-website">เว็บไซต์ (ไม่ต้องกรอก)</label>
-        <input id="lead-company-website" name="companyWebsite" tabIndex={-1} autoComplete="off" />
+        <input
+          id="lead-company-website"
+          name="companyWebsite"
+          tabIndex={-1}
+          autoComplete="off"
+        />
       </div>
 
       <fieldset className="space-y-5">
@@ -362,7 +403,10 @@ export function LeadForm({
         </p>
 
         {errors.files && (
-          <p id="lead-files" className="text-caption font-medium text-flare-800">
+          <p
+            id="lead-files"
+            className="text-caption font-medium text-flare-800"
+          >
             {errors.files}
           </p>
         )}
@@ -372,9 +416,11 @@ export function LeadForm({
             id="lead-bill"
             name="bill"
             label="บิลค่าไฟ"
-            hint={`ไฟล์ภาพหรือ PDF ไม่เกิน ${MAX_FILE_MB} MB ต่อไฟล์`}
+            hint={`ไฟล์ภาพหรือ PDF ไม่เกิน ${MAX_FILE_MB} MB ต่อไฟล์ รวมทุกไฟล์ไม่เกิน 3 MB`}
             fileNames={fileNames.bill}
-            onFiles={(names) => setFileNames((prev) => ({ ...prev, bill: names }))}
+            onFiles={(names) =>
+              setFileNames((prev) => ({ ...prev, bill: names }))
+            }
           />
           <FileField
             id="lead-roof"
@@ -382,12 +428,17 @@ export function LeadForm({
             label="รูปหลังคา"
             hint="ถ่ายให้เห็นพื้นที่ว่างและสิ่งกีดขวางรอบหลังคา"
             fileNames={fileNames.roof}
-            onFiles={(names) => setFileNames((prev) => ({ ...prev, roof: names }))}
+            onFiles={(names) =>
+              setFileNames((prev) => ({ ...prev, roof: names }))
+            }
           />
         </div>
 
         <div>
-          <label htmlFor="lead-message" className="block text-body font-semibold text-navy-900">
+          <label
+            htmlFor="lead-message"
+            className="block text-body font-semibold text-navy-900"
+          >
             ข้อความเพิ่มเติม
           </label>
           <textarea
@@ -405,7 +456,9 @@ export function LeadForm({
         <div
           className={cn(
             'rounded-card border p-4 sm:p-5',
-            errors.consent ? 'border-flare-400 bg-flare-50' : 'border-hairline bg-paper-soft',
+            errors.consent
+              ? 'border-flare-400 bg-flare-50'
+              : 'border-hairline bg-paper-soft',
           )}
         >
           <div className="flex items-start gap-3">
@@ -419,13 +472,21 @@ export function LeadForm({
               className="mt-1 h-5 w-5 shrink-0 accent-solar-600"
             />
             <div>
-              <label htmlFor="lead-consent" className="text-body font-semibold text-navy-900">
-                ยินยอมให้เก็บและใช้ข้อมูล <span className="text-flare-700">*</span>
+              <label
+                htmlFor="lead-consent"
+                className="text-body font-semibold text-navy-900"
+              >
+                ยินยอมให้เก็บและใช้ข้อมูล{' '}
+                <span className="text-flare-700">*</span>
               </label>
-              <p id="lead-consent-detail" className="mt-1.5 text-caption text-ink-700">
-                ข้าพเจ้ายินยอมให้ NP88 Solar เก็บรวบรวมและใช้ชื่อ เบอร์โทร LINE ID ข้อมูลการใช้ไฟ
-                และไฟล์ที่แนบมา เพื่อวิเคราะห์และเสนอแนวทางระบบ Solar
-                และเพื่อติดต่อกลับเท่านั้น โดยไม่เปิดเผยต่อบุคคลภายนอกเพื่อการตลาด
+              <p
+                id="lead-consent-detail"
+                className="mt-1.5 text-caption text-ink-700"
+              >
+                ข้าพเจ้ายินยอมให้ NP88 Solar เก็บรวบรวมและใช้ชื่อ เบอร์โทร LINE
+                ID ข้อมูลการใช้ไฟ และไฟล์ที่แนบมา
+                เพื่อวิเคราะห์และเสนอแนวทางระบบ Solar และเพื่อติดต่อกลับเท่านั้น
+                โดยไม่เปิดเผยต่อบุคคลภายนอกเพื่อการตลาด
                 รายละเอียดและสิทธิของเจ้าของข้อมูลระบุไว้ใน{' '}
                 <Link
                   href="/privacy"
@@ -435,13 +496,16 @@ export function LeadForm({
                 </Link>
               </p>
               {errors.consent && (
-                <p className="mt-2 text-caption font-medium text-flare-800">{errors.consent}</p>
+                <p className="mt-2 text-caption font-medium text-flare-800">
+                  {errors.consent}
+                </p>
               )}
             </div>
           </div>
         </div>
 
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+          <SpamChallenge key={challengeKey} />
           <Button
             type="submit"
             size="lg"
@@ -454,11 +518,16 @@ export function LeadForm({
               : isStaticPreview
                 ? 'แบบฟอร์มยังไม่เปิดในเว็บไซต์พรีวิว'
                 : cta.submit}
-            {status !== 'submitting' && <Icon name="arrow-right" className="h-5 w-5" />}
+            {status !== 'submitting' && (
+              <Icon name="arrow-right" className="h-5 w-5" />
+            )}
           </Button>
           <p className="text-caption text-ink-600">
             หรือติดต่อโดยตรง{' '}
-            <a href={contact.phoneHref} className="font-semibold text-solar-700">
+            <a
+              href={contact.phoneHref}
+              className="font-semibold text-solar-700"
+            >
               {contact.phone}
             </a>{' '}
             ·{' '}
@@ -478,7 +547,10 @@ export function LeadForm({
         </p>
 
         {status === 'error' && (
-          <p role="alert" className="mt-4 rounded-lg bg-flare-50 p-4 text-caption text-flare-900">
+          <p
+            role="alert"
+            className="mt-4 rounded-lg bg-flare-50 p-4 text-caption text-flare-900"
+          >
             {serverMessage}
           </p>
         )}
@@ -516,7 +588,10 @@ function Field({
 
   return (
     <div>
-      <label htmlFor={id} className="block text-body font-semibold text-navy-900">
+      <label
+        htmlFor={id}
+        className="block text-body font-semibold text-navy-900"
+      >
         {label} {required && <span className="text-flare-700">*</span>}
       </label>
       <input
@@ -526,8 +601,13 @@ function Field({
         required={required}
         aria-required={required || undefined}
         aria-invalid={error ? true : undefined}
-        aria-describedby={[hintId, errorId].filter(Boolean).join(' ') || undefined}
-        className={cn(inputClass, error ? 'border-flare-500' : 'border-hairline')}
+        aria-describedby={
+          [hintId, errorId].filter(Boolean).join(' ') || undefined
+        }
+        className={cn(
+          inputClass,
+          error ? 'border-flare-500' : 'border-hairline',
+        )}
         {...rest}
       />
       {hint && (
@@ -536,7 +616,10 @@ function Field({
         </p>
       )}
       {error && (
-        <p id={errorId} className="mt-1.5 text-caption font-medium text-flare-800">
+        <p
+          id={errorId}
+          className="mt-1.5 text-caption font-medium text-flare-800"
+        >
           {error}
         </p>
       )}
@@ -564,7 +647,10 @@ function SelectField({
   const hintId = hint ? `${id}-hint` : undefined;
   return (
     <div>
-      <label htmlFor={id} className="block text-body font-semibold text-navy-900">
+      <label
+        htmlFor={id}
+        className="block text-body font-semibold text-navy-900"
+      >
         {label}
       </label>
       <select
@@ -609,7 +695,10 @@ function FileField({
 }) {
   return (
     <div>
-      <label htmlFor={id} className="block text-body font-semibold text-navy-900">
+      <label
+        htmlFor={id}
+        className="block text-body font-semibold text-navy-900"
+      >
         {label}
       </label>
       <div className="mt-2 rounded-lg border border-dashed border-ink-500/40 bg-white p-4">
@@ -623,7 +712,9 @@ function FileField({
             accept={ACCEPTED}
             aria-describedby={`${id}-hint`}
             onChange={(event) =>
-              onFiles(Array.from(event.target.files ?? []).map((file) => file.name))
+              onFiles(
+                Array.from(event.target.files ?? []).map((file) => file.name),
+              )
             }
             className="block w-full text-caption file:mr-3 file:rounded-md file:border-0 file:bg-navy-900 file:px-3.5 file:py-2 file:text-caption file:font-semibold file:text-white"
           />
@@ -632,7 +723,10 @@ function FileField({
           <ul className="mt-3 space-y-1 text-caption text-ink-700">
             {fileNames.map((fileName) => (
               <li key={fileName} className="flex items-center gap-2">
-                <Icon name="check" className="h-4 w-4 shrink-0 text-solar-600" />
+                <Icon
+                  name="check"
+                  className="h-4 w-4 shrink-0 text-solar-600"
+                />
                 <span className="truncate">{fileName}</span>
               </li>
             ))}

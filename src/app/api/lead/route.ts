@@ -1,3 +1,11 @@
+import { fileTypeFromBuffer } from 'file-type';
+import {
+  MAX_REQUEST_BYTES,
+  MAX_TOTAL_UPLOAD_BYTES,
+  MAX_FILE_BYTES,
+  MAX_FILES,
+  ALLOWED_TYPES,
+} from '@/lib/upload-policy';
 import { NextResponse } from 'next/server';
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -28,25 +36,6 @@ export const dynamic = 'force-dynamic';
 
 /* ------------------------------- limits ---------------------------------- */
 
-/** Hard ceiling for the whole request body, headers excluded. */
-const MAX_REQUEST_BYTES = 30 * 1024 * 1024; // 30 MB
-/** Combined size of all attachments. Leaves headroom for the text fields. */
-const MAX_TOTAL_UPLOAD_BYTES = 25 * 1024 * 1024; // 25 MB
-const MAX_FILE_BYTES = 10 * 1024 * 1024; // 10 MB
-const MAX_FILES = 8;
-
-const ALLOWED_TYPES = new Set([
-  'application/pdf',
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-  'image/heic',
-  'image/heif',
-]);
-
-/** Used when a part arrives with no Content-Type of its own. */
-const ALLOWED_EXTENSIONS = new Set(['pdf', 'jpg', 'jpeg', 'png', 'webp', 'heic', 'heif']);
-
 /* ------------------------------- types ----------------------------------- */
 
 type Lead = {
@@ -64,7 +53,12 @@ type Lead = {
   segment: string;
   interestedPackage: string;
   consent: boolean;
-  attachments: { field: string; filename: string; type: string; size: number }[];
+  attachments: {
+    field: string;
+    filename: string;
+    type: string;
+    size: number;
+  }[];
 };
 
 const fail = (status: number, message: string) =>
@@ -82,11 +76,6 @@ function clean(value: FormDataEntryValue | null, maxLength = 500): string {
 function safeFilename(name: string): string {
   const base = name.split(/[\\/]/).pop() ?? 'file';
   return base.replace(CONTROL_CHARS, '').slice(0, 180) || 'file';
-}
-
-function extensionOf(name: string): string {
-  const match = /\.([a-z0-9]+)$/i.exec(safeFilename(name));
-  return match ? match[1].toLowerCase() : '';
 }
 
 /**
@@ -163,8 +152,17 @@ export async function POST(request: Request) {
   const bad = (status: number, message: string) =>
     wantsHtml ? backToForm({ error: message }) : fail(status, message);
   const good = (extra?: Record<string, unknown>) =>
-    wantsHtml ? backToForm({ sent: '1' }) : NextResponse.json({ ok: true, ...extra });
+    wantsHtml
+      ? backToForm({ sent: '1' })
+      : NextResponse.json({ ok: true, ...extra });
 
+  const origin = request.headers.get('origin');
+  if (
+    origin &&
+    origin !== new URL(request.url).origin &&
+    origin !== process.env.NEXT_PUBLIC_SITE_URL
+  )
+    return bad(403, 'ไม่อนุญาตแหล่งที่มาของคำขอ');
   const contentType = request.headers.get('content-type') ?? '';
   if (!contentType.toLowerCase().includes('multipart/form-data')) {
     return bad(415, 'รูปแบบข้อมูลไม่ถูกต้อง');
@@ -224,7 +222,10 @@ export async function POST(request: Request) {
         return bad(413, `แนบไฟล์ได้ไม่เกิน ${MAX_FILES} ไฟล์`);
       }
       if (entry.size > MAX_FILE_BYTES) {
-        return bad(413, `แต่ละไฟล์ต้องมีขนาดไม่เกิน ${MAX_FILE_BYTES / 1024 / 1024} MB`);
+        return bad(
+          413,
+          `แต่ละไฟล์ต้องมีขนาดไม่เกิน ${MAX_FILE_BYTES / 1024 / 1024} MB`,
+        );
       }
       totalUploadBytes += entry.size;
       if (totalUploadBytes > MAX_TOTAL_UPLOAD_BYTES) {
@@ -234,14 +235,14 @@ export async function POST(request: Request) {
         );
       }
 
-      // A part may legitimately arrive without its own Content-Type; fall back
-      // to the extension rather than letting it through unchecked.
+      // Require an allowed declared type, then verify the file signature below.
       const declaredType = entry.type.split(';')[0].trim().toLowerCase();
-      const typeAllowed = declaredType
-        ? ALLOWED_TYPES.has(declaredType)
-        : ALLOWED_EXTENSIONS.has(extensionOf(entry.name));
+      const typeAllowed = ALLOWED_TYPES.has(declaredType);
       if (!typeAllowed) {
-        return bad(415, 'รองรับเฉพาะไฟล์ PDF และไฟล์ภาพ (JPG, PNG, WEBP, HEIC) เท่านั้น');
+        return bad(
+          415,
+          'รองรับเฉพาะไฟล์ PDF และไฟล์ภาพ (JPG, PNG, WEBP, HEIC) เท่านั้น',
+        );
       }
 
       incoming.push({ field, entry });
@@ -251,6 +252,70 @@ export async function POST(request: Request) {
         type: declaredType || 'application/octet-stream',
         size: entry.size,
       });
+    }
+  }
+
+  for (const { entry } of incoming) {
+    const detected = await fileTypeFromBuffer(
+      new Uint8Array(await entry.slice(0, 8192).arrayBuffer()),
+    ).catch(() => undefined);
+    if (
+      !detected ||
+      !ALLOWED_TYPES.has(detected.mime) ||
+      (detected.mime !== entry.type &&
+        !(
+          detected.mime.startsWith('image/hei') &&
+          entry.type.startsWith('image/hei')
+        ))
+    )
+      return bad(
+        415,
+        'ชนิดไฟล์จริงไม่ตรงกับรูปแบบที่รองรับ กรุณาแนบรูปภาพหรือ PDF ที่ถูกต้อง',
+      );
+  }
+
+  if (clean(form.get('testMode')) === '1' && process.env.LEAD_TEST_MODE !== '1')
+    return bad(403, 'ปิดโหมดทดสอบ');
+  const testMode =
+    process.env.LEAD_TEST_MODE === '1' && clean(form.get('testMode')) === '1';
+  if (!testMode && process.env.NODE_ENV === 'production') {
+    if (
+      !process.env.LEAD_WEBHOOK_URL?.startsWith('https://') ||
+      !process.env.TURNSTILE_SECRET_KEY
+    )
+      return bad(
+        503,
+        'แบบฟอร์มยังไม่เปิดรับข้อมูล กรุณาติดต่อผ่านโทรศัพท์หรือ LINE ที่แสดงบนหน้านี้',
+      );
+    const token = clean(form.get('cf-turnstile-response'), 2048);
+    if (!token) return bad(422, 'กรุณายืนยันการตรวจสอบความปลอดภัยก่อนส่ง');
+    try {
+      const response = await fetch(
+        'https://challenges.cloudflare.com/turnstile/v0/siteverify',
+        {
+          method: 'POST',
+          body: new URLSearchParams({
+            secret: process.env.TURNSTILE_SECRET_KEY,
+            response: token,
+          }),
+          signal: AbortSignal.timeout(10000),
+        },
+      );
+      const result = await response.json();
+      const expectedHostname = new URL(
+        process.env.NEXT_PUBLIC_SITE_URL || request.url,
+      ).hostname;
+      if (
+        !result.success ||
+        result.action !== 'lead' ||
+        result.hostname !== expectedHostname
+      )
+        return bad(
+          422,
+          'การตรวจสอบความปลอดภัยหมดอายุ กรุณาโหลดหน้าใหม่และลองอีกครั้ง',
+        );
+    } catch {
+      return bad(503, 'ระบบตรวจสอบความปลอดภัยขัดข้อง กรุณาลองอีกครั้ง');
     }
   }
 
@@ -283,7 +348,10 @@ export async function POST(request: Request) {
    * running the production build) it exists for. LEAD_TEST_MODE must be set
    * explicitly — set it in CI only, never in a real deployment's environment.
    */
-  if (clean(form.get('testMode')) === '1' && process.env.LEAD_TEST_MODE === '1') {
+  if (
+    clean(form.get('testMode')) === '1' &&
+    process.env.LEAD_TEST_MODE === '1'
+  ) {
     console.info('[lead] test mode — validated but not delivered');
     return good({ testMode: true });
   }
@@ -297,38 +365,66 @@ export async function POST(request: Request) {
     );
     await deliver(lead, files);
   } catch (error) {
-    console.error('[lead] delivery failed', error);
+    console.error(
+      '[lead] delivery failed',
+      error instanceof Error ? error.name : 'UnknownError',
+    );
     return bad(
       502,
-      'ระบบส่งข้อมูลขัดข้องชั่วคราว กรุณาติดต่อทีมงานทาง LINE @np88solar หรือโทร 095-697-1915',
+      'ระบบส่งข้อมูลขัดข้องชั่วคราว กรุณาติดต่อผ่านโทรศัพท์หรือ LINE ที่แสดงบนหน้านี้',
     );
   }
 
   return good();
 }
 
-async function deliver(lead: Lead, files: { name: string; bytes: ArrayBuffer }[]) {
+async function deliver(
+  lead: Lead,
+  files: { name: string; bytes: ArrayBuffer }[],
+) {
   const webhook = process.env.LEAD_WEBHOOK_URL;
 
   if (webhook) {
+    if (!webhook.startsWith('https://'))
+      throw new Error('Webhook must use HTTPS');
     const response = await fetch(webhook, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(lead),
+      headers: {
+        'content-type': 'application/json',
+        ...(process.env.LEAD_WEBHOOK_TOKEN
+          ? { Authorization: `Bearer ${process.env.LEAD_WEBHOOK_TOKEN}` }
+          : {}),
+      },
+      body: JSON.stringify({
+        ...lead,
+        attachments: lead.attachments.map((attachment, index) => ({
+          ...attachment,
+          contentBase64: Buffer.from(files[index].bytes).toString('base64'),
+        })),
+      }),
+      signal: AbortSignal.timeout(15000),
+      redirect: 'error',
     });
     if (!response.ok) throw new Error(`webhook responded ${response.status}`);
-    // Note: attachments are described in the payload but not forwarded here.
-    // Wire object storage (S3 / GCS / Cloudinary) and send the resulting URLs.
+    // The HTTPS receiver must persist the bytes privately before acknowledging.
     return;
   }
 
-  // Development fallback — never rely on this in production.
+  if (process.env.NODE_ENV === 'production')
+    throw new Error('Lead delivery is not configured');
+  // Development fallback only; .data is gitignored and outside public/.
   const stamp = lead.receivedAt.replace(/[:.]/g, '-');
   const dir = path.join(process.cwd(), '.data', 'leads', stamp);
   await mkdir(dir, { recursive: true });
-  await writeFile(path.join(dir, 'lead.json'), JSON.stringify(lead, null, 2), 'utf8');
+  await writeFile(
+    path.join(dir, 'lead.json'),
+    JSON.stringify(lead, null, 2),
+    'utf8',
+  );
   for (const file of files) {
     await writeFile(path.join(dir, file.name), Buffer.from(file.bytes));
   }
-  console.info(`[lead] stored at ${dir} (set LEAD_WEBHOOK_URL for real delivery)`);
+  console.info(
+    `[lead] stored at ${dir} (set LEAD_WEBHOOK_URL for real delivery)`,
+  );
 }

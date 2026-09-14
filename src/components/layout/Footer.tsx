@@ -2,10 +2,12 @@ import Link from 'next/link';
 import { Logo } from '@/components/brand/Logo';
 import { Container } from '@/components/ui/Container';
 import { Icon } from '@/components/ui/Icon';
-import { contact, copyrightYear, footerNav, serviceAreas, site } from '@/lib/site';
+import { copyrightYear, footerNav } from '@/lib/site';
+import { getSiteData } from '@/cms/site';
 
-
-export function Footer() {
+export async function Footer() {
+  const { contact, serviceAreas, site, footerInformation } =
+    await getSiteData();
   return (
     <footer className="on-navy bg-navy-950 text-navy-200">
       <Container width="wide">
@@ -16,13 +18,15 @@ export function Footer() {
             <p className="mt-5 max-w-sm text-caption leading-relaxed">
               {site.legalNameShort}
               <br />
-              ให้บริการสำรวจ ออกแบบ ติดตั้ง และดูแลระบบ Solar Rooftop
-              สำหรับบ้าน ธุรกิจ และโรงงานในภาคเหนือ
+              {footerInformation}
             </p>
 
             <address className="mt-6 space-y-3 text-caption not-italic">
               <p className="flex items-start gap-2.5">
-                <Icon name="map-pin" className="mt-0.5 h-4.5 w-4.5 shrink-0 text-sky-brand" />
+                <Icon
+                  name="map-pin"
+                  className="mt-0.5 h-4.5 w-4.5 shrink-0 text-sky-brand"
+                />
                 <span>
                   {contact.addressLines[0]}
                   <br />
@@ -30,13 +34,22 @@ export function Footer() {
                 </span>
               </p>
               <p className="flex items-center gap-2.5">
-                <Icon name="phone" className="h-4.5 w-4.5 shrink-0 text-sky-brand" />
-                <a href={contact.phoneHref} className="font-semibold text-white hover:underline">
+                <Icon
+                  name="phone"
+                  className="h-4.5 w-4.5 shrink-0 text-sky-brand"
+                />
+                <a
+                  href={contact.phoneHref}
+                  className="font-semibold text-white hover:underline"
+                >
                   {contact.phone}
                 </a>
               </p>
               <p className="flex items-center gap-2.5">
-                <Icon name="line" className="h-4.5 w-4.5 shrink-0 text-line-500" />
+                <Icon
+                  name="line"
+                  className="h-4.5 w-4.5 shrink-0 text-line-500"
+                />
                 <a
                   href={contact.lineUrl}
                   target="_blank"
@@ -83,26 +96,31 @@ export function Footer() {
             aria-label="ลิงก์ท้ายเว็บไซต์"
             className="grid gap-8 sm:grid-cols-3 md:col-span-7 lg:col-span-8 lg:grid-cols-4"
           >
-            {[footerNav.services, footerNav.company, footerNav.legal].map((group) => (
-              <div key={group.title}>
-                <h2 className="text-caption font-semibold tracking-wide text-white uppercase">
-                  {group.title}
-                </h2>
-                <ul className="mt-4 space-y-2.5 text-caption">
-                  {group.links.map((link) => (
-                    <li key={link.href}>
-                      <Link href={link.href} className="hover:text-white hover:underline">
-                        {link.label}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
+            {[footerNav.services, footerNav.company, footerNav.legal].map(
+              (group) => (
+                <div key={group.title}>
+                  <h2 className="text-caption font-semibold tracking-wide text-white uppercase">
+                    {group.title}
+                  </h2>
+                  <ul className="mt-4 space-y-2.5 text-caption">
+                    {group.links.map((link) => (
+                      <li key={link.href}>
+                        <Link
+                          href={link.href}
+                          className="hover:text-white hover:underline"
+                        >
+                          {link.label}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ),
+            )}
 
             <div>
               <h2 className="text-caption font-semibold tracking-wide text-white uppercase">
-                พื้นที่ให้บริการ
+                บริการในภาคเหนือ
               </h2>
               <ul className="mt-4 space-y-2.5 text-caption">
                 {serviceAreas.map((area) => (
@@ -128,7 +146,10 @@ export function Footer() {
             <Link href="/privacy" className="hover:text-white hover:underline">
               ประกาศความเป็นส่วนตัว
             </Link>
-            <Link href="/cookie-policy" className="hover:text-white hover:underline">
+            <Link
+              href="/cookie-policy"
+              className="hover:text-white hover:underline"
+            >
               นโยบายคุกกี้
             </Link>
             <Link href="/contact" className="hover:text-white hover:underline">
