@@ -152,7 +152,7 @@ export default async function ContactPage() {
               <li
                 key={area.slug}
                 id={area.slug}
-                className="flex scroll-mt-28 items-center gap-2 rounded-lg bg-paper-soft px-4 py-3 text-body font-medium text-navy-900"
+                className="flex scroll-mt-20 items-center gap-2 rounded-lg bg-paper-soft px-4 py-3 text-body font-medium text-navy-900"
               >
                 <Icon
                   name="map-pin"

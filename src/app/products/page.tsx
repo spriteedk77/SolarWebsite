@@ -75,7 +75,7 @@ export default async function ProductsPage() {
           {categoryOrder
             .filter((category) => grouped[category]?.length)
             .map((category) => (
-              <section key={category} aria-labelledby={`cat-${category}`} className="scroll-mt-28">
+              <section key={category} aria-labelledby={`cat-${category}`} className="scroll-mt-20">
                 <h2 id={`cat-${category}`} className="text-h2">
                   {category}
                 </h2>

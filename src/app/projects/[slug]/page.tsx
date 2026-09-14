@@ -256,7 +256,7 @@ export default async function ProjectPage({ params }: Params) {
 
           {/* Specification sidebar */}
           <aside className="lg:col-span-5">
-            <div className="lg:sticky lg:top-28">
+            <div className="lg:sticky lg:top-20">
               <div className="rounded-card border border-hairline bg-white shadow-card">
                 <h2 className="border-b border-hairline px-6 py-4 text-h3">
                   ข้อมูลระบบ

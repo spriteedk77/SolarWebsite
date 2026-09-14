@@ -9,42 +9,16 @@ import { DesktopNav } from './DesktopNav';
 import { MobileNav } from './MobileNav';
 
 export async function Header() {
-  const { contact, cta, serviceAreas } = await getSiteData();
+  const { contact, cta } = await getSiteData();
   return (
     // Solid background on purpose: a backdrop-filter here would create a
     // containing block and trap any `position: fixed` descendant (the mobile
     // drawer) inside the header's box.
+    //
+    // One 4.5rem row at every width — the navy utility strip that used to sit
+    // above it is gone, so the anchor and sticky offsets below it are 5rem
+    // everywhere rather than the old two-height 6.5rem compromise.
     <header className="sticky top-0 z-40 bg-white shadow-header">
-      {/* Utility strip — service areas and direct channels, desktop only. */}
-      <div className="hidden border-b border-hairline bg-navy-900 text-navy-100 xl:block">
-        <Container width="wide">
-          <div className="flex h-9 items-center justify-between text-caption">
-            <p className="flex shrink-0 items-center gap-2">
-              <Icon name="map-pin" className="h-4 w-4 text-sky-brand" />
-              ให้บริการ {serviceAreas.map((area) => area.name).join(' · ')}
-            </p>
-            <p className="flex items-center gap-5">
-              <a
-                href={contact.phoneHref}
-                className="inline-flex items-center gap-1.5 hover:text-white"
-              >
-                <Icon name="phone" className="h-4 w-4 text-sky-brand" />
-                {contact.phone}
-              </a>
-              <a
-                href={contact.lineUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 hover:text-white"
-              >
-                <Icon name="line" className="h-4 w-4 text-line-500" />
-                LINE {contact.lineId}
-              </a>
-            </p>
-          </div>
-        </Container>
-      </div>
-
       <Container width="wide">
         <div className="flex h-[4.5rem] items-center justify-between gap-4">
           <Link

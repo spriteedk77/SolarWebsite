@@ -89,7 +89,7 @@ export default async function KnowledgePage() {
                 key={category}
                 id={encodeURIComponent(category)}
                 aria-labelledby={`cat-${encodeURIComponent(category)}`}
-                className="scroll-mt-28"
+                className="scroll-mt-20"
               >
                 <h2 id={`cat-${encodeURIComponent(category)}`} className="text-h2">
                   {category}

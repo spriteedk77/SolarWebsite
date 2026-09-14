@@ -151,7 +151,7 @@ export default async function ArticlePage({ params }: Params) {
           </article>
 
           <aside className="lg:col-span-4">
-            <div className="space-y-6 lg:sticky lg:top-28">
+            <div className="space-y-6 lg:sticky lg:top-20">
               <div className="hidden lg:block">
                 {article.richContent ? (
                   <RichToc

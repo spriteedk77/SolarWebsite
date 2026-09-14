@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 
 import { Hero } from '@/components/home/Hero';
+import { HistorySection } from '@/components/home/HistorySection';
 import { WhyNP88 } from '@/components/home/WhyNP88';
 import { BusinessSection } from '@/components/home/BusinessSection';
 import { HomeSolarSection } from '@/components/home/HomeSolarSection';
@@ -59,8 +60,11 @@ export default async function HomePage() {
               No unverified installation count: see TrustStrip. */}
       <Hero />
 
-      {/* 3 — Evidence first. Real specs sit directly under the hero so a factory
-              owner can judge the work before reading any argument for it. */}
+      {/* 2 — Who NP88 Solar is, stated before any of the evidence below. */}
+      <HistorySection />
+
+      {/* 3 — Evidence early. Real specs come before any argument for them, so
+              a factory owner can judge the work on its own terms. */}
       <FeaturedProjects projects={projects} />
 
       {/* 4 — The argument: designed from real consumption, not panel count. */}

@@ -111,8 +111,9 @@
 
   html {
     scroll-behavior: smooth;
-    /* Sticky header offset for in-page anchors. */
-    scroll-padding-top: 6.5rem;
+    /* Sticky header offset for in-page anchors: one 4.5rem header row plus a
+       little clearance. The header is the same height at every width. */
+    scroll-padding-top: 5rem;
     -webkit-text-size-adjust: 100%;
   }
 

@@ -3,14 +3,42 @@ import { contact, cta, serviceAreas, site } from './site';
 type Mutable<T> = T extends string
   ? string
   : T extends number
-    ? number
-    : T extends boolean
-      ? boolean
-      : T extends readonly (infer U)[]
-        ? Mutable<U>[]
-        : T extends object
-          ? { -readonly [K in keyof T]: Mutable<T[K]> }
-          : T;
+  ? number
+  : T extends boolean
+  ? boolean
+  : T extends readonly (infer U)[]
+  ? Mutable<U>[]
+  : T extends object
+  ? { -readonly [K in keyof T]: Mutable<T[K]> }
+  : T;
+
+/* ==========================================================================
+   QUICK EDIT: Homepage history
+   --------------------------------------------------------------------------
+   The "ประวัติและความเป็นมา" section under the hero. Edit the four values
+   below and nothing else — `HistorySection` reads them directly and adds no
+   copy of its own.
+
+   `historyParagraphs` renders in order, one <p> each; add or remove entries
+   freely. `historyQuote` is set apart from the body as the pull quote.
+
+   ⚠️ CONTENT RULE: this section states how NP88 Solar works, and nothing that
+   would need proof. Do not add a founding year, founder names, team size,
+   awards, certifications, engineering licences, partnerships or an
+   installation count here — see src/lib/pending.ts for what is still
+   unconfirmed.
+   ========================================================================= */
+export const homepageHistory = {
+  historyEyebrow: 'ABOUT NP88 SOLAR',
+  historyTitle: 'ประวัติและความเป็นมาของ NP88 Solar',
+  historyParagraphs: [
+    'NP88 Solar ภายใต้ NP88 Engineering Co., Ltd. ให้บริการด้าน Solar Rooftop โดยให้ความสำคัญกับการสำรวจ วิเคราะห์รูปแบบการใช้พลังงาน และออกแบบระบบให้เหมาะกับพื้นที่และลักษณะการใช้งานจริงของลูกค้า',
+    'ตั้งแต่บ้านพักอาศัย ธุรกิจ SME ร้านค้า สำนักงาน คลินิก คลังสินค้า ไปจนถึงโรงงานและอาคารพาณิชย์',
+    'ทีมงานดูแลตั้งแต่การสำรวจ วิเคราะห์ ออกแบบ ติดตั้ง ไปจนถึงบริการหลังการขาย เพื่อให้ระบบ Solar เป็นส่วนหนึ่งของการบริหารพลังงานในระยะยาว',
+  ],
+  historyQuote:
+    'แนวคิดของ NP88 Solar ไม่ได้เริ่มจากคำถามว่าต้องติดกี่แผง แต่เริ่มจากการทำความเข้าใจว่าระบบแบบใดเหมาะสมและคุ้มค่ากับการใช้พลังงานของลูกค้า',
+} as const;
 
 export type SiteData = {
   site: Mutable<typeof site>;
@@ -35,8 +63,8 @@ export const defaultSiteData: SiteData = {
   homepage: {
     headline: 'ออกแบบระบบพลังงาน\nให้เหมาะกับธุรกิจของคุณ',
     description:
-      'สำรวจ ออกแบบ และติดตั้ง Solar Rooftop สำหรับบ้าน ธุรกิจ และโรงงาน เลือกระบบให้เหมาะกับการใช้ไฟและพื้นที่ติดตั้ง',
-    serviceMessage: 'พร้อมสำรวจ และติดตั้ง',
+      'พร้อมสำรวจ ออกแบบ และติดตั้ง Solar Rooftop สำหรับบ้าน ธุรกิจ และโรงงาน เลือกระบบให้เหมาะกับการใช้ไฟและพื้นที่ติดตั้ง',
+    serviceMessage: 'CONTACT',
   },
   footerInformation:
     'ให้บริการสำรวจ ออกแบบ ติดตั้ง และดูแลระบบ Solar Rooftop สำหรับบ้าน ธุรกิจ และโรงงานในภาคเหนือ',
