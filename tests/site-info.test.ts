@@ -24,6 +24,7 @@ const good = (): SiteInfoValues => ({
   district: 'เมือง',
   province: 'เชียงใหม่',
   postalCode: '50000',
+  serviceAreas: 'เชียงใหม่ | Chiang Mai | chiang-mai | หลัก\nลำพูน | Lamphun | lamphun',
   homepageHeadline: 'ออกแบบระบบพลังงาน',
   homepageDescription: 'พร้อมสำรวจ ออกแบบ และติดตั้ง',
   homepageServiceMessage: 'CONTACT',
@@ -67,7 +68,6 @@ test('saving touches only the fields the form owns', () => {
   // Everything this form does not show must be absent from the patch, so a
   // save cannot wipe it.
   for (const key of [
-    'serviceAreas',
     'googleBusinessProfileUrl',
     'googleMapsEmbedUrl',
     'approvedForPublication',
@@ -76,6 +76,16 @@ test('saving touches only the fields the form owns', () => {
   ])
     assert.equal(key in company, false, key);
   assert.equal('contactInformation' in settings, false);
+});
+
+test('service areas are parsed once and written as the exact shape the site reads', () => {
+  const { company } = toPatches(good());
+  assert.deepEqual(company.serviceAreas, [
+    { name: 'เชียงใหม่', nameEn: 'Chiang Mai', slug: 'chiang-mai', primary: true },
+    { name: 'ลำพูน', nameEn: 'Lamphun', slug: 'lamphun', primary: false },
+  ]);
+  assert.ok(validate({ ...good(), serviceAreas: 'เชียงใหม่ | | chiang-mai' })?.serviceAreas);
+  assert.ok(validate({ ...good(), serviceAreas: 'เชียงใหม่ | Chiang Mai | เชียงใหม่' })?.serviceAreas);
 });
 
 test('a save cannot delete the address fields the form does not show', () => {

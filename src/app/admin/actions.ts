@@ -127,6 +127,7 @@ function fromSiteData(): SiteInfoValues {
       facebookUrl: contact.facebookUrl,
       businessHours: contact.businessHours,
       address: contact.address,
+      serviceAreas: defaultSiteData.serviceAreas,
     },
     {
       homepageHeadline: homepage.headline,

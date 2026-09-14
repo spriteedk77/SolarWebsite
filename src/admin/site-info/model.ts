@@ -47,6 +47,33 @@ export const siteInfoSchema = z.object({
   district: required('อำเภอ'),
   province: required('จังหวัด'),
   postalCode: required('รหัสไปรษณีย์'),
+  serviceAreas: z
+    .string()
+    .trim()
+    .min(1, 'กรุณากรอกพื้นที่ให้บริการอย่างน้อย 1 จังหวัด')
+    .superRefine((value, context) => {
+      const lines = value.split(/\r?\n/).filter((line) => line.trim());
+      const slugs = new Set<string>();
+      for (const [index, line] of lines.entries()) {
+        const parts = line.split('|').map((part) => part.trim());
+        if (parts.length < 3 || parts.length > 4 || parts.slice(0, 3).some((part) => !part)) {
+          context.addIssue({
+            code: 'custom',
+            message: `บรรทัดที่ ${index + 1} ต้องเป็น จังหวัด | English | slug | หลัก`,
+          });
+          continue;
+        }
+        const slug = parts[2];
+        if (!/^[a-z0-9-]+$/.test(slug))
+          context.addIssue({
+            code: 'custom',
+            message: `slug บรรทัดที่ ${index + 1} ใช้ได้เฉพาะ a-z ตัวเลข และขีดกลาง`,
+          });
+        if (slugs.has(slug))
+          context.addIssue({ code: 'custom', message: `slug "${slug}" ซ้ำกัน` });
+        slugs.add(slug);
+      }
+    }),
 
   // — หน้าแรก —
   homepageHeadline: required('หัวเรื่องหน้าแรก'),
@@ -101,6 +128,7 @@ export function fromDocuments(company: Doc, settings: Doc): SiteInfoValues {
   const values = {} as Record<string, string>;
   for (const key of COMPANY_FIELDS) values[key] = str(company?.[key]);
   for (const key of ADDRESS_FIELDS) values[key] = str(address[key]);
+  values.serviceAreas = formatServiceAreas(company?.serviceAreas);
   for (const key of SETTINGS_FIELDS) values[key] = str(settings?.[key]);
   return values as SiteInfoValues;
 }
@@ -125,11 +153,35 @@ export function toPatches(values: SiteInfoValues): {
   // save would otherwise silently delete.
   for (const key of ADDRESS_FIELDS)
     company[`address.${key}`] = values[key].trim();
+  company.serviceAreas = parseServiceAreas(values.serviceAreas);
 
   const settings: Record<string, unknown> = {};
   for (const key of SETTINGS_FIELDS) settings[key] = values[key].trim();
 
   return { company, settings };
+}
+
+type ServiceArea = { name: string; nameEn: string; slug: string; primary: boolean };
+
+function formatServiceAreas(value: unknown): string {
+  if (!Array.isArray(value)) return '';
+  return value
+    .filter((area): area is Record<string, unknown> => Boolean(area) && typeof area === 'object')
+    .map((area) =>
+      [str(area.name), str(area.nameEn), str(area.slug), area.primary ? 'หลัก' : ''].join(' | ').replace(/ \| $/, ''),
+    )
+    .join('\n');
+}
+
+export function parseServiceAreas(value: string): ServiceArea[] {
+  return value
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const [name, nameEn, slug, primary = ''] = line.split('|').map((part) => part.trim());
+      return { name, nameEn, slug, primary: ['หลัก', 'yes', 'true', '1'].includes(primary.toLowerCase()) };
+    });
 }
 
 /**

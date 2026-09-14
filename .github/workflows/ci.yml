@@ -116,7 +116,7 @@ jobs:
       - run: npm ci
 
       - name: Remove the routes a static export cannot serve
-        run: rm -rf src/app/api src/app/admin
+        run: rm -rf src/app/api src/app/admin src/admin src/components/admin tests
 
       - name: Build static preview
         run: npm run build

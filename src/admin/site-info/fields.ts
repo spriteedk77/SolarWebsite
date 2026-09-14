@@ -65,13 +65,20 @@ export const fieldGroups: FieldGroup[] = [
   },
   {
     id: 'address',
-    title: 'ที่อยู่',
-    description: 'แสดงบนหน้าติดต่อและท้ายเว็บไซต์',
+    title: 'ที่อยู่และพื้นที่ให้บริการ',
+    description: 'แสดงบนหน้าติดต่อ ท้ายเว็บไซต์ และหน้าแรก',
     fields: [
       { name: 'street', label: 'เลขที่ หมู่ ถนน ตำบล' },
       { name: 'district', label: 'อำเภอ' },
       { name: 'province', label: 'จังหวัด' },
       { name: 'postalCode', label: 'รหัสไปรษณีย์' },
+      {
+        name: 'serviceAreas',
+        label: 'พื้นที่ให้บริการ',
+        help: 'หนึ่งจังหวัดต่อหนึ่งบรรทัด: จังหวัด | English | slug | หลัก (ใส่คำว่า หลัก เฉพาะพื้นที่หลัก)',
+        placeholder: 'เชียงใหม่ | Chiang Mai | chiang-mai | หลัก\nลำพูน | Lamphun | lamphun',
+        multiline: true,
+      },
     ],
   },
   {
