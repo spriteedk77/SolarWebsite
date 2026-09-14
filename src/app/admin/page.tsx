@@ -2,6 +2,7 @@ import { Container } from '@/components/ui/Container';
 import { AdminShell } from '@/components/admin/AdminShell';
 import { LoginForm } from '@/components/admin/LoginForm';
 import { SiteInfoForm } from '@/components/admin/SiteInfoForm';
+import { PublishPanel } from '@/components/admin/PublishPanel';
 import { isSignedIn } from '@/lib/admin-session';
 import { adminConfig } from '@/lib/admin-auth';
 import { loadSiteInfo } from './actions';
@@ -97,7 +98,27 @@ export default async function AdminPage() {
             </div>
           )}
 
+          {info.canSave && !info.liveReadsCms && (
+            <div className="mb-8 rounded-card border border-flare-500 bg-white p-6">
+              <h2 className="text-h3">เว็บไซต์ยังไม่ได้อ่านข้อมูลจากที่นี่</h2>
+              <p className="mt-3 max-w-prose text-body text-ink-700">
+                ตอนนี้เว็บไซต์ยังแสดงข้อมูลชุดเดิมที่ฝังมากับตัวเว็บ
+                การแก้ไขที่นี่จะยังไม่มีผลจนกว่าจะตั้งค่า{' '}
+                <code className="rounded bg-soft px-2 py-1 font-mono text-caption">
+                  CONTENT_SOURCE=sanity
+                </code>{' '}
+                ในระบบโฮสต์
+              </p>
+              <p className="mt-3 max-w-prose text-body text-ink-700">
+                ต้องกดเผยแพร่ด้านล่างให้สำเร็จอย่างน้อยหนึ่งครั้งก่อน
+                แล้วค่อยตั้งค่านั้น มิฉะนั้นเว็บไซต์จะไม่มีข้อมูลให้แสดงและจะ
+                build ไม่ผ่าน
+              </p>
+            </div>
+          )}
+
           <SiteInfoForm values={info.values} canSave={info.canSave} />
+          <PublishPanel canSave={info.canSave} />
         </div>
       </Container>
     </AdminShell>

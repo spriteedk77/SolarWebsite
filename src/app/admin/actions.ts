@@ -9,6 +9,8 @@ import {
   draftId,
 } from '@/cms/admin-write';
 import { defaultSiteData } from '@/lib/site-data';
+import { companyModel, settingsModel } from '@/cms/site';
+import { usesSanity } from '@/cms/client';
 import {
   fromDocuments,
   toPatches,
@@ -73,6 +75,8 @@ export async function loadSiteInfo(): Promise<{
   values: SiteInfoValues;
   canSave: boolean;
   missing: string[];
+  /** Whether the website actually reads this content, or still the snapshot. */
+  liveReadsCms: boolean;
 }> {
   await requireSignedIn();
   const config = adminWriteClient();
@@ -81,6 +85,7 @@ export async function loadSiteInfo(): Promise<{
       values: fromSiteData(),
       canSave: false,
       missing: config.missing,
+      liveReadsCms: usesSanity(),
     };
 
   const [companyDraft, company, settingsDraft, settings] =
@@ -95,6 +100,7 @@ export async function loadSiteInfo(): Promise<{
     values: fromDocuments(companyDraft ?? company, settingsDraft ?? settings),
     canSave: true,
     missing: [],
+    liveReadsCms: usesSanity(),
   };
 }
 
@@ -181,5 +187,124 @@ export async function saveSiteInfoAction(
   }
 
   revalidatePath('/admin');
-  return { status: 'ok', message: 'บันทึกฉบับร่างแล้ว' };
+  return {
+    status: 'ok',
+    message: 'บันทึกแล้ว — ยังไม่ขึ้นเว็บจริง กดเผยแพร่ด้านล่างเมื่อพร้อม',
+  };
+}
+
+/**
+ * Put the saved draft on the live website.
+ *
+ * Two documents move together: the company details and the homepage text. The
+ * company goes first because the settings document points at it, and a
+ * published document may not reference one that does not exist yet.
+ *
+ * Before anything is written, the result is held to the same rules the website
+ * itself applies when it reads the content back — see companyModel and
+ * settingsModel. Publishing something the site cannot render would not show up
+ * here; it would show up as a site that refuses to build, which is a far worse
+ * place to find out.
+ */
+export async function publishSiteInfoAction(
+  _previous: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  await requireSignedIn();
+
+  if (formData.get('confirm') !== 'yes')
+    return {
+      status: 'error',
+      message: 'กรุณาติ๊กยืนยันว่าข้อมูลถูกต้องก่อนเผยแพร่',
+    };
+
+  const config = adminWriteClient();
+  if (!config.ready)
+    return {
+      status: 'error',
+      message: `ยังตั้งค่าไม่ครบ: ${config.missing.join(', ')}`,
+    };
+
+  const [companyDraft, companyLive, settingsDraft, settingsLive] =
+    await config.client.getDocuments([
+      draftId(COMPANY_ID),
+      COMPANY_ID,
+      draftId(SETTINGS_ID),
+      SETTINGS_ID,
+    ]);
+
+  const company = companyDraft ?? companyLive;
+  const settings = settingsDraft ?? settingsLive;
+  if (!company || !settings)
+    return {
+      status: 'error',
+      message:
+        'ยังไม่มีข้อมูลให้เผยแพร่ กรุณากดบันทึกก่อนอย่างน้อยหนึ่งครั้ง',
+    };
+
+  // The approval the schema asks for is being given here, by whoever ticked
+  // the box and pressed the button.
+  const publishedCompany = {
+    ...company,
+    _id: COMPANY_ID,
+    _type: 'company',
+    approvedForPublication: true,
+  };
+  const publishedSettings = {
+    ...settings,
+    _id: SETTINGS_ID,
+    _type: 'siteSettings',
+    approvedForPublication: true,
+  };
+
+  const problems = [
+    ...describeIssues('ข้อมูลบริษัท', companyModel.safeParse(publishedCompany)),
+    ...describeIssues('หน้าแรก', settingsModel.safeParse(publishedSettings)),
+  ];
+  if (problems.length)
+    return {
+      status: 'error',
+      message: `ยังเผยแพร่ไม่ได้ เพราะเว็บไซต์จะแสดงข้อมูลนี้ไม่ได้ — ${problems.join(' · ')}`,
+    };
+
+  try {
+    await config.client
+      .transaction()
+      .createOrReplace(publishedCompany)
+      .createOrReplace(publishedSettings)
+      // The drafts have served their purpose; leaving them would make the next
+      // edit start from a copy that is no longer what the site is showing.
+      .delete(draftId(COMPANY_ID))
+      .delete(draftId(SETTINGS_ID))
+      .commit();
+  } catch (error) {
+    return {
+      status: 'error',
+      message:
+        error instanceof Error
+          ? `เผยแพร่ไม่สำเร็จ: ${error.message}`
+          : 'เผยแพร่ไม่สำเร็จ',
+    };
+  }
+
+  revalidatePath('/admin', 'layout');
+  revalidatePath('/', 'layout');
+  return {
+    status: 'ok',
+    message: 'เผยแพร่แล้ว ข้อมูลนี้คือข้อมูลที่เว็บไซต์ใช้',
+  };
+}
+
+/** Field paths a zod failure names, in words rather than as a stack trace. */
+function describeIssues(
+  label: string,
+  result: { success: boolean; error?: { issues: { path: PropertyKey[] }[] } },
+): string[] {
+  if (result.success || !result.error) return [];
+  const fields = [
+    ...new Set(
+      result.error.issues.map((issue) => issue.path.join('.') || '(ทั้งเอกสาร)'),
+    ),
+  ];
+  return [`${label}: ${fields.join(', ')}`];
 }

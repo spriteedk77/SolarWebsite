@@ -12,7 +12,14 @@ const area = z.object({
   nameEn: text,
   primary: z.boolean().default(false),
 });
-const company = z.object({
+/**
+ * What the website needs before it can render this content.
+ *
+ * Exported so the admin can hold a document to the same standard *before*
+ * publishing it. The alternative is finding out at deploy time, when the
+ * failure is a site that will not build rather than a message in a form.
+ */
+export const companyModel = z.object({
   companyName: text,
   legalName: text,
   tagline: text,
@@ -35,7 +42,7 @@ const company = z.object({
   googleBusinessProfileUrl: https.optional().nullable(),
   googleMapsEmbedUrl: z.string().optional().nullable(),
 });
-const settings = z.object({
+export const settingsModel = z.object({
   homepageHeadline: text,
   homepageDescription: text,
   homepageServiceMessage: text,
@@ -53,8 +60,8 @@ export const getSiteData = cache(async (): Promise<SiteData> => {
     "company": *[_type == "company" && approvedForPublication == true && _id == "company"][0]{companyName,legalName,tagline,description,phone,phoneE164,lineId,lineUrl,facebookUrl,businessHours,address,serviceAreas,googleBusinessProfileUrl,googleMapsEmbedUrl},
     "settings": *[_type == "siteSettings" && approvedForPublication == true && _id == "siteSettings"][0]{homepageHeadline,homepageDescription,homepageServiceMessage,primaryCTA,secondaryCTA,footerInformation}
   }`);
-  const c = company.parse(result.company);
-  const s = settings.parse(result.settings);
+  const c = companyModel.parse(result.company);
+  const s = settingsModel.parse(result.settings);
   const addressLines = [
     c.address.street,
     `${c.address.district} จังหวัด${c.address.province} ${c.address.postalCode}`,
