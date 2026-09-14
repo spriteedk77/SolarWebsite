@@ -1,5 +1,37 @@
 # ตรวจสอบ revision
 
+## รอบที่ 3 — 14 กันยายน 2026 (โลโก้จริงและ Hero)
+
+### สิ่งที่แก้
+
+- **โลโก้จริง** — Header, Footer, เมนูมือถือ และ structured data ใช้ `public/logo/np88-logo-horizontal.png` ที่ NP88 ส่งมา ลบ SVG ที่วาดเลียนแบบไว้เดิมทั้งในคอมโพเนนต์และใน `public/images/brand/` ย่อขนาดตามสัดส่วนจริง (1692×537) ไม่ crop ไม่แก้สี ตัวอักษรเป็นสีกรมท่าจึงอ่านได้บน Header สีขาว ส่วน Footer สีกรมท่าวางโลโก้บนแผ่นรองสีขาวแทนการกลับสี
+- **Favicon / touch icon** — สร้างจาก `np88-logo-square.png` ด้วย `scripts/generate-icons.mjs` (16/32/48/180/192/512 และ `favicon.ico` แบบหลายขนาด) commit ไฟล์ที่สร้างแล้ว ไม่มีขั้นตอน build ใดต้องใช้ sharp ประกาศผ่าน `metadata.icons` แทน file convention `src/app/icon.*` เพื่อให้ทุก href ผ่าน `publicAssetPath` และทำงานใต้ `/SolarWebsite`
+- **Web app manifest** — ย้ายจาก `public/site.webmanifest` เป็น route `src/app/manifest.ts` เพราะ `start_url` และ path ของไอคอนต้องมี base path เฉพาะบน build ของ Pages ไฟล์ JSON แบบ static ทำไม่ได้ ต้องใส่ `export const dynamic = 'force-static'` ไม่เช่นนั้น `output: 'export'` จะ build ไม่ผ่าน
+- **Hero** — เหลือคอลัมน์เดียวชิดซ้าย: หัวเรื่อง ข้อความรอง ปุ่มหลัก/รอง จากนั้น "พร้อมสำรวจ และติดตั้ง" แล้วต่อด้วย Facebook, LINE และเบอร์โทรเป็นแถวลิงก์ที่ wrap เอง (ไม่ใช่การ์ดสามใบ) พื้นที่ให้บริการอยู่ถัดลงมาในระดับรอง และแถบประสบการณ์ย้ายเข้ามาอยู่ในส่วนเดียวกับ Hero ที่ขอบล่าง แทนที่จะเป็นแถบแยกต่อท้าย
+- **Facebook** — ใส่เพจจริงที่ NP88 ส่งมาแทนค่าว่างเดิม ตัวแปร `NEXT_PUBLIC_FACEBOOK_URL` ยังมีสิทธิ์ override เปิดแท็บใหม่พร้อม `rel="noopener noreferrer"`
+- **เตรียมภาพพื้นหลัง Hero** — แยก `HeroBackground` ออกมา รองรับ `object-cover`, focal point (`object-position`), ภาพแนวตั้งสำหรับต่ำกว่า 768px และ overlay สีกรมท่า (#001D78) ค่าเริ่มต้น 55% พร้อม gradient ทางแนวนอนให้ฝั่งข้อความเข้มกว่า **ยังไม่มีภาพจริงในรอบนี้** และไม่ได้ใส่ภาพ AI/stock ใด ๆ Hero ยังใช้พื้นกรมท่าลาย blueprint เดิม
+
+ขนาดภาพที่รอจาก NP88: desktop 2400×1350 (ขั้นต่ำ 1920×1080) เว้นพื้นที่โล่งฝั่งซ้ายสำหรับข้อความ, mobile 1080×1440 (ไม่บังคับ) วิธีติดตั้งอยู่ใน docblock ของ `src/components/home/HeroBackground.tsx`
+
+### ผลการตรวจ
+
+- ESLint, TypeScript, tests 6 รายการ, CMS seed dry-run และ production build ผ่าน
+- `verify:links` crawl 51 หน้า 29 assets ไม่พบลิงก์/anchor/asset เสีย
+- `verify:metadata` 16 routes ผ่าน
+- `verify:lead-api` 10 เคสผ่าน
+- Static export + `verify-static-preview.mjs`: 31 หน้า 83 ลิงก์/assets ผ่าน ตรวจ HTML ที่ export แล้วพบ `<link rel="icon">`, `apple-touch-icon`, `manifest`, `start_url` และ `src` ของโลโก้ขึ้นต้นด้วย `/SolarWebsite` ครบ
+- Hero: ไม่พบ horizontal overflow ที่ 390, 430, 768, 820, 1024, 1280, 1440, 1920px ความสูง Hero 732–970px แถบติดต่อล่างแสดงต่ำกว่า 768px และซ่อนตั้งแต่ 768px ขึ้นไป
+- ตรวจ href ใน Hero: `/quote`, `/projects` ผ่าน next/link (ได้ base path บน export), Facebook และ LINE เปิดแท็บใหม่พร้อม rel, โทรศัพท์เป็น `tel:+66956971915`
+- ไม่พบ browser console errors
+
+### ข้อสังเกตที่ยังค้าง
+
+- favicon ขนาด 16–48px อ่านชื่อ "NP88 Solar" ไม่ออก เพราะโลโก้สี่เหลี่ยมมีตัวอักษรอยู่ใต้สัญลักษณ์ ถ้าต้องการให้ชัดขึ้นต้องมีไฟล์เฉพาะที่เป็นเครื่องหมายอย่างเดียว (ไม่มีตัวอักษร) จาก NP88 — รอบนี้ไม่ crop ตามที่กำหนด
+- โลโก้สี่เหลี่ยมไม่มี alpha channel พื้นหลังจึงเป็นสีขาวทึบ ใช้เป็น favicon ได้ แต่ถ้าต้องการพื้นโปร่งใสต้องขอไฟล์ที่มี alpha
+- ยังไม่ใส่จำนวนไซต์งาน 600+ / 700+
+
+---
+
 ## รอบที่ 2 — 14 กันยายน 2026 (หลัง 30bd49b)
 
 ### สิ่งที่แก้
