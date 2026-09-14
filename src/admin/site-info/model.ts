@@ -59,7 +59,7 @@ export const siteInfoSchema = z.object({
         if (parts.length < 3 || parts.length > 4 || parts.slice(0, 3).some((part) => !part)) {
           context.addIssue({
             code: 'custom',
-            message: `บรรทัดที่ ${index + 1} ต้องเป็น จังหวัด | English | slug | หลัก`,
+            message: `พื้นที่ลำดับที่ ${index + 1} ต้องมีชื่อจังหวัดและชื่ออังกฤษ`,
           });
           continue;
         }
@@ -67,10 +67,10 @@ export const siteInfoSchema = z.object({
         if (!/^[a-z0-9-]+$/.test(slug))
           context.addIssue({
             code: 'custom',
-            message: `slug บรรทัดที่ ${index + 1} ใช้ได้เฉพาะ a-z ตัวเลข และขีดกลาง`,
+            message: `ระบบสร้างชื่อในลิงก์ของพื้นที่ลำดับที่ ${index + 1} ไม่สำเร็จ กรุณาตรวจชื่ออังกฤษ`,
           });
         if (slugs.has(slug))
-          context.addIssue({ code: 'custom', message: `slug "${slug}" ซ้ำกัน` });
+          context.addIssue({ code: 'custom', message: `ชื่ออังกฤษของพื้นที่ลำดับที่ ${index + 1} ซ้ำกับจังหวัดอื่น` });
         slugs.add(slug);
       }
     }),
@@ -179,9 +179,20 @@ export function parseServiceAreas(value: string): ServiceArea[] {
     .map((line) => line.trim())
     .filter(Boolean)
     .map((line) => {
-      const [name, nameEn, slug, primary = ''] = line.split('|').map((part) => part.trim());
-      return { name, nameEn, slug, primary: ['หลัก', 'yes', 'true', '1'].includes(primary.toLowerCase()) };
+      const [name, nameEn, , primary = ''] = line.split('|').map((part) => part.trim());
+      return { name, nameEn, slug: createServiceAreaSlug(nameEn), primary: ['หลัก', 'yes', 'true', '1'].includes(primary.toLowerCase()) };
     });
+}
+
+/** Internal route key; staff never need to know or type this value. */
+export function createServiceAreaSlug(nameEn: string): string {
+  return nameEn
+    .normalize('NFKD')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/[\s_-]+/g, '-')
+    .replace(/^-|-$/g, '');
 }
 
 /**

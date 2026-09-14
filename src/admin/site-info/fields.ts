@@ -75,8 +75,7 @@ export const fieldGroups: FieldGroup[] = [
       {
         name: 'serviceAreas',
         label: 'พื้นที่ให้บริการ',
-        help: 'หนึ่งจังหวัดต่อหนึ่งบรรทัด: จังหวัด | English | slug | หลัก (ใส่คำว่า หลัก เฉพาะพื้นที่หลัก)',
-        placeholder: 'เชียงใหม่ | Chiang Mai | chiang-mai | หลัก\nลำพูน | Lamphun | lamphun',
+        help: 'กรอกชื่อจังหวัดและชื่ออังกฤษ ระบบจะสร้างรหัสภายในให้อัตโนมัติ',
         multiline: true,
       },
     ],

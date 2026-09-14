@@ -6,6 +6,7 @@ import {
   toPatches,
   validate,
   type SiteInfoValues,
+  createServiceAreaSlug,
 } from '../src/admin/site-info/model';
 import { defaultSiteData } from '../src/lib/site-data';
 import { companyModel, settingsModel } from '../src/cms/site-models';
@@ -87,6 +88,13 @@ test('service areas are parsed once and written as the exact shape the site read
   ]);
   assert.ok(validate({ ...good(), serviceAreas: 'เชียงใหม่ | | chiang-mai' })?.serviceAreas);
   assert.ok(validate({ ...good(), serviceAreas: 'เชียงใหม่ | Chiang Mai | เชียงใหม่' })?.serviceAreas);
+});
+
+test('the service-area route key is generated from the English name', () => {
+  assert.equal(createServiceAreaSlug('Chiang Mai'), 'chiang-mai');
+  assert.equal(createServiceAreaSlug('  Mae   Hong Son  '), 'mae-hong-son');
+  const { company } = toPatches({ ...good(), serviceAreas: 'เชียงใหม่ | Chiang Mai | not-used' });
+  assert.equal((company.serviceAreas as { slug: string }[])[0].slug, 'chiang-mai');
 });
 
 test('a save cannot delete the address fields the form does not show', () => {
