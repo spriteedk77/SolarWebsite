@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   fromDocuments,
+  requiredAddressDefaults,
   toPatches,
   validate,
   type SiteInfoValues,
@@ -75,12 +76,28 @@ test('saving touches only the fields the form owns', () => {
   ])
     assert.equal(key in company, false, key);
   assert.equal('contactInformation' in settings, false);
-  assert.deepEqual(Object.keys(company.address as object).sort(), [
-    'district',
-    'postalCode',
-    'province',
-    'street',
+});
+
+test('a save cannot delete the address fields the form does not show', () => {
+  // The bug this exists for: writing an `address` object replaces it, and it
+  // carries the country code and its name, which the website requires and
+  // this form never shows. The patch has to address each line on its own.
+  const { company } = toPatches(good());
+  assert.equal('address' in company, false, 'must not replace the whole object');
+  assert.equal(company['address.street'], '123 หมู่ 4');
+  assert.equal(company['address.province'], 'เชียงใหม่');
+  for (const key of ['address.country', 'address.countryName'])
+    assert.equal(key in company, false, `${key} is not this form's to set`);
+});
+
+test('the fields a previous save may have dropped can be restored', () => {
+  const defaults = requiredAddressDefaults();
+  assert.deepEqual(Object.keys(defaults).sort(), [
+    'address.country',
+    'address.countryName',
   ]);
+  for (const value of Object.values(defaults))
+    assert.equal(typeof value === 'string' && value.length > 0, true);
 });
 
 test('values are trimmed on the way into the document', () => {
@@ -96,7 +113,14 @@ test('values are trimmed on the way into the document', () => {
 test('a round trip through a document keeps every value', () => {
   const values = good();
   const { company, settings } = toPatches(values);
-  assert.deepEqual(fromDocuments(company, settings), values);
+  // Rebuild the document the way Sanity applies a patch of dotted paths.
+  const applied: Record<string, unknown> = { address: {} };
+  for (const [key, value] of Object.entries(company)) {
+    const [head, tail] = key.split('.');
+    if (tail) (applied.address as Record<string, unknown>)[tail] = value;
+    else applied[head] = value;
+  }
+  assert.deepEqual(fromDocuments(applied, settings), values);
 });
 
 test('the site data the repo ships would pass this form', () => {

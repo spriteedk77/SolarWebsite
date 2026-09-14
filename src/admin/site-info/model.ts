@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { defaultSiteData } from '@/lib/site-data';
 
 /**
  * The fields NP88 actually changes, and the rules they have to satisfy.
@@ -118,14 +119,29 @@ export function toPatches(values: SiteInfoValues): {
 } {
   const company: Record<string, unknown> = {};
   for (const key of COMPANY_FIELDS) company[key] = values[key].trim();
-  company.address = Object.fromEntries(
-    ADDRESS_FIELDS.map((key) => [key, values[key].trim()]),
-  );
+  // One key per address line rather than one `address` object. Writing the
+  // object would replace it, and it holds two fields this form does not show —
+  // the country code and its name — which the website requires and which a
+  // save would otherwise silently delete.
+  for (const key of ADDRESS_FIELDS)
+    company[`address.${key}`] = values[key].trim();
 
   const settings: Record<string, unknown> = {};
   for (const key of SETTINGS_FIELDS) settings[key] = values[key].trim();
 
   return { company, settings };
+}
+
+/**
+ * Address fields the form does not show but the website cannot render without.
+ *
+ * Written only where they are absent, which is repair rather than content: an
+ * earlier version of this form replaced the whole address object and dropped
+ * them, and the values are the ones this repository has always shipped.
+ */
+export function requiredAddressDefaults(): Record<string, unknown> {
+  const { country, countryName } = defaultSiteData.contact.address;
+  return { 'address.country': country, 'address.countryName': countryName };
 }
 
 /** Field errors keyed by field name, or null when the values are usable. */

@@ -13,6 +13,7 @@ import { companyModel, settingsModel } from '@/cms/site';
 import { usesSanity } from '@/cms/client';
 import {
   fromDocuments,
+  requiredAddressDefaults,
   toPatches,
   validate,
   type SiteInfoValues,
@@ -173,7 +174,15 @@ export async function saveSiteInfoAction(
       .transaction()
       .createIfNotExists({ _id: draftId(COMPANY_ID), _type: COMPANY_ID })
       .createIfNotExists({ _id: draftId(SETTINGS_ID), _type: SETTINGS_ID })
-      .patch(draftId(COMPANY_ID), (patch) => patch.set(company))
+      .patch(draftId(COMPANY_ID), (patch) =>
+        patch
+          // `address` has to exist before a path inside it can be set, and the
+          // two fields the form does not show are restored here if an earlier
+          // save removed them.
+          .setIfMissing({ address: {} })
+          .setIfMissing(requiredAddressDefaults())
+          .set(company),
+      )
       .patch(draftId(SETTINGS_ID), (patch) => patch.set(settings))
       .commit();
   } catch (error) {
