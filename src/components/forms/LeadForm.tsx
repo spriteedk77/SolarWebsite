@@ -79,6 +79,7 @@ export function LeadForm({
   submitted?: boolean;
   submitError?: string;
 }) {
+  const isStaticPreview = process.env.NEXT_PUBLIC_STATIC_PREVIEW === '1';
   const [errors, setErrors] = useState<Errors>({});
   const [status, setStatus] = useState<Status>(
     submitted ? 'success' : submitError ? 'error' : 'idle',
@@ -119,6 +120,7 @@ export function LeadForm({
 
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (isStaticPreview) return;
     // Synchronous guard. `status` is React state, so two submits fired in the
     // same tick would both read 'idle' and both reach the network; a ref flips
     // immediately and closes that window.
@@ -204,13 +206,19 @@ export function LeadForm({
       ref={formRef}
       // Real action/method: without JavaScript the browser posts natively and
       // the endpoint redirects back to /quote?sent=1.
-      action="/api/lead"
+      action={isStaticPreview ? undefined : '/api/lead'}
       method="post"
       encType="multipart/form-data"
       onSubmit={onSubmit}
       noValidate
       className="space-y-6"
     >
+      {isStaticPreview && (
+        <div className="rounded-card border border-solar-300 bg-solar-50 p-4 text-caption text-navy-900 sm:p-5">
+          หน้านี้เป็นเว็บไซต์พรีวิวบน GitHub Pages จึงยังไม่เปิดรับข้อมูลผ่านแบบฟอร์ม
+          สามารถติดต่อทีมงานได้ทาง LINE หรือโทรศัพท์ด้านล่าง
+        </div>
+      )}
       <noscript>
         <div className="rounded-card border border-flare-300 bg-flare-50 p-4 text-caption text-flare-900">
           เบราว์เซอร์ของคุณปิดการใช้งาน JavaScript อยู่ — แบบฟอร์มยังส่งได้ตามปกติ
@@ -438,10 +446,14 @@ export function LeadForm({
             type="submit"
             size="lg"
             variant="primary"
-            disabled={status === 'submitting'}
+            disabled={status === 'submitting' || isStaticPreview}
             className="sm:min-w-64"
           >
-            {status === 'submitting' ? 'กำลังส่งข้อมูล…' : cta.submit}
+            {status === 'submitting'
+              ? 'กำลังส่งข้อมูล…'
+              : isStaticPreview
+                ? 'แบบฟอร์มยังไม่เปิดในเว็บไซต์พรีวิว'
+                : cta.submit}
             {status !== 'submitting' && <Icon name="arrow-right" className="h-5 w-5" />}
           </Button>
           <p className="text-caption text-ink-600">

@@ -1,5 +1,7 @@
 import { ImageResponse } from 'next/og';
 
+export const dynamic = 'force-static';
+
 /**
  * Site-wide social share image.
  *

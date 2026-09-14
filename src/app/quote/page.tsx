@@ -29,7 +29,9 @@ const first = (value: string | string[] | undefined): string =>
   (Array.isArray(value) ? value[0] : value) ?? '';
 
 export default async function QuotePage({ searchParams }: { searchParams: SearchParams }) {
-  const params = await searchParams;
+  // GitHub Pages has no request-time server. Its preview build renders the
+  // default form state; Railway keeps the query-prefill behaviour unchanged.
+  const params = process.env.NEXT_PUBLIC_STATIC_PREVIEW === '1' ? {} : await searchParams;
 
   // Deep links from the marketing pages carry the visitor's context so the form
   // arrives partly answered instead of asking again.

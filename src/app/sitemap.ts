@@ -2,6 +2,8 @@ import type { MetadataRoute } from 'next';
 import { getArticles, getProjects } from '@/content';
 import { site } from '@/lib/site';
 
+export const dynamic = 'force-static';
+
 /**
  * XML sitemap.
  *
