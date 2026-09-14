@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 
 import { PageHero } from '@/components/layout/PageHero';
 import { SolutionsGrid } from '@/components/sections/SolutionsGrid';
@@ -99,7 +100,9 @@ export default async function SolutionsPage() {
         <ul className="mt-8 divide-y divide-hairline overflow-hidden rounded-card border border-hairline">
           {comparison.map((row) => (
             <li key={row.question}>
-              <a
+              {/* next/link, not a bare <a>: only Link applies the GitHub Pages
+                  basePath, and these in-page anchors 404 on the preview without it. */}
+              <Link
                 href={row.href}
                 className="flex flex-col gap-2 bg-white px-5 py-4 hover:bg-paper-soft sm:flex-row sm:items-center sm:justify-between sm:px-6"
               >
@@ -108,7 +111,7 @@ export default async function SolutionsPage() {
                   {row.answer}
                   <Icon name="arrow-right" className="h-4.5 w-4.5" />
                 </span>
-              </a>
+              </Link>
             </li>
           ))}
         </ul>

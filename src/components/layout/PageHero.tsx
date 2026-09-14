@@ -17,6 +17,7 @@ export function PageHero({
   actions,
   image,
   children,
+  width = 'wide',
 }: {
   crumbs: Crumb[];
   title: string;
@@ -26,6 +27,8 @@ export function PageHero({
   /** Background photograph. Falls back to the flat navy ground when omitted. */
   image?: { src: string; alt: string };
   children?: React.ReactNode;
+  /** Must match the width of the section below, so the page reads as one column. */
+  width?: 'default' | 'narrow' | 'wide';
 }) {
   const imageSrc = image ? publicAssetPath(image.src) : undefined;
 
@@ -47,7 +50,7 @@ export function PageHero({
       )}
       {!image && <div aria-hidden="true" className="absolute inset-0 -z-10 bg-blueprint" />}
 
-      <Container width="wide">
+      <Container width={width}>
         <div className="py-10 md:py-14">
           <Breadcrumb crumbs={crumbs} tone="dark" />
 

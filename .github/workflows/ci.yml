@@ -90,6 +90,40 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
+  static-preview:
+    # The GitHub Pages export is what the client reviews, and it is the only
+    # build where `basePath` applies. It runs in `Publish website preview`
+    # too, but that workflow only fires on pushes to main — running it here
+    # as well means a pull request cannot merge a link or asset that would
+    # 404 under /SolarWebsite.
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GITHUB_PAGES: 'true'
+      NEXT_PUBLIC_STATIC_PREVIEW: '1'
+      NEXT_PUBLIC_BASE_PATH: /SolarWebsite
+      NEXT_PUBLIC_SITE_URL: https://spriteedk77.github.io/SolarWebsite
+      CONTENT_SOURCE: local
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Remove server-only route from the static preview
+        run: rm -rf src/app/api
+
+      - name: Build static preview
+        run: npm run build
+
+      - name: Verify exported routes and asset paths
+        run: node scripts/verify-static-preview.mjs
+
   studio:
     runs-on: ubuntu-latest
     timeout-minutes: 15

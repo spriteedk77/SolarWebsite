@@ -33,28 +33,29 @@ export default async function ContactPage() {
   return (
     <>
       <PageHero
+        width="default"
         crumbs={crumbs}
         title={`ติดต่อ ${site.name}`}
         lead="สอบถามเรื่องระบบ Solar นัดหมายสำรวจ หรือส่งบิลค่าไฟและรูปหลังคาให้ทีมงานประเมินเบื้องต้น"
       />
-      <Section tone="white" width="wide">
-        <div className="grid items-stretch gap-8 md:grid-cols-2 lg:gap-12">
+      <Section tone="white" width="default">
+        <div className="grid items-start gap-10 md:grid-cols-2 lg:gap-14">
           <section
             aria-labelledby="contact-company-title"
-            className="min-w-0 py-2"
+            className="min-w-0"
           >
             <h2 id="contact-company-title" className="text-h2">
               {site.name}
             </h2>
             <p className="mt-2 text-body text-ink-600">{site.legalNameShort}</p>
-            <address className="mt-7 border-t border-hairline pt-6 text-body not-italic text-ink-700">
+            <address className="mt-6 border-t border-hairline pt-6 text-body not-italic text-ink-700">
               <p className="font-semibold text-navy-900">ที่อยู่สำนักงาน</p>
               <p className="mt-3">{contact.address.street}</p>
               <p>{contact.address.district}</p>
               <p>
                 จังหวัด{contact.address.province} {contact.address.postalCode}
               </p>
-              <div className="mt-6 space-y-2">
+              <div className="mt-5 space-y-1">
                 <a
                   className="flex min-h-11 items-center gap-3 font-semibold text-navy-900"
                   href={contact.phoneHref}
@@ -84,14 +85,14 @@ export default async function ContactPage() {
                 </p>
               )}
             </address>
-            <div className="mt-7 flex flex-col flex-wrap gap-3 sm:flex-row">
+            <div className="mt-6 flex flex-col flex-wrap gap-3 sm:flex-row">
               <LineCTA size="lg" />
               <PhoneCTA size="lg" label="โทรหาทีมงาน" />
             </div>
           </section>
           <section
             aria-labelledby="office-location-title"
-            className="min-w-0 rounded-card border border-hairline bg-paper-soft p-6 sm:p-8"
+            className="min-w-0 rounded-card border border-hairline bg-paper-soft p-6 sm:p-7"
           >
             <div className="flex items-center gap-3">
               <Icon
@@ -111,7 +112,7 @@ export default async function ContactPage() {
                 className="mt-6 aspect-[4/3] w-full rounded-lg border-0"
               />
             ) : (
-              <div className="mt-7 space-y-5">
+              <div className="mt-6 space-y-4">
                 <p className="text-h3">
                   {contact.address.district}
                   <br />
@@ -120,7 +121,7 @@ export default async function ContactPage() {
                 <p className="text-body text-ink-700">
                   {contact.addressLines.join(' ')}
                 </p>
-                <p className="border-t border-hairline pt-5 text-body text-ink-700">
+                <p className="border-t border-hairline pt-4 text-body text-ink-700">
                   กรุณาติดต่อทีมงานก่อนเข้าพบ
                   เพื่อนัดหมายและรับเส้นทางมายังสำนักงาน
                 </p>
@@ -146,12 +147,12 @@ export default async function ContactPage() {
           <h2 id="contact-areas-title" className="text-h2">
             พื้นที่ให้บริการ
           </h2>
-          <ul className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          <ul className="mt-5 flex flex-wrap gap-3">
             {serviceAreas.map((area) => (
               <li
                 key={area.slug}
                 id={area.slug}
-                className="flex scroll-mt-28 items-center gap-2 rounded-lg bg-paper-soft px-4 py-4 text-body font-medium text-navy-900"
+                className="flex scroll-mt-28 items-center gap-2 rounded-lg bg-paper-soft px-4 py-3 text-body font-medium text-navy-900"
               >
                 <Icon
                   name="map-pin"
