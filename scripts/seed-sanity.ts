@@ -68,7 +68,17 @@ async function seed(
     _id: `drafts.${id}`,
     approvedForPublication: false,
   };
-  if (client) await client.createIfNotExists(document);
+  if (client)
+    try {
+      await client.createIfNotExists(document);
+    } catch (cause) {
+      // Which document failed is the first thing worth knowing, and the
+      // caller only sees one line. Sanity's own message is kept intact.
+      throw new Error(
+        `Could not create draft "${id}": ${cause instanceof Error ? cause.message : String(cause)}`,
+        { cause },
+      );
+    }
   console.log(`${write ? 'Created draft' : 'Dry run'}: ${id}`);
 }
 async function main() {
@@ -101,7 +111,13 @@ async function main() {
     primaryCTA: cta.primary,
     secondaryCTA: cta.projects,
     footerInformation,
-    contactInformation: { _type: 'reference', _ref: 'company' },
+    // Weak on purpose. Sanity refuses a strong reference to a document that
+    // does not exist, and this import creates `drafts.company` — never
+    // `company` — because nothing here is allowed to publish. A strong
+    // reference would make the whole import impossible, not just this field.
+    // Once an editor has published the company document, re-picking it in the
+    // Settings field writes the strong reference the schema asks for.
+    contactInformation: { _type: 'reference', _ref: 'company', _weak: true },
   }));
   for (const p of projects)
     await seed(p.id, async () => {
@@ -197,9 +213,16 @@ async function main() {
       : 'No remote changes. Add --write only after configuring the target dataset and taking a backup.',
   );
 }
-main().catch(() => {
+main().catch((error: unknown) => {
+  // Print what Sanity actually said. Guessing at "credentials, dataset and
+  // network" sent the first real import hunting in the wrong place: the token
+  // was fine and one document was at fault. Only the message and the status
+  // are printed — never the error object or the client config, either of
+  // which can carry the write token into a terminal log or a screenshot.
+  const status = (error as { statusCode?: number } | null)?.statusCode;
   console.error(
-    'CMS import failed. Check credentials, target dataset and network; no documents were published.',
+    `CMS import failed${status ? ` (HTTP ${status})` : ''}; no documents were published.`,
   );
+  console.error(error instanceof Error ? error.message : String(error));
   process.exitCode = 1;
 });
