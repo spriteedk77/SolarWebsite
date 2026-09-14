@@ -36,11 +36,8 @@ import { SpamChallenge } from './SpamChallenge';
  *    summary is announced and focused after a failed submit
  *  - status changes are announced through a live region
  *
- * Progressive enhancement:
- *  the <form> carries a real `action`/`method`, so with JavaScript unavailable
- *  the browser posts natively and /api/lead redirects back to /quote?sent=1.
- *  JavaScript only upgrades that to an inline fetch — it is not required for
- *  the lead to arrive, and a <noscript> panel says so with phone and LINE.
+ * The form retains native POST handling, but production spam verification
+ * requires JavaScript. The noscript notice directs users to phone or LINE.
  */
 
 const MAX_FILE_MB = MAX_FILE_BYTES / 1024 / 1024;

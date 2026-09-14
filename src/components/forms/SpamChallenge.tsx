@@ -11,6 +11,7 @@ declare global {
         options: {
           sitekey: string;
           action: string;
+          size: 'compact';
           'response-field-name': string;
         },
       ) => string;
@@ -27,6 +28,8 @@ export function SpamChallenge() {
     const id = window.turnstile.render(ref.current, {
       sitekey,
       action: 'lead',
+      // Fits the form's inner column even at 375px; normal mode requires 300px.
+      size: 'compact',
       'response-field-name': 'cf-turnstile-response',
     });
     return () => window.turnstile?.remove(id);
