@@ -20,6 +20,21 @@ const ph = (
   placeholder: true,
 });
 
+const photo = (
+  src: string,
+  alt: string,
+  caption: string,
+  width: number,
+  height: number,
+): ImageAsset => ({
+  src,
+  alt,
+  caption,
+  width,
+  height,
+  placeholder: false,
+});
+
 export const projects: Project[] = [
   {
     id: 'prj-178',
@@ -40,10 +55,13 @@ export const projects: Project[] = [
     monitoring: 'ติดตามการผลิตไฟรายแผงผ่าน Optimizer',
     estimatedSavingsThbPerMonth: 120000,
     gallery: [
-      ph(
-        '/images/placeholder/project-commercial-wide.svg',
+      // Original media published by NP88 Solar: Facebook photo 122328701426027026.
+      photo(
+        '/images/projects/commercial-rooftop-178kw-lampang.jpg',
         'ภาพรวมหลังคาอาคารพาณิชย์ที่ติดตั้งแผงโซลาร์ขนาด 178.56 kW จังหวัดลำปาง',
         'ภาพรวมการติดตั้งแผง 288 แผงบนหลังคาอาคาร',
+        1254,
+        1254,
       ),
       ph(
         '/images/placeholder/project-array-detail.svg',
@@ -110,10 +128,13 @@ export const projects: Project[] = [
     zeroExport: false,
     estimatedSavingsThbPerMonth: 24000,
     gallery: [
-      ph(
-        '/images/placeholder/project-rooftop-30kw.svg',
+      // Original media published by NP88 Solar: Facebook photo 122328701522027026.
+      photo(
+        '/images/projects/solar-rooftop-30kw-mae-taeng.jpg',
         'แผงโซลาร์ 48 แผงบนหลังคาอาคารในอำเภอแม่แตง จังหวัดเชียงใหม่',
         'ระบบ 30 kW จำนวน 48 แผงบนหลังคา',
+        1254,
+        1254,
       ),
       ph(
         '/images/placeholder/project-array-detail.svg',
@@ -170,10 +191,13 @@ export const projects: Project[] = [
     zeroExport: false,
     estimatedSavingsThbPerMonth: 14000,
     gallery: [
-      ph(
-        '/images/placeholder/project-rooftop-22kw.svg',
+      // Original media published by NP88 Solar: Facebook photo 122328701360027026.
+      photo(
+        '/images/projects/solar-rooftop-22-5kw-mueang-chiang-mai.jpg',
         'แผงโซลาร์ชนิด Bifacial กระจกสองชั้น 36 แผง บนหลังคาในอำเภอเมืองเชียงใหม่',
         'ระบบ 22.50 kW ด้วยแผง Bifacial กระจกสองชั้น',
+        1254,
+        1254,
       ),
       ph(
         '/images/placeholder/equipment-panel.svg',
@@ -249,10 +273,13 @@ export const projects: Project[] = [
       { label: 'งานติดตั้ง', value: '3 ปี' },
     ],
     gallery: [
-      ph(
-        '/images/placeholder/project-clinic-rooftop.svg',
+      // Original media published by NP88 Solar: Facebook photo 122327022188027026.
+      photo(
+        '/images/projects/8items-clinic-solar-battery-chiang-mai.jpg',
         'แผงโซลาร์ AIKO STELLAR จำนวน 14 แผง บนหลังคาคลินิกในตำบลฟ้าฮ่าม เชียงใหม่',
         'ระบบ 10.78 kW บนหลังคาอาคารคลินิก',
+        1920,
+        1920,
       ),
       ph(
         '/images/placeholder/equipment-battery.svg',

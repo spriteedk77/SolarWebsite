@@ -24,11 +24,9 @@ const ratios = {
 /**
  * Project and article imagery.
  *
- * NP88 Solar's real installation photography is not in the repository yet, so
- * every asset currently flagged `placeholder` renders with a visible marker.
- * That is deliberate: a placeholder must never be mistaken for a real project
- * photograph, by a visitor or by whoever reviews the site before launch.
- * Drop the real files into /public/images/ and set `placeholder: false`.
+ * Assets flagged `placeholder` are the original branded illustrations used
+ * until NP88 Solar supplies a matching photograph. Real project photography
+ * lives under /public/images/projects and is marked `placeholder: false`.
  */
 export function Figure({
   image,
