@@ -501,24 +501,34 @@ export function LeadForm({
           </div>
         </div>
 
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
-          <SpamChallenge key={challengeKey} />
-          <Button
-            type="submit"
-            size="lg"
-            variant="primary"
-            disabled={status === 'submitting' || isStaticPreview}
-            className="sm:min-w-64"
-          >
-            {status === 'submitting'
-              ? 'กำลังส่งข้อมูล…'
-              : isStaticPreview
-                ? 'แบบฟอร์มยังไม่เปิดในเว็บไซต์พรีวิว'
-                : cta.submit}
-            {status !== 'submitting' && (
-              <Icon name="arrow-right" className="h-5 w-5" />
-            )}
-          </Button>
+        {/* The fallback contact line used to sit in this row and squeeze the
+            submit button onto two lines. It is secondary, so it gets its own
+            line below and the button keeps the width it needs. */}
+        <div className="mt-6 space-y-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <SpamChallenge key={challengeKey} />
+            <Button
+              type="submit"
+              size="lg"
+              variant="primary"
+              disabled={status === 'submitting' || isStaticPreview}
+              className="shrink-0"
+            >
+              {/* Kept on one line: the label and the arrow are a single unit,
+                  and the notice at the top of the form already explains why the
+                  button is disabled in the preview. */}
+              <span className="whitespace-nowrap">
+                {status === 'submitting'
+                  ? 'กำลังส่งข้อมูล…'
+                  : isStaticPreview
+                    ? 'ยังไม่เปิดรับข้อมูล'
+                    : cta.submit}
+              </span>
+              {status !== 'submitting' && (
+                <Icon name="arrow-right" className="h-5 w-5 shrink-0" />
+              )}
+            </Button>
+          </div>
           <p className="text-caption text-ink-600">
             หรือติดต่อโดยตรง{' '}
             <a

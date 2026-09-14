@@ -3,7 +3,6 @@ import { PageHero } from '@/components/layout/PageHero';
 import { Section } from '@/components/ui/Section';
 import { Icon } from '@/components/ui/Icon';
 import { ContactChannels } from '@/components/cta/ContactChannels';
-import { LineCTA } from '@/components/cta/ContactCTAs';
 import { FaqSection } from '@/components/sections/FaqSection';
 import { LeadSection } from '@/components/sections/LeadSection';
 import { JsonLd } from '@/components/seo/JsonLd';
@@ -67,12 +66,7 @@ export default async function ContactPage() {
                 </p>
               )}
             </address>
-            {/* One action. The number directly above is already a tap-to-call
-                link with a full touch target, so a second button repeated the
-                channel rather than adding one. */}
-            <div className="mt-6">
-              <LineCTA size="lg" />
-            </div>
+
           </section>
           <section
             aria-labelledby="office-location-title"
