@@ -5,10 +5,23 @@ const repositoryName =
   process.env.GITHUB_REPOSITORY?.split('/')[1] ?? 'SolarWebsite';
 const pagesBasePath = isGitHubPages ? `/${repositoryName}` : '';
 
-if (
+/**
+ * Hosts that mean "this build is going in front of real customers".
+ *
+ * Vercel and Netlify each say so in their own read-only build variable, so the
+ * guard below fires without anyone remembering to set anything. On any other
+ * host — or locally — set PRODUCTION_LAUNCH=1 to opt in manually.
+ *
+ * Netlify's CONTEXT is `production`, `deploy-preview`, `branch-deploy` or
+ * `dev`; only the first one is a real launch, so previews stay buildable
+ * against the local content snapshot.
+ */
+const isProductionLaunch =
   process.env.VERCEL_ENV === 'production' ||
-  process.env.PRODUCTION_LAUNCH === '1'
-) {
+  (process.env.NETLIFY === 'true' && process.env.CONTEXT === 'production') ||
+  process.env.PRODUCTION_LAUNCH === '1';
+
+if (isProductionLaunch) {
   const required = [
     'SANITY_PROJECT_ID',
     'SANITY_DATASET',
