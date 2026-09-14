@@ -19,7 +19,7 @@ npm ci
 npm run dev
 ```
 
-ตั้ง `.env.local` ตาม `.env.example` เมื่อจำเป็น ค่าเริ่มต้น `CONTENT_SOURCE=local` ใช้ข้อมูลเดิมใน repo ไม่ต้องมีบัญชีภายนอก ห้าม commit secret
+ตั้ง `.env.local` ตาม `.env.example` เมื่อจำเป็น เครื่องพัฒนาและ GitHub Pages ใช้ข้อมูลสำเนาใน repo ส่วน Netlify อ่าน Sanity โดยตรง ห้าม commit secret
 
 | คำสั่ง | ใช้สำหรับ |
 | --- | --- |
@@ -39,7 +39,7 @@ npm run dev
 
 `Website checks` ตรวจ lint/test/typecheck/build และเปิด server ทดสอบ links/metadata/API แยก job ตรวจ Sanity Studio schema/typecheck/build และ audit โดยไม่ใช้บัญชี CMS เก็บรายงานเว็บใน artifact `ci-logs`
 
-`Publish website preview` รอ Website checks ผ่านจาก push ใน repo นี้ แล้ว checkout commit ที่ผ่านจริงเพื่อ build static และ deploy Pages ตั้ง `CONTENT_SOURCE=local` เสมอ สามารถสั่ง manual preview build ได้ และมี lint/test/typecheck ก่อน build อีกชั้น
+`Publish website preview` รอ Website checks ผ่านจาก push ใน repo นี้ แล้ว checkout commit ที่ผ่านจริงเพื่อ build static และ deploy Pages สามารถสั่ง manual preview build ได้ และมี lint/test/typecheck ก่อน build อีกชั้น
 
 CI ไม่ได้ตรวจ proxy ของโฮสต์จริงหรือพิสูจน์ว่า webhook เก็บไฟล์แล้ว ต้องทดสอบอีกครั้งตอนเชื่อม deployment จริง
 

@@ -1,17 +1,10 @@
 import 'server-only';
 import { cache } from 'react';
-import { z } from 'zod';
 import { defaultSiteData, type SiteData } from '@/lib/site-data';
 import { queryPublished, usesSanity } from './client';
-
-const text = z.string().min(1);
-const https = z.url().refine((value) => value.startsWith('https://'));
-const area = z.object({
-  slug: text.regex(/^[a-z0-9-]+$/),
-  name: text,
-  nameEn: text,
-  primary: z.boolean().default(false),
-});
+import { imageProjection } from './content';
+export { companyModel, settingsModel } from './site-models';
+import { companyModel, settingsModel } from './site-models';
 /**
  * What the website needs before it can render this content.
  *
@@ -19,47 +12,15 @@ const area = z.object({
  * publishing it. The alternative is finding out at deploy time, when the
  * failure is a site that will not build rather than a message in a form.
  */
-export const companyModel = z.object({
-  companyName: text,
-  legalName: text,
-  tagline: text,
-  description: text,
-  phone: text,
-  phoneE164: text.regex(/^\+[1-9]\d{7,14}$/),
-  lineId: text,
-  lineUrl: https,
-  facebookUrl: https.optional().nullable(),
-  businessHours: z.string().optional().nullable(),
-  address: z.object({
-    street: text,
-    district: text,
-    province: text,
-    postalCode: text,
-    country: text,
-    countryName: text,
-  }),
-  serviceAreas: z.array(area).min(1),
-  googleBusinessProfileUrl: https.optional().nullable(),
-  googleMapsEmbedUrl: z.string().optional().nullable(),
-});
-export const settingsModel = z.object({
-  homepageHeadline: text,
-  homepageDescription: text,
-  homepageServiceMessage: text,
-  primaryCTA: text.max(50),
-  secondaryCTA: text.max(50),
-  footerInformation: text,
-});
+export const settingsProjection = `{homepageHeadline,homepageDescription,homepageServiceMessage,primaryCTA,secondaryCTA,footerInformation,"heroImage":heroImage ${imageProjection},"executivePortrait":executivePortrait ${imageProjection}}`;
 
 /**
  * Read one CMS document, or say what is wrong with it in words.
  *
- * `CONTENT_SOURCE=sanity` with nothing published fails the whole build, by
- * design — the site does not mix live content with the snapshot it shipped
- * with. But it used to fail as a bare `ZodError: expected object, received
- * null` pointing at a line number, which says nothing about what to do. The
- * two cases are quite different and both have an obvious next step, so they
- * now say so.
+ * A missing or invalid published document fails in words rather than as a bare
+ * Zod stack trace. The hosted site never swaps to the repository snapshot: a
+ * visible configuration problem is safer than showing stale content as if a
+ * successful edit had gone live.
  */
 function readOrExplain<T>(
   model: { parse: (value: unknown) => T; safeParse: (value: unknown) => { success: boolean; error?: { issues: { path: PropertyKey[]; message: string }[] } } },
@@ -68,8 +29,8 @@ function readOrExplain<T>(
 ): T {
   if (value === null || value === undefined)
     throw new Error(
-      `CONTENT_SOURCE=sanity แต่ยังไม่มี "${label}" ที่เผยแพร่และติ๊กยืนยันแล้วใน CMS ` +
-        `— เปิด /admin แล้วกดเผยแพร่ก่อน หรือเอา CONTENT_SOURCE ออกเพื่อกลับไปใช้ข้อมูลที่ฝังมากับเว็บ`,
+      `ระบบเนื้อหายังไม่มี "${label}" ที่เผยแพร่และติ๊กยืนยันแล้ว ` +
+        `— เปิด /admin บันทึกข้อมูลให้ครบ แล้วกดเผยแพร่`,
     );
 
   const result = model.safeParse(value);
@@ -91,7 +52,7 @@ export const getSiteData = cache(async (): Promise<SiteData> => {
     settings: unknown;
   }>(`{
     "company": *[_type == "company" && approvedForPublication == true && _id == "company"][0]{companyName,legalName,tagline,description,phone,phoneE164,lineId,lineUrl,facebookUrl,businessHours,address,serviceAreas,googleBusinessProfileUrl,googleMapsEmbedUrl},
-    "settings": *[_type == "siteSettings" && approvedForPublication == true && _id == "siteSettings"][0]{homepageHeadline,homepageDescription,homepageServiceMessage,primaryCTA,secondaryCTA,footerInformation}
+    "settings": *[_type == "siteSettings" && approvedForPublication == true && _id == "siteSettings"][0]${settingsProjection}
   }`);
   const c = readOrExplain(companyModel, result.company, 'ข้อมูลบริษัท');
   const s = readOrExplain(
@@ -145,6 +106,8 @@ export const getSiteData = cache(async (): Promise<SiteData> => {
       headline: s.homepageHeadline,
       description: s.homepageDescription,
       serviceMessage: s.homepageServiceMessage,
+      heroImage: s.heroImage || undefined,
+      executivePortrait: s.executivePortrait || undefined,
     },
     footerInformation: s.footerInformation,
   };

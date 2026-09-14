@@ -4,8 +4,8 @@
 
 ## สถาปัตยกรรม
 
-- `CONTENT_SOURCE=local` อ่าน snapshot ใน repo; Pages ใช้โหมดนี้และปิดรับข้อมูลฟอร์มจริง โทร/LINE ใช้ได้
-- `CONTENT_SOURCE=sanity` อ่านเฉพาะ published perspective และเอกสารที่ยืนยันข้อมูลแล้ว บน Next.js server เนื้อหาอยู่ใน HTML และสร้างหน้าใหม่จาก slug ได้
+- เครื่องพัฒนาและ GitHub Pages อ่าน snapshot ใน repo; Pages เป็นสำเนาสำหรับตรวจงานและปิดรับข้อมูลฟอร์มจริง โทร/LINE ใช้ได้
+- Netlify อ่านเฉพาะ Sanity published perspective และเอกสารที่ยืนยันข้อมูลแล้ว เนื้อหาอยู่ใน HTML และสร้างหน้าใหม่จาก slug ได้โดยไม่ต้อง deploy
 - Cache ตั้ง revalidate 60 วินาที รวม sitemap คำขอแรกหลังหมดอายุอาจยังได้ข้อมูลเก่าระหว่าง refresh จึงไม่ใช่การอัปเดตทันทีทุกเครื่อง
 - ถ้า CMS ผิดพลาดหรือข้อมูลบริษัทไม่ครบ จะรายงานข้อผิดพลาด ไม่แสดง snapshot เก่าปะปน
 - `studio/` ใช้ login, drafts, publish และ revision ของ Sanity จริง ข้อมูลบริษัท/ช่องทางติดต่อ/พื้นที่บริการใช้เอกสารเดียวกัน Settings อ้างอิงบริษัท
@@ -20,7 +20,7 @@ GitHub Pages ไม่รัน API/ISR และไม่อัปเดตต�
 3. สำรอง dataset ก่อนนำเข้า รัน `npm run cms:seed` เพื่อตรวจแผนโดยไม่เชื่อมเครือข่าย เมื่อพร้อมตั้ง `SANITY_PROJECT_ID`, `SANITY_DATASET`, `SANITY_WRITE_TOKEN` ใน shell ส่วนตัว แล้วรัน `npm run cms:seed -- --write` (tsx ไม่โหลด `.env.local` อัตโนมัติ)
 4. สคริปต์เตรียม 19 drafts: บริษัท 1, Settings 1, โครงการ 4, บทความ 12, โปรโมชั่น 1 อัปโหลดภาพจริง แปลงเนื้อหาเป็น rich text ไม่ publish และข้าม ID ที่มี draft/published อยู่แล้ว ไม่เขียนทับงานบรรณาธิการ
 5. ตรวจและ publish บริษัทก่อน Settings แล้วตรวจเนื้อหาทีละรายการ เติมผู้เขียน ภาพจริง และสิทธิ์ใช้งานที่ขาด รูป SVG เก็บไว้เพื่ออ้างอิง แต่ Studio ต้องมีภาพอัปโหลดก่อน publish โปรโมชั่นนำเข้าเป็น inactive และยังขาดเงื่อนไขโดยตั้งใจ
-6. ตั้งค่า deployment host (Netlify — ดู `netlify.toml`) ตั้ง `CONTENT_SOURCE=sanity` และตัวแปรตาม `.env.example` ล้าง `GITHUB_PAGES`, `NEXT_PUBLIC_STATIC_PREVIEW`, `NEXT_PUBLIC_BASE_PATH`, `LEAD_TEST_MODE` ใช้ canonical origin ของ deployment ที่ทดสอบ
+6. ตั้งค่า deployment host (Netlify — ดู `netlify.toml`) ด้วยตัวแปรตาม `.env.example` ล้าง `GITHUB_PAGES`, `NEXT_PUBLIC_STATIC_PREVIEW`, `NEXT_PUBLIC_BASE_PATH`, `LEAD_TEST_MODE` ใช้ canonical origin ของ deployment ที่ทดสอบ
 7. ต่อ receiver ที่เก็บ lead/ไฟล์เป็นส่วนตัว และ Turnstile ที่อนุญาต hostname นี้ เมื่อเปิดจริงตั้ง `PRODUCTION_LAUNCH=1` (Netlify `CONTEXT=production` และ Vercel production บังคับอัตโนมัติอยู่แล้ว) build จะหยุดหากขาด CMS, receiver หรือ spam protection
 8. ทดสอบรายการด้านล่างครบ แล้วค่อยเปลี่ยน DNS/canonical ห้ามถอด Pages ก่อน replacement ใช้งานได้ ยกเลิก write token หลังนำเข้าจบ
 

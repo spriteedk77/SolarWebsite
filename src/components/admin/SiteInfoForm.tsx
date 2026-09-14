@@ -4,6 +4,7 @@ import { useActionState } from 'react';
 import { saveSiteInfoAction, type FormState } from '@/app/admin/actions';
 import { fieldGroups } from '@/admin/site-info/fields';
 import type { SiteInfoValues } from '@/admin/site-info/model';
+import { ServiceAreasEditor } from './ServiceAreasEditor';
 
 const initial: FormState = { status: 'idle' };
 
@@ -68,7 +69,13 @@ export function SiteInfoForm({
                       </p>
                     )}
 
-                    {field.multiline ? (
+                    {field.name === 'serviceAreas' ? (
+                      <ServiceAreasEditor
+                        value={values.serviceAreas}
+                        error={error}
+                        describedBy={describedBy}
+                      />
+                    ) : field.multiline ? (
                       <textarea
                         id={id}
                         name={field.name}
@@ -92,7 +99,7 @@ export function SiteInfoForm({
                       />
                     )}
 
-                    {error && (
+                    {error && field.name !== 'serviceAreas' && (
                       <p
                         id={errorId}
                         className="mt-2 text-caption font-medium text-red-700"

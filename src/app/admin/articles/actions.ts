@@ -1,18 +1,15 @@
 'use server';
 
 import { randomUUID } from 'node:crypto';
-import type { SanityClient } from '@sanity/client';
-import { fileTypeFromBuffer } from 'file-type';
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { articleFieldsModel, textBlock, tagsFromText, validateBlocks, type EditorBlock } from '@/admin/articles/model';
+import { articleFieldsModel, portableTextForEditorBlock, tagsFromText, validateBlocks, type EditorBlock } from '@/admin/articles/model';
 import { adminWriteClient, draftId } from '@/cms/admin-write';
 import { articleProjection } from '@/cms/content';
 import { articleModel } from '@/cms/models';
 import { requireSignedIn } from '@/lib/admin-session';
+import { resolveAdminImage } from '@/cms/admin-images';
 
-const MAX_CMS_IMAGE_BYTES = 3 * 1024 * 1024;
-const IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 
 export type ArticleActionState = { status: 'idle' | 'error'; message?: string; errors?: string[] };
 
@@ -111,9 +108,9 @@ function toEditorBlock(block: RawBlock): EditorBlock | null {
     return { kind: 'image', key, assetId: block.assetId, src: block.src, width: block.width, height: block.height, alt: block.alt || '', caption: block.caption || '' };
   if (block._type === 'block') {
     const style = ['normal', 'h2', 'h3', 'blockquote'].includes(block.style || '') ? block.style as 'normal' | 'h2' | 'h3' | 'blockquote' : 'normal';
-    return { kind: 'text', key, style, text: Array.isArray(block.children) ? block.children.map((child) => child.text || '').join('') : '' };
+    return { kind: 'text', key, style, text: Array.isArray(block.children) ? block.children.map((child) => child.text || '').join('') : '', raw: JSON.stringify(block) };
   }
-  return null;
+  return { kind: 'preserved', key, label: block._type === 'contentTable' ? 'ตารางเดิม' : 'เนื้อหารูปแบบเดิม', raw: JSON.stringify(block) };
 }
 
 export async function saveArticleAction(_previous: ArticleActionState, formData: FormData): Promise<ArticleActionState> {
@@ -139,13 +136,13 @@ export async function saveArticleAction(_previous: ArticleActionState, formData:
 
   let destination = '';
   try {
-    const featuredImage = await resolveImage(config.client, formData.get('featuredImageFile'), String(formData.get('featuredAssetId') || ''), String(formData.get('featuredAlt') || ''), String(formData.get('featuredCaption') || ''));
+    const featuredImage = await resolveAdminImage(config.client, formData.get('featuredImageFile'), String(formData.get('featuredAssetId') || ''), String(formData.get('featuredAlt') || ''), String(formData.get('featuredCaption') || ''));
     if (!featuredImage) return { status: 'error', message: 'กรุณาเลือกรูปหน้าปกและใส่คำอธิบายภาพ' };
     const content = [];
     for (const block of blocks) {
-      if (block.kind === 'text') content.push(textBlock(block.key, block.style, block.text));
+      if (block.kind === 'text' || block.kind === 'preserved') content.push(portableTextForEditorBlock(block));
       else {
-        const image = await resolveImage(config.client, formData.get(`body.file.${block.key}`), block.assetId || '', block.alt, block.caption);
+        const image = await resolveAdminImage(config.client, formData.get(`body.file.${block.key}`), block.assetId || '', block.alt, block.caption);
         if (!image) return { status: 'error', message: `กรุณาเลือกรูปสำหรับส่วน "${block.alt || block.key}"` };
         content.push({ _key: block.key, ...image });
       }
@@ -186,9 +183,10 @@ function readEditorBlocks(formData: FormData): EditorBlock[] {
     const kind = String(formData.get(`body.${index}.kind`));
     const key = String(formData.get(`body.${index}.key`) || randomUUID());
     if (kind === 'image') return { kind: 'image' as const, key, assetId: String(formData.get(`body.${index}.assetId`) || ''), alt: String(formData.get(`body.${index}.alt`) || ''), caption: String(formData.get(`body.${index}.caption`) || '') };
+    if (kind === 'preserved') return { kind: 'preserved' as const, key, label: 'เนื้อหารูปแบบเดิม', raw: String(formData.get(`body.${index}.raw`) || '') };
     const rawStyle = String(formData.get(`body.${index}.style`) || 'normal');
     const style = ['normal', 'h2', 'h3', 'blockquote'].includes(rawStyle) ? rawStyle as 'normal' | 'h2' | 'h3' | 'blockquote' : 'normal';
-    return { kind: 'text' as const, key, style, text: String(formData.get(`body.${index}.text`) || '') };
+    return { kind: 'text' as const, key, style, text: String(formData.get(`body.${index}.text`) || ''), raw: String(formData.get(`body.${index}.raw`) || '') || undefined };
   }).map((block) => {
     if (block.kind === 'image') {
       const index = keys.find((candidate) => String(formData.get(`body.${candidate}.key`)) === block.key);
@@ -196,21 +194,6 @@ function readEditorBlocks(formData: FormData): EditorBlock[] {
     }
     return block;
   });
-}
-
-async function resolveImage(client: SanityClient, upload: FormDataEntryValue | null, existingAssetId: string, alt: string, caption: string) {
-  if (!alt.trim()) return null;
-  let assetId = existingAssetId;
-  if (upload instanceof File && upload.size > 0) {
-    if (upload.size > MAX_CMS_IMAGE_BYTES) throw new Error('รูปต้องมีขนาดไม่เกิน 3 MB');
-    const buffer = Buffer.from(await upload.arrayBuffer());
-    const detected = await fileTypeFromBuffer(buffer);
-    if (!detected || !IMAGE_TYPES.has(detected.mime)) throw new Error('รองรับเฉพาะรูป JPG, PNG และ WebP ที่เป็นไฟล์จริง');
-    const asset = await client.assets.upload('image', buffer, { filename: upload.name, contentType: detected.mime });
-    assetId = asset._id;
-  }
-  if (!assetId) return null;
-  return { _type: 'siteImage', asset: { _type: 'reference', _ref: assetId }, alt: alt.trim(), caption: caption.trim() || undefined };
 }
 
 export async function deleteArticleAction(formData: FormData) {

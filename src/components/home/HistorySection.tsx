@@ -2,6 +2,7 @@ import Image from 'next/image';
 import { Section } from '@/components/ui/Section';
 import { homepageHistory } from '@/lib/site-data';
 import { publicAssetPath } from '@/lib/utils';
+import { getSiteData } from '@/cms/site';
 
 /**
  * "ประวัติและความเป็นมา" — the company statement directly under the hero.
@@ -15,7 +16,7 @@ import { publicAssetPath } from '@/lib/utils';
  * Nothing is written inline here, so editing the section never means editing
  * markup.
  */
-export function HistorySection() {
+export async function HistorySection() {
   const {
     historyEyebrow,
     historyTitle,
@@ -23,8 +24,11 @@ export function HistorySection() {
     historyQuote,
     historyImage,
   } = homepageHistory;
+  const { homepage } = await getSiteData();
+  const cmsPortrait = homepage.executivePortrait;
 
-  const hasPortrait = Boolean(historyImage.src && historyImage.alt);
+  const portrait = cmsPortrait ?? (historyImage.src && historyImage.alt ? { ...historyImage, width: 1200, height: 1500 } : undefined);
+  const portraitPosition = cmsPortrait ? '50% 50%' : historyImage.position;
 
   return (
     <Section
@@ -42,13 +46,13 @@ export function HistorySection() {
               photograph this stays empty on purpose: no stock image, no
               generated stand-in, and no caption claiming who it will be. */}
           <div className="relative aspect-4/5 w-full overflow-hidden rounded-card border border-hairline bg-white">
-            {hasPortrait && (
+            {portrait && (
               <Image
-                src={publicAssetPath(historyImage.src)}
-                alt={historyImage.alt}
+                src={publicAssetPath(portrait.src)}
+                alt={portrait.alt}
                 fill
                 sizes="(min-width: 768px) 42vw, 100vw"
-                style={{ objectPosition: historyImage.position }}
+                style={{ objectPosition: portraitPosition }}
                 className="object-cover"
               />
             )}

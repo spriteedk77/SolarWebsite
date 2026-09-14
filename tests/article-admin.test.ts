@@ -4,6 +4,7 @@ import {
   articleFieldsModel,
   tagsFromText,
   textBlock,
+  portableTextForEditorBlock,
   validateBlocks,
 } from '../src/admin/articles/model';
 import { articleModel } from '../src/cms/models';
@@ -60,4 +61,20 @@ test('the publish model accepts the same text and inline-image blocks the editor
     richContent: [textBlock('intro', 'normal', 'เนื้อหา'), { _type: 'siteImage', _key: 'photo', ...image }],
   });
   assert.equal(result.success, true);
+});
+
+test('saving an untouched migrated block preserves its links and emphasis', () => {
+  const original = {
+    _type: 'block',
+    _key: 'intro',
+    style: 'normal',
+    children: [{ _type: 'span', _key: 'span', text: 'อ่านเพิ่มเติม', marks: ['strong', 'link'] }],
+    markDefs: [{ _type: 'link', _key: 'link', href: '/projects' }],
+  };
+  assert.deepEqual(
+    portableTextForEditorBlock({ kind: 'text', key: 'intro', style: 'normal', text: 'อ่านเพิ่มเติม', raw: JSON.stringify(original) }),
+    original,
+  );
+  const edited = portableTextForEditorBlock({ kind: 'text', key: 'intro', style: 'normal', text: 'ข้อความใหม่', raw: JSON.stringify(original) });
+  assert.equal(JSON.stringify(edited).includes('/projects'), false);
 });

@@ -15,6 +15,7 @@ import { LeadSection } from '@/components/sections/LeadSection';
 import { JsonLd } from '@/components/seo/JsonLd';
 
 import { getProject, getProjects } from '@/content';
+import { usesSanity } from '@/cms/client';
 import {
   customerTypeLabels,
   type Project,
@@ -29,6 +30,7 @@ import { formatKw, formatThb } from '@/lib/utils';
 type Params = { params: Promise<{ slug: string }> };
 
 export async function generateStaticParams() {
+  if (usesSanity()) return [];
   const projects = await getProjects();
   return projects.map((project) => ({ slug: project.slug }));
 }

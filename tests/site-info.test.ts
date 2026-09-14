@@ -8,6 +8,7 @@ import {
   type SiteInfoValues,
 } from '../src/admin/site-info/model';
 import { defaultSiteData } from '../src/lib/site-data';
+import { companyModel, settingsModel } from '../src/cms/site-models';
 
 const good = (): SiteInfoValues => ({
   phone: '095-697-1915',
@@ -137,4 +138,32 @@ test('the site data the repo ships would pass this form', () => {
   // Guards against the form demanding something the real content cannot meet.
   const { contact } = defaultSiteData;
   assert.equal(validate({ ...good(), phone: contact.phone, phoneE164: contact.phoneE164, lineId: contact.lineId, lineUrl: contact.lineUrl }), null);
+});
+
+test('a complete document built from the form passes the public website model', () => {
+  const { company, settings } = toPatches(good());
+  const address: Record<string, unknown> = {
+    country: defaultSiteData.contact.address.country,
+    countryName: defaultSiteData.contact.address.countryName,
+  };
+  const document: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(company)) {
+    if (key.startsWith('address.')) address[key.slice('address.'.length)] = value;
+    else document[key] = value;
+  }
+  document.address = address;
+  assert.equal(companyModel.safeParse(document).success, true);
+  assert.equal(settingsModel.safeParse(settings).success, true);
+});
+
+test('homepage images use the same alt-text rule in admin publication and public rendering', () => {
+  const image = {
+    src: 'https://cdn.sanity.io/images/mtnue2wm/production/hero-2400x1350.jpg',
+    alt: 'ทีมงานตรวจหลังคาก่อนออกแบบระบบโซลาร์',
+    width: 2400,
+    height: 1350,
+  };
+  const settings = { ...toPatches(good()).settings, heroImage: image };
+  assert.equal(settingsModel.safeParse(settings).success, true);
+  assert.equal(settingsModel.safeParse({ ...settings, heroImage: { ...image, alt: '' } }).success, false);
 });

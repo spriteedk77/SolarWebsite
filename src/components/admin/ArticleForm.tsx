@@ -5,6 +5,7 @@ import { useActionState } from 'react';
 import { ARTICLE_CATEGORIES } from '@/cms/models';
 import { ArticleBodyEditor } from './ArticleBodyEditor';
 import { saveArticleAction, type ArticleActionState, type ArticleEditorData } from '@/app/admin/articles/actions';
+import { ImageFileInput } from './ImageFileInput';
 
 const initialState: ArticleActionState = { status: 'idle' };
 const input = 'mt-1 w-full rounded-lg border border-hairline bg-white px-4 py-3 text-body text-ink-900 focus:border-solar-600 focus:outline-none';
@@ -39,7 +40,7 @@ export function ArticleForm({ article }: { article: ArticleEditorData }) {
         {article.featuredImage?.src && <img src={article.featuredImage.src} alt="" className="mt-4 max-h-72 w-full rounded-lg bg-soft object-contain" />}
         <input type="hidden" name="featuredAssetId" value={article.featuredImage?.assetId ?? ''} />
         <div className="mt-5 grid gap-5 sm:grid-cols-2">
-          <label className="text-body font-semibold">เลือกรูปใหม่<input type="file" name="featuredImageFile" accept="image/jpeg,image/png,image/webp" className="mt-2 block w-full text-caption" /></label>
+          <label className="text-body font-semibold">เลือกรูปใหม่<ImageFileInput name="featuredImageFile" /></label>
           <label className="text-body font-semibold">คำอธิบายภาพ<input name="featuredAlt" defaultValue={article.featuredImage?.alt ?? ''} className={input} required /></label>
           <label className="text-body font-semibold sm:col-span-2">คำบรรยายใต้ภาพ<input name="featuredCaption" defaultValue={article.featuredImage?.caption ?? ''} className={input} /></label>
         </div>

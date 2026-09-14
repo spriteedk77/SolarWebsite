@@ -23,6 +23,7 @@ export type EditorTextBlock = {
   key: string;
   style: 'normal' | 'h2' | 'h3' | 'blockquote';
   text: string;
+  raw?: string;
 };
 export type EditorImageBlock = {
   kind: 'image';
@@ -34,7 +35,13 @@ export type EditorImageBlock = {
   alt: string;
   caption: string;
 };
-export type EditorBlock = EditorTextBlock | EditorImageBlock;
+export type EditorPreservedBlock = {
+  kind: 'preserved';
+  key: string;
+  label: string;
+  raw: string;
+};
+export type EditorBlock = EditorTextBlock | EditorImageBlock | EditorPreservedBlock;
 
 export function textBlock(key: string, style: EditorTextBlock['style'], text: string) {
   return {
@@ -44,6 +51,21 @@ export function textBlock(key: string, style: EditorTextBlock['style'], text: st
     markDefs: [],
     children: [{ _type: 'span', _key: `${key}-span`, text: text.trim(), marks: [] }],
   };
+}
+
+export function portableTextForEditorBlock(block: EditorTextBlock | EditorPreservedBlock) {
+  if (block.kind === 'preserved') return JSON.parse(block.raw) as Record<string, unknown>;
+  if (block.raw) {
+    try {
+      const original = JSON.parse(block.raw) as { _key?: string; style?: string; children?: { text?: string }[] };
+      const originalText = Array.isArray(original.children) ? original.children.map((child) => child.text || '').join('') : '';
+      if (originalText === block.text && (original.style || 'normal') === block.style)
+        return { ...original, _key: block.key };
+    } catch {
+      // Hidden form values are untrusted; use the visible fields if parsing fails.
+    }
+  }
+  return textBlock(block.key, block.style, block.text);
 }
 
 export function tagsFromText(value: string): string[] {

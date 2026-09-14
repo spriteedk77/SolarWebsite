@@ -103,7 +103,6 @@ jobs:
       NEXT_PUBLIC_STATIC_PREVIEW: '1'
       NEXT_PUBLIC_BASE_PATH: /SolarWebsite
       NEXT_PUBLIC_SITE_URL: https://spriteedk77.github.io/SolarWebsite
-      CONTENT_SOURCE: local
 
     steps:
       - uses: actions/checkout@v7

@@ -5,6 +5,7 @@
   "description": "NP88 Solar — เว็บไซต์บริษัท NP88 Engineering Co., Ltd. (Solar Rooftop เชียงใหม่)",
   "scripts": {
     "dev": "next dev",
+    "prebuild": "tsx scripts/bootstrap-sanity.ts",
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",

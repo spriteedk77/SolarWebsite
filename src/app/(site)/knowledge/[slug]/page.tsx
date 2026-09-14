@@ -25,10 +25,14 @@ import {
 import { quoteLinks } from '@/lib/site';
 import { getSiteData } from '@/cms/site';
 import { formatThaiDate } from '@/lib/utils';
+import { usesSanity } from '@/cms/client';
 
 type Params = { params: Promise<{ slug: string }> };
 
 export async function generateStaticParams() {
+  // Live CMS slugs are resolved per request; only the frozen Pages preview
+  // knows its complete route list at build time.
+  if (usesSanity()) return [];
   const articles = await getArticles();
   return articles.map((article) => ({ slug: article.slug }));
 }

@@ -35,7 +35,6 @@ if (isProductionLaunch) {
   const required = [
     'SANITY_PROJECT_ID',
     'SANITY_DATASET',
-    'SANITY_READ_TOKEN',
     'NEXT_PUBLIC_SITE_URL',
     'LEAD_WEBHOOK_URL',
     'TURNSTILE_SECRET_KEY',
@@ -44,7 +43,6 @@ if (isProductionLaunch) {
   const missing = required.filter((key) => !process.env[key]);
   if (
     isGitHubPages ||
-    process.env.CONTENT_SOURCE !== 'sanity' ||
     process.env.LEAD_TEST_MODE === '1' ||
     missing.length
   ) {

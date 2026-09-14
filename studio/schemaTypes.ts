@@ -534,6 +534,16 @@ const siteSettings = defineType({
     requiredString('secondaryCTA', 'ข้อความปุ่มดูผลงาน'),
     text('footerInformation', 'คำอธิบายท้ายเว็บไซต์'),
     defineField({
+      name: 'heroImage',
+      title: 'ภาพพื้นหลังหน้าแรก (2400 × 1350 ขึ้นไป)',
+      type: 'siteImage',
+    }),
+    defineField({
+      name: 'executivePortrait',
+      title: 'ภาพผู้บริหาร (แนวตั้ง 4:5, 1200 × 1500 ขึ้นไป)',
+      type: 'siteImage',
+    }),
+    defineField({
       name: 'contactInformation',
       title: 'ข้อมูลบริษัท ช่องทางติดต่อ และพื้นที่ให้บริการ',
       type: 'reference',

@@ -18,13 +18,14 @@ import { HeroBackground, type HeroImage } from '@/components/home/HeroBackground
  */
 export async function Hero({ image }: { image?: HeroImage } = {}) {
   const { contact, cta, serviceAreas, homepage } = await getSiteData();
+  const background = image ?? (homepage.heroImage ? { src: homepage.heroImage.src } : undefined);
 
   return (
     <section
       aria-labelledby="hero-title"
       className="on-navy relative isolate bg-navy-900"
     >
-      <HeroBackground image={image} />
+      <HeroBackground image={background} />
 
       <Container width="wide">
         {/* Asymmetric padding: generous above the headline, tighter below the

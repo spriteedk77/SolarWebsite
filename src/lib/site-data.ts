@@ -1,4 +1,5 @@
 import { contact, cta, serviceAreas, site } from './site';
+import type { ImageAsset } from '@/content/types';
 
 type Mutable<T> = T extends string
   ? string
@@ -65,7 +66,13 @@ export type SiteData = {
   contact: Mutable<typeof contact> & { businessHours: string };
   serviceAreas: Mutable<typeof serviceAreas>;
   cta: Mutable<typeof cta>;
-  homepage: { headline: string; description: string; serviceMessage: string };
+  homepage: {
+    headline: string;
+    description: string;
+    serviceMessage: string;
+    heroImage?: ImageAsset;
+    executivePortrait?: ImageAsset;
+  };
   footerInformation: string;
 };
 
