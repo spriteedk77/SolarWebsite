@@ -59,34 +59,40 @@ export async function Footer() {
                   LINE {contact.lineId}
                 </a>
               </p>
+              {contact.facebookUrl && (
+                <p className="flex items-center gap-2.5">
+                  <Icon
+                    name="facebook"
+                    className="h-4.5 w-4.5 shrink-0 text-sky-brand"
+                  />
+                  <a
+                    href={contact.facebookUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-semibold text-white hover:underline"
+                  >
+                    Facebook {site.name}
+                  </a>
+                </p>
+              )}
             </address>
 
-            {(contact.facebookUrl || contact.googleBusinessProfileUrl) && (
+            {/* Facebook moved up into the contact rows, so it reads as a
+                channel alongside phone and LINE rather than a lone outlined
+                button. Only the Google Business Profile is left here, and it
+                stays hidden until NEXT_PUBLIC_GBP_URL is set. */}
+            {contact.googleBusinessProfileUrl && (
               <ul className="mt-6 flex gap-3 text-caption">
-                {contact.facebookUrl && (
-                  <li>
-                    <a
-                      href={contact.facebookUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="rounded-md border border-white/20 px-3 py-1.5 hover:bg-white/10"
-                    >
-                      Facebook
-                    </a>
-                  </li>
-                )}
-                {contact.googleBusinessProfileUrl && (
-                  <li>
-                    <a
-                      href={contact.googleBusinessProfileUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="rounded-md border border-white/20 px-3 py-1.5 hover:bg-white/10"
-                    >
-                      Google Business Profile
-                    </a>
-                  </li>
-                )}
+                <li>
+                  <a
+                    href={contact.googleBusinessProfileUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded-md border border-white/20 px-3 py-1.5 hover:bg-white/10"
+                  >
+                    Google Business Profile
+                  </a>
+                </li>
               </ul>
             )}
           </div>
