@@ -1,4 +1,5 @@
 import type { NextConfig } from 'next';
+import { isPreviewDeployment } from './src/lib/deployment';
 
 const isGitHubPages = process.env.GITHUB_PAGES === 'true';
 const repositoryName =
@@ -6,20 +7,29 @@ const repositoryName =
 const pagesBasePath = isGitHubPages ? `/${repositoryName}` : '';
 
 /**
- * Hosts that mean "this build is going in front of real customers".
+ * Is this build the one real customers reach?
  *
- * Vercel and Netlify each say so in their own read-only build variable, so the
- * guard below fires without anyone remembering to set anything. On any other
- * host — or locally — set PRODUCTION_LAUNCH=1 to opt in manually.
+ * Two things have to be true. The host has to call it production — Vercel and
+ * Netlify each say so in their own read-only variable, so nobody has to
+ * remember a setting — and the address it answers on has to be a real domain.
  *
- * Netlify's CONTEXT is `production`, `deploy-preview`, `branch-deploy` or
- * `dev`; only the first one is a real launch, so previews stay buildable
- * against the local content snapshot.
+ * The second half matters because a Netlify site is production from the moment
+ * it exists, while np88solar.netlify.app is an address for the people building
+ * the site, not for customers. Holding a staging URL to the full launch
+ * checklist only means there is nothing to look at. Attaching the company's
+ * domain is the moment that changes, and Netlify rewrites `URL` itself when
+ * that happens, so the checklist starts being enforced without a flag being
+ * flipped. See src/lib/deployment.ts.
+ *
+ * PRODUCTION_LAUNCH=1 still forces the checklist anywhere, for a host that
+ * reports neither.
  */
 const isProductionLaunch =
-  process.env.VERCEL_ENV === 'production' ||
-  (process.env.NETLIFY === 'true' && process.env.CONTEXT === 'production') ||
-  process.env.PRODUCTION_LAUNCH === '1';
+  process.env.PRODUCTION_LAUNCH === '1' ||
+  ((process.env.VERCEL_ENV === 'production' ||
+    (process.env.NETLIFY === 'true' &&
+      process.env.CONTEXT === 'production')) &&
+    !isPreviewDeployment());
 
 if (isProductionLaunch) {
   const required = [
