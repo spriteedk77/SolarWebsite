@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" role="img" aria-label="บทความ: Solar Rooftop เชียงใหม่">
+  <rect width="1600" height="900" fill="#0c243d"/>
+  <g stroke="#ffffff" stroke-opacity="0.05" stroke-width="1">
+    <path d="M80 0V900"/><path d="M160 0V900"/><path d="M240 0V900"/><path d="M320 0V900"/><path d="M400 0V900"/><path d="M480 0V900"/><path d="M560 0V900"/><path d="M640 0V900"/><path d="M720 0V900"/><path d="M800 0V900"/><path d="M880 0V900"/><path d="M960 0V900"/><path d="M1040 0V900"/><path d="M1120 0V900"/><path d="M1200 0V900"/><path d="M1280 0V900"/><path d="M1360 0V900"/><path d="M1440 0V900"/><path d="M1520 0V900"/><path d="M1600 0V900"/>
+    <path d="M0 80H1600"/><path d="M0 160H1600"/><path d="M0 240H1600"/><path d="M0 320H1600"/><path d="M0 400H1600"/><path d="M0 480H1600"/><path d="M0 560H1600"/><path d="M0 640H1600"/><path d="M0 720H1600"/><path d="M0 800H1600"/><path d="M0 880H1600"/>
+  </g>
+  
+    <g transform="translate(560 340)">
+      <path d="M0 220 L120 40 H400 L520 220 Z" fill="#0b63ce" opacity="0.9"/>
+      <g stroke="#8ac5fb" stroke-width="3" opacity="0.7">
+        <path d="M120 40 L60 220 M200 40 L170 220 M280 40 L280 220 M360 40 L390 220 M400 40 L460 220"/>
+        <path d="M60 130 H460 M30 175 H490"/>
+      </g>
+      <circle cx="460" cy="30" r="34" fill="#ffc021"/>
+      <g stroke="#f2861e" stroke-width="5" stroke-linecap="round">
+        <path d="M460 -22v14M460 68v14M398 30h14M508 30h14M416 -14l10 10M494 74l10 10M504 -14l-10 10M426 74l-10 10"/>
+      </g>
+    </g>
+</svg>

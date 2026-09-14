@@ -1,0 +1,29 @@
+{
+  "name": "np88-solar",
+  "version": "1.0.0",
+  "private": true,
+  "description": "NP88 Solar — เว็บไซต์บริษัท NP88 Engineering Co., Ltd. (Solar Rooftop เชียงใหม่)",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "verify:links": "node scripts/verify-links.mjs",
+    "verify:metadata": "node scripts/verify-metadata.mjs",
+    "verify:lead-api": "node scripts/verify-lead-api.mjs",
+    "verify": "npm run verify:links && npm run verify:metadata && npm run verify:lead-api"
+  },
+  "dependencies": {
+    "next": "^16.3.5",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.13",
+    "@types/node": "^22.15.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "tailwindcss": "^4.1.13",
+    "typescript": "^5.8.3"
+  }
+}

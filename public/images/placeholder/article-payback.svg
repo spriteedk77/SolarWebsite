@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" role="img" aria-label="บทความ: ระยะเวลาคืนทุน">
+  <rect width="1600" height="900" fill="#0c243d"/>
+  <g stroke="#ffffff" stroke-opacity="0.05" stroke-width="1">
+    <path d="M80 0V900"/><path d="M160 0V900"/><path d="M240 0V900"/><path d="M320 0V900"/><path d="M400 0V900"/><path d="M480 0V900"/><path d="M560 0V900"/><path d="M640 0V900"/><path d="M720 0V900"/><path d="M800 0V900"/><path d="M880 0V900"/><path d="M960 0V900"/><path d="M1040 0V900"/><path d="M1120 0V900"/><path d="M1200 0V900"/><path d="M1280 0V900"/><path d="M1360 0V900"/><path d="M1440 0V900"/><path d="M1520 0V900"/><path d="M1600 0V900"/>
+    <path d="M0 80H1600"/><path d="M0 160H1600"/><path d="M0 240H1600"/><path d="M0 320H1600"/><path d="M0 400H1600"/><path d="M0 480H1600"/><path d="M0 560H1600"/><path d="M0 640H1600"/><path d="M0 720H1600"/><path d="M0 800H1600"/><path d="M0 880H1600"/>
+  </g>
+  
+    <g transform="translate(620 340)">
+      <g fill="#0b63ce" opacity="0.9">
+        <rect x="10" y="140" width="52" height="80" rx="8"/>
+        <rect x="86" y="100" width="52" height="120" rx="8"/>
+        <rect x="162" y="60" width="52" height="160" rx="8"/>
+        <rect x="238" y="26" width="52" height="194" rx="8"/>
+      </g>
+      <path d="M0 232h330" stroke="#8ac5fb" stroke-width="4" stroke-linecap="round"/>
+      <circle cx="320" cy="18" r="24" fill="#ffc021"/>
+    </g>
+</svg>

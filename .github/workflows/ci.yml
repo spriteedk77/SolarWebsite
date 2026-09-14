@@ -1,0 +1,87 @@
+name: Website checks
+
+# Runs on every push to main and every pull request: typecheck, production
+# build, then boot that build and run the verification suite against it
+# (internal links/anchors/assets, SEO/structural metadata, and /api/lead's
+# validation contract). Nothing here delivers a real lead or touches any
+# external service — see scripts/verify-lead-api.mjs for how that's enforced.
+#
+# This job does NOT replace testing on a real host (Railway trial): it can't
+# see that platform's own request-size limits or proxy behaviour. It exists
+# to catch regressions on every push, for free, before anything reaches a
+# paid preview.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build
+
+      - name: Start production server
+        env:
+          # Enables /api/lead's testMode=1 shortcut for this job only.
+          # NEVER set this in a real deployment's environment.
+          LEAD_TEST_MODE: '1'
+          NEXT_PUBLIC_SITE_URL: http://127.0.0.1:3000
+        run: |
+          npm start > server.log 2>&1 &
+          echo $! > server.pid
+
+      - name: Wait for server
+        run: |
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:3000/ > /dev/null 2>&1; then
+              echo "Server is up after ${i}s"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Server did not start in time — log so far:"
+          cat server.log
+          exit 1
+
+      - name: Run verification suite
+        env:
+          BASE_URL: http://127.0.0.1:3000
+        run: |
+          set -o pipefail
+          npm run verify 2>&1 | tee verify-report.txt
+
+      - name: Stop server
+        if: always()
+        run: |
+          if [ -f server.pid ]; then kill "$(cat server.pid)" 2>/dev/null || true; fi
+
+      - name: Upload logs and report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-logs
+          path: |
+            server.log
+            verify-report.txt
+          if-no-files-found: warn
+          retention-days: 14

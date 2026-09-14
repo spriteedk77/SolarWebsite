@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" role="img" aria-label="ระบบ 22.50 kW อ.เมืองเชียงใหม่">
+  <rect width="1600" height="900" fill="#0c243d"/>
+  <g stroke="#ffffff" stroke-opacity="0.05" stroke-width="1">
+    <path d="M80 0V900"/><path d="M160 0V900"/><path d="M240 0V900"/><path d="M320 0V900"/><path d="M400 0V900"/><path d="M480 0V900"/><path d="M560 0V900"/><path d="M640 0V900"/><path d="M720 0V900"/><path d="M800 0V900"/><path d="M880 0V900"/><path d="M960 0V900"/><path d="M1040 0V900"/><path d="M1120 0V900"/><path d="M1200 0V900"/><path d="M1280 0V900"/><path d="M1360 0V900"/><path d="M1440 0V900"/><path d="M1520 0V900"/><path d="M1600 0V900"/>
+    <path d="M0 80H1600"/><path d="M0 160H1600"/><path d="M0 240H1600"/><path d="M0 320H1600"/><path d="M0 400H1600"/><path d="M0 480H1600"/><path d="M0 560H1600"/><path d="M0 640H1600"/><path d="M0 720H1600"/><path d="M0 800H1600"/><path d="M0 880H1600"/>
+  </g>
+  
+    <g transform="translate(620 340)">
+      <rect x="0" y="20" width="360" height="200" rx="10" fill="#0b63ce" opacity="0.9"/>
+      <g stroke="#8ac5fb" stroke-width="3" opacity="0.7">
+        <path d="M90 20v200M180 20v200M270 20v200M0 86h360M0 153h360"/>
+      </g>
+      <circle cx="330" cy="-6" r="26" fill="#ffc021"/>
+    </g>
+</svg>

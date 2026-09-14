@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" role="img" aria-label="บทความ: Inverter คืออะไร">
+  <rect width="1600" height="900" fill="#0c243d"/>
+  <g stroke="#ffffff" stroke-opacity="0.05" stroke-width="1">
+    <path d="M80 0V900"/><path d="M160 0V900"/><path d="M240 0V900"/><path d="M320 0V900"/><path d="M400 0V900"/><path d="M480 0V900"/><path d="M560 0V900"/><path d="M640 0V900"/><path d="M720 0V900"/><path d="M800 0V900"/><path d="M880 0V900"/><path d="M960 0V900"/><path d="M1040 0V900"/><path d="M1120 0V900"/><path d="M1200 0V900"/><path d="M1280 0V900"/><path d="M1360 0V900"/><path d="M1440 0V900"/><path d="M1520 0V900"/><path d="M1600 0V900"/>
+    <path d="M0 80H1600"/><path d="M0 160H1600"/><path d="M0 240H1600"/><path d="M0 320H1600"/><path d="M0 400H1600"/><path d="M0 480H1600"/><path d="M0 560H1600"/><path d="M0 640H1600"/><path d="M0 720H1600"/><path d="M0 800H1600"/><path d="M0 880H1600"/>
+  </g>
+  
+    <g transform="translate(650 330)">
+      <rect x="0" y="0" width="180" height="240" rx="16" fill="#0b63ce" opacity="0.9"/>
+      <g stroke="#8ac5fb" stroke-width="4" stroke-linecap="round" opacity="0.85">
+        <path d="M36 52h108M36 92h68"/>
+        <path d="M112 196l26-52h-26l26-52"/>
+      </g>
+      <rect x="216" y="70" width="150" height="100" rx="14" fill="#08192b" stroke="#8ac5fb" stroke-width="4"/>
+      <g stroke="#ffc021" stroke-width="5" stroke-linecap="round"><path d="M250 100v40M282 100v40M314 100v40"/></g>
+    </g>
+</svg>
