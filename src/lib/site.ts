@@ -53,7 +53,9 @@ export const contact = {
   /** Set once the Google Business Profile / Maps place is confirmed. */
   googleBusinessProfileUrl: process.env.NEXT_PUBLIC_GBP_URL || '',
   googleMapsEmbedUrl: process.env.NEXT_PUBLIC_MAPS_EMBED_URL || '',
-  facebookUrl: process.env.NEXT_PUBLIC_FACEBOOK_URL || '',
+  facebookUrl:
+    process.env.NEXT_PUBLIC_FACEBOOK_URL ||
+    'https://www.facebook.com/share/1BMxmsmdZK/?mibextid=wwXIfr',
 } as const;
 
 /**

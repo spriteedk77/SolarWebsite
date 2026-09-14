@@ -13,6 +13,7 @@ export type GlyphName =
   | IconName
   | 'phone'
   | 'line'
+  | 'facebook'
   | 'arrow-right'
   | 'check'
   | 'plus'
@@ -160,6 +161,12 @@ const paths: Record<GlyphName, React.ReactNode> = {
     <>
       <path d="M21 10.2c0-4-4-7.2-9-7.2s-9 3.2-9 7.2c0 3.6 3.2 6.6 7.5 7.1.3.1.7.2.8.5.1.3 0 .7 0 1l-.1.8c0 .3-.2 1 .9.6 1-.5 5.7-3.4 7.8-5.8A6.4 6.4 0 0 0 21 10.2z" />
       <path d="M8 8.5v3.6M8 12.1h1.8M11.5 8.5v3.6M14 12.1V8.5l2.4 3.6V8.5M18.5 8.5h1.6" />
+    </>
+  ),
+  facebook: (
+    <>
+      <rect x="3" y="3" width="18" height="18" rx="4" />
+      <path d="M15.2 7.8h-1.6a2 2 0 0 0-2 2V12m-1.7 0h3.7m-2 0v8.9" />
     </>
   ),
   'arrow-right': <path d="M5 12h13M13 6l6 6-6 6" />,

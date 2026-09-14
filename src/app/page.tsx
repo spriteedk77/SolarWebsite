@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 
 import { Hero } from '@/components/home/Hero';
-import { TrustStrip } from '@/components/home/TrustStrip';
 import { WhyNP88 } from '@/components/home/WhyNP88';
 import { BusinessSection } from '@/components/home/BusinessSection';
 import { HomeSolarSection } from '@/components/home/HomeSolarSection';
@@ -56,11 +55,9 @@ export default async function HomePage() {
 
   return (
     <>
-      {/* 1 — Hero */}
+      {/* 1 — Hero, with the experience strip anchored along its bottom edge.
+              No unverified installation count: see TrustStrip. */}
       <Hero />
-
-      {/* 2 — Who we build for. No unverified installation count: see TrustStrip. */}
-      <TrustStrip />
 
       {/* 3 — Evidence first. Real specs sit directly under the hero so a factory
               owner can judge the work before reading any argument for it. */}

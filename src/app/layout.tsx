@@ -39,8 +39,36 @@ export const metadata: Metadata = {
   creator: site.legalNameShort,
   publisher: site.legalNameShort,
   formatDetection: { telephone: true, address: false, email: false },
-  // Favicon comes from src/app/icon.svg (Next's file convention).
-  manifest: publicAssetPath('/site.webmanifest'),
+  // Generated from the official square logo by scripts/generate-icons.mjs.
+  // Declared here rather than through src/app/icon.* so every href runs
+  // through publicAssetPath and resolves under the GitHub Pages base path.
+  icons: {
+    icon: [
+      { url: publicAssetPath('/favicon.ico'), sizes: '16x16 32x32 48x48' },
+      {
+        url: publicAssetPath('/logo/favicon-16.png'),
+        type: 'image/png',
+        sizes: '16x16',
+      },
+      {
+        url: publicAssetPath('/logo/favicon-32.png'),
+        type: 'image/png',
+        sizes: '32x32',
+      },
+      {
+        url: publicAssetPath('/logo/icon-192.png'),
+        type: 'image/png',
+        sizes: '192x192',
+      },
+    ],
+    apple: [
+      {
+        url: publicAssetPath('/logo/apple-touch-icon.png'),
+        type: 'image/png',
+        sizes: '180x180',
+      },
+    ],
+  },
 };
 
 export const revalidate = 60;

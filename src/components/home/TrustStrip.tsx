@@ -14,13 +14,18 @@ import { segments } from '@/content/th/pages';
  */
 export function TrustStrip() {
   return (
-    <section aria-labelledby="trust-title" className="on-navy bg-navy-900 bg-blueprint">
+    // Transparent on purpose: this sits inside the hero section and shares its
+    // ground, so the future hero photograph runs behind it unbroken.
+    <section
+      aria-labelledby="trust-title"
+      className="relative border-t border-white/15"
+    >
       <Container width="wide">
-        <div className="flex flex-col gap-5 py-8 lg:flex-row lg:items-center lg:gap-10">
+        <div className="flex flex-col gap-4 py-6 lg:flex-row lg:items-center lg:gap-x-10 lg:gap-y-3 lg:py-7">
           <h2 id="trust-title" className="shrink-0 text-body-lg font-semibold text-white">
             ประสบการณ์จากงานติดตั้งจริง
           </h2>
-          <ul className="flex flex-wrap gap-x-5 gap-y-2.5">
+          <ul className="flex flex-wrap gap-x-5 gap-y-2">
             {segments.map((segment) => (
               <li key={segment} className="flex items-center gap-2 text-body text-navy-100">
                 <Icon name="check" className="h-4 w-4 shrink-0 text-flare-600" />

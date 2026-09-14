@@ -14,7 +14,7 @@ export async function Footer() {
         <div className="grid gap-10 py-14 md:grid-cols-12 md:gap-8 md:py-16">
           {/* Identity + NAP */}
           <div className="md:col-span-5 lg:col-span-4">
-            <Logo variant="light" showTagline />
+            <Logo variant="light" />
             <p className="mt-5 max-w-sm text-caption leading-relaxed">
               {site.legalNameShort}
               <br />

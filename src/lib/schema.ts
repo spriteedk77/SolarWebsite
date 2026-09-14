@@ -30,7 +30,9 @@ export function organizationSchema(data: SiteData = defaultSiteData) {
     image: absoluteUrl(DEFAULT_OG_PATH),
     logo: {
       '@type': 'ImageObject',
-      url: absoluteUrl('/images/brand/np88-solar-logo.svg'),
+      url: absoluteUrl('/logo/np88-logo-square.png'),
+      width: 1254,
+      height: 1254,
     },
     address: {
       '@type': 'PostalAddress',

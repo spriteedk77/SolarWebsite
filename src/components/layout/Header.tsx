@@ -52,7 +52,7 @@ export async function Header() {
             className="shrink-0"
             aria-label="NP88 Solar — กลับสู่หน้าแรก"
           >
-            <Logo />
+            <Logo priority />
           </Link>
 
           <DesktopNav />

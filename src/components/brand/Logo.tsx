@@ -1,75 +1,54 @@
-'use client';
-import { useSiteData } from '@/components/SiteProvider';
-import { cn } from '@/lib/utils';
+import Image from 'next/image';
+import { cn, publicAssetPath } from '@/lib/utils';
 
 /**
- * NP88 Solar wordmark.
+ * The official NP88 Solar logo.
  *
- * Mark: a solar array in perspective under a rising sun — panel + sun, the two
- * shapes the brand is already recognised by, rendered in the existing
- * navy / solar-blue / orange palette.
+ * `public/logo/np88-logo-horizontal.png` is the registered artwork supplied by
+ * NP88 Solar — it is only ever scaled, never cropped, recoloured or rebuilt in
+ * markup. The intrinsic size below is the file's own, so `next/image` keeps the
+ * aspect ratio and reserves the right box before the image loads.
  *
- * ⚠️ If NP88 Solar supplies the original logo artwork, replace the SVG in this
- * component and in /public/images/brand/np88-solar-logo.svg with the official
- * files. This is a faithful reconstruction in the brand colours, not the
- * registered mark.
+ * The wordmark is dark navy on a transparent ground, so it reads on white and
+ * on the light surfaces. On the navy footer it sits on a white plate rather
+ * than being inverted, because inverting would alter the mark.
  */
+
+/** Intrinsic pixel size of np88-logo-horizontal.png. */
+const INTRINSIC = { width: 1692, height: 537 };
+
 export function Logo({
   className,
   variant = 'dark',
-  showTagline = false,
+  priority = false,
 }: {
   className?: string;
-  /** `dark` = navy text for light backgrounds; `light` = white text on navy. */
+  /** `dark` = the artwork as-is, for white and light grounds.
+   *  `light` = the same artwork on a white plate, for navy grounds. */
   variant?: 'dark' | 'light';
-  showTagline?: boolean;
+  /** Set on the header logo, which is above the fold on every page. */
+  priority?: boolean;
 }) {
-  const { site } = useSiteData();
-  const wordColor = variant === 'light' ? '#ffffff' : 'var(--color-navy-900)';
-  const subColor = variant === 'light' ? '#bcdcfd' : '#4c5b6a';
-
-  return (
-    <span className={cn('inline-flex items-center gap-2.5', className)}>
-      <svg
-        viewBox="0 0 48 48"
-        className="h-10 w-10 shrink-0"
-        aria-hidden="true"
-        focusable="false"
-      >
-        <rect width="48" height="48" rx="11" fill="var(--color-navy-900)" />
-        {/* sun */}
-        <circle cx="24" cy="18.5" r="6.5" fill="var(--color-flare-500)" />
-        <g
-          stroke="var(--color-flare-500)"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-        >
-          <path d="M24 6.5v2.4M24 28.1v2.4M11.7 18.5h2.4M33.9 18.5h2.4M15.3 9.8l1.7 1.7M31 26l1.7 1.7M32.7 9.8 31 11.5M17 26l-1.7 1.7" />
-        </g>
-        {/* array */}
-        <path d="M9 39.5 13.5 29h21L39 39.5z" fill="var(--color-solar-600)" />
-        <g stroke="#8ac5fb" strokeWidth="1.2" strokeLinecap="round">
-          <path d="M16.6 29 13.2 39.5M24 29v10.5M31.4 29l3.4 10.5M12.2 33.2h23.6" />
-        </g>
-      </svg>
-
-      <span className="flex flex-col leading-none">
-        {/* The orange half of the wordmark is the brand's own colour and is
-            kept exactly as-is. WCAG 1.4.3 exempts logotypes from the contrast
-            minimum; no other orange text on the site relies on that exemption. */}
-        <span className="font-display text-[1.35rem] font-bold tracking-tight">
-          <span style={{ color: wordColor }}>NP88</span>{' '}
-          <span style={{ color: 'var(--color-flare-500)' }}>Solar</span>
-        </span>
-        {showTagline && (
-          <span
-            className="mt-1 text-[0.7rem] font-medium tracking-wide"
-            style={{ color: subColor }}
-          >
-            {site.tagline}
-          </span>
-        )}
-      </span>
-    </span>
+  const image = (
+    <Image
+      src={publicAssetPath('/logo/np88-logo-horizontal.png')}
+      alt="NP88 Solar by NP88 Engineering Co., Ltd."
+      width={INTRINSIC.width}
+      height={INTRINSIC.height}
+      priority={priority}
+      // Height-driven: the width follows from the intrinsic aspect ratio.
+      className={cn('h-9 w-auto sm:h-10 lg:h-11', className)}
+      sizes="160px"
+    />
   );
+
+  if (variant === 'light') {
+    return (
+      <span className="inline-flex items-center rounded-lg bg-white px-3 py-2">
+        {image}
+      </span>
+    );
+  }
+
+  return image;
 }
