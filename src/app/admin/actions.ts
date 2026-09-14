@@ -1,0 +1,185 @@
+'use server';
+
+import { revalidatePath } from 'next/cache';
+import { signIn, signOut, requireSignedIn } from '@/lib/admin-session';
+import {
+  adminWriteClient,
+  COMPANY_ID,
+  SETTINGS_ID,
+  draftId,
+} from '@/cms/admin-write';
+import { defaultSiteData } from '@/lib/site-data';
+import {
+  fromDocuments,
+  toPatches,
+  validate,
+  type SiteInfoValues,
+} from '@/admin/site-info/model';
+
+/**
+ * Everything the admin can do, as server actions.
+ *
+ * Each one checks the session again before it touches anything. Having been
+ * shown the form is not permission to submit it — the browser can send this
+ * request at any time, with anything in it, so the request is what gets
+ * checked, not the page that produced it.
+ */
+
+export type FormState = {
+  status: 'idle' | 'ok' | 'error';
+  message?: string;
+  errors?: Partial<Record<keyof SiteInfoValues, string>>;
+};
+
+export async function signInAction(
+  _previous: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const password = String(formData.get('password') ?? '');
+  const result = await signIn(password);
+  if (result.ok) {
+    revalidatePath('/admin');
+    return { status: 'ok' };
+  }
+  return {
+    status: 'error',
+    message: {
+      'not-configured':
+        'ยังไม่ได้ตั้งค่ารหัสผ่านสำหรับหน้านี้ ดูวิธีตั้งค่าด้านล่าง',
+      'rate-limited':
+        'ลองผิดหลายครั้งเกินไป กรุณารอสักครู่แล้วลองใหม่',
+      // Deliberately the same wording whatever went wrong with the password:
+      // "ไม่มีรหัสนี้" and "รหัสผิด" would be two different answers to guess with.
+      'wrong-password': 'รหัสผ่านไม่ถูกต้อง',
+    }[result.reason],
+  };
+}
+
+export async function signOutAction(): Promise<void> {
+  await signOut();
+  revalidatePath('/admin');
+}
+
+/**
+ * The two documents the short form edits, as they stand right now.
+ *
+ * Before the CMS is wired up there is nothing to read, so the form is filled
+ * from the snapshot in this repository — which is exactly what the website is
+ * serving in that state, so it is what it claims to be rather than a
+ * placeholder. Saving is refused until the connection exists, and the page
+ * says which settings are missing.
+ */
+export async function loadSiteInfo(): Promise<{
+  values: SiteInfoValues;
+  canSave: boolean;
+  missing: string[];
+}> {
+  await requireSignedIn();
+  const config = adminWriteClient();
+  if (!config.ready)
+    return {
+      values: fromSiteData(),
+      canSave: false,
+      missing: config.missing,
+    };
+
+  const [companyDraft, company, settingsDraft, settings] =
+    await config.client.getDocuments([
+      draftId(COMPANY_ID),
+      COMPANY_ID,
+      draftId(SETTINGS_ID),
+      SETTINGS_ID,
+    ]);
+
+  return {
+    values: fromDocuments(companyDraft ?? company, settingsDraft ?? settings),
+    canSave: true,
+    missing: [],
+  };
+}
+
+/**
+ * The same fields, read out of the content snapshot the repository ships.
+ *
+ * Used only before the CMS is connected. It goes through the same
+ * `fromDocuments` the live path uses, so there is one place that decides what
+ * an empty field looks like.
+ */
+function fromSiteData(): SiteInfoValues {
+  const { site, contact, homepage, cta, footerInformation } = defaultSiteData;
+  return fromDocuments(
+    {
+      companyName: site.name,
+      legalName: site.legalNameShort,
+      tagline: site.tagline,
+      description: site.description,
+      phone: contact.phone,
+      phoneE164: contact.phoneE164,
+      lineId: contact.lineId,
+      lineUrl: contact.lineUrl,
+      facebookUrl: contact.facebookUrl,
+      businessHours: contact.businessHours,
+      address: contact.address,
+    },
+    {
+      homepageHeadline: homepage.headline,
+      homepageDescription: homepage.description,
+      homepageServiceMessage: homepage.serviceMessage,
+      primaryCTA: cta.primary,
+      secondaryCTA: cta.projects,
+      footerInformation,
+    },
+  );
+}
+
+export async function saveSiteInfoAction(
+  _previous: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  await requireSignedIn();
+
+  const config = adminWriteClient();
+  if (!config.ready)
+    return {
+      status: 'error',
+      message: `ยังตั้งค่าไม่ครบ: ${config.missing.join(', ')}`,
+    };
+
+  const values = Object.fromEntries(
+    [...formData.entries()]
+      .filter(([, value]) => typeof value === 'string')
+      .map(([key, value]) => [key, String(value)]),
+  ) as SiteInfoValues;
+
+  const errors = validate(values);
+  if (errors)
+    return {
+      status: 'error',
+      message: 'ยังมีช่องที่ต้องแก้ ดูข้อความสีแดงใต้ช่องนั้น',
+      errors,
+    };
+
+  const { company, settings } = toPatches(values);
+  try {
+    // Saved as a draft. Nothing here puts text on the live site: that stays a
+    // separate, deliberate step.
+    await config.client
+      .transaction()
+      .createIfNotExists({ _id: draftId(COMPANY_ID), _type: COMPANY_ID })
+      .createIfNotExists({ _id: draftId(SETTINGS_ID), _type: SETTINGS_ID })
+      .patch(draftId(COMPANY_ID), (patch) => patch.set(company))
+      .patch(draftId(SETTINGS_ID), (patch) => patch.set(settings))
+      .commit();
+  } catch (error) {
+    return {
+      status: 'error',
+      message:
+        error instanceof Error
+          ? `บันทึกไม่สำเร็จ: ${error.message}`
+          : 'บันทึกไม่สำเร็จ',
+    };
+  }
+
+  revalidatePath('/admin');
+  return { status: 'ok', message: 'บันทึกฉบับร่างแล้ว' };
+}
