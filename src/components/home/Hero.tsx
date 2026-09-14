@@ -3,6 +3,7 @@ import { Container } from '@/components/ui/Container';
 import { ButtonLink } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { contact, cta, quoteLinks, serviceAreas } from '@/lib/site';
+import { publicAssetPath } from '@/lib/utils';
 
 /**
  * Homepage hero.
@@ -19,7 +20,7 @@ export function Hero() {
     <section aria-labelledby="hero-title" className="on-navy relative isolate bg-navy-900">
       <div className="absolute inset-0 -z-10">
         <Image
-          src="/images/placeholder/hero-rooftop.svg"
+          src={publicAssetPath('/images/placeholder/hero-rooftop.svg')}
           alt=""
           fill
           priority

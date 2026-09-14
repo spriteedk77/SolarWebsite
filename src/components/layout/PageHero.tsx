@@ -2,6 +2,7 @@ import Image from 'next/image';
 import { Container } from '@/components/ui/Container';
 import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import type { Crumb } from '@/lib/schema';
+import { publicAssetPath } from '@/lib/utils';
 
 /**
  * Standard page header: breadcrumb, H1, lead paragraph and (optionally) the
@@ -26,16 +27,18 @@ export function PageHero({
   image?: { src: string; alt: string };
   children?: React.ReactNode;
 }) {
+  const imageSrc = image ? publicAssetPath(image.src) : undefined;
+
   return (
     <section className="on-navy relative isolate bg-navy-900">
-      {image && (
+      {image && imageSrc && (
         <div className="absolute inset-0 -z-10">
           <Image
-            src={image.src}
+            src={imageSrc}
             alt=""
             fill
             priority
-            unoptimized={image.src.endsWith('.svg')}
+            unoptimized={imageSrc.endsWith('.svg')}
             sizes="100vw"
             className="object-cover opacity-45"
           />

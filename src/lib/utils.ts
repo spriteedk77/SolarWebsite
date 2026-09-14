@@ -3,6 +3,20 @@ export function cn(...parts: Array<string | false | null | undefined>): string {
   return parts.filter(Boolean).join(' ');
 }
 
+/**
+ * Prefix files from /public when the static preview is hosted below a GitHub
+ * Pages repository path. Normal deployments keep their root-relative URLs.
+ */
+export function publicAssetPath(path: string): string {
+  const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? '';
+
+  if (!basePath || !path.startsWith('/') || path.startsWith(`${basePath}/`)) {
+    return path;
+  }
+
+  return `${basePath}${path}`;
+}
+
 /** 178.56 -> "178.56", 30 -> "30" — keeps kW figures honest, no rounding up. */
 export function formatKw(kw: number): string {
   return Number.isInteger(kw) ? String(kw) : kw.toFixed(2).replace(/0$/, '');
@@ -22,4 +36,3 @@ export function formatThaiDate(iso: string): string {
     year: 'numeric',
   }).format(date);
 }
-

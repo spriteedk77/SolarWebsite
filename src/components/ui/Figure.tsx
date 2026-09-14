@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import type { ImageAsset } from '@/content/types';
-import { cn } from '@/lib/utils';
+import { cn, publicAssetPath } from '@/lib/utils';
 
 type Props = {
   image: ImageAsset;
@@ -38,6 +38,8 @@ export function Figure({
   ratio = '16/9',
   rounded = true,
 }: Props) {
+  const imageSrc = publicAssetPath(image.src);
+
   return (
     <figure className={cn('relative', className)}>
       <div
@@ -48,7 +50,7 @@ export function Figure({
         )}
       >
         <Image
-          src={image.src}
+          src={imageSrc}
           alt={image.alt}
           fill
           sizes={sizes}
@@ -56,7 +58,7 @@ export function Figure({
           loading={priority ? undefined : 'lazy'}
           // Vector placeholders gain nothing from the raster pipeline; real
           // photography (jpg/webp) goes through it as normal.
-          unoptimized={image.src.endsWith('.svg')}
+          unoptimized={imageSrc.endsWith('.svg')}
           className={cn('object-cover', imageClassName)}
         />
       </div>

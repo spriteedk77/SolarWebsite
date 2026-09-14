@@ -5,6 +5,7 @@ import { ButtonLink } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { BusinessTypeCard } from '@/components/cards/BusinessTypeCard';
 import type { BusinessType } from '@/content/types';
+import { publicAssetPath } from '@/lib/utils';
 
 /** Section 5 — the business-focused block. One CTA only. */
 export function BusinessSection({ types }: { types: BusinessType[] }) {
@@ -12,7 +13,7 @@ export function BusinessSection({ types }: { types: BusinessType[] }) {
     <section aria-labelledby="business-title" className="on-navy relative isolate bg-navy-900">
       <div className="absolute inset-0 -z-10">
         <Image
-          src="/images/placeholder/business-rooftop.svg"
+          src={publicAssetPath('/images/placeholder/business-rooftop.svg')}
           alt=""
           fill
           unoptimized
