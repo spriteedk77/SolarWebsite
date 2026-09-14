@@ -142,5 +142,8 @@ jobs:
       - run: npm ci --prefix studio
       - run: npm audit --prefix studio --audit-level=moderate
       - run: npm run typecheck --prefix studio
+      # The menu is resolved in the browser, so `sanity build` cannot see a
+      # broken pane. This serializes it the way the Studio does.
+      - run: npm run verify:structure --prefix studio
       - run: npm run schema:extract --prefix studio
       - run: npm run build --prefix studio
