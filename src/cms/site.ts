@@ -51,6 +51,39 @@ export const settingsModel = z.object({
   footerInformation: text,
 });
 
+/**
+ * Read one CMS document, or say what is wrong with it in words.
+ *
+ * `CONTENT_SOURCE=sanity` with nothing published fails the whole build, by
+ * design — the site does not mix live content with the snapshot it shipped
+ * with. But it used to fail as a bare `ZodError: expected object, received
+ * null` pointing at a line number, which says nothing about what to do. The
+ * two cases are quite different and both have an obvious next step, so they
+ * now say so.
+ */
+function readOrExplain<T>(
+  model: { parse: (value: unknown) => T; safeParse: (value: unknown) => { success: boolean; error?: { issues: { path: PropertyKey[]; message: string }[] } } },
+  value: unknown,
+  label: string,
+): T {
+  if (value === null || value === undefined)
+    throw new Error(
+      `CONTENT_SOURCE=sanity แต่ยังไม่มี "${label}" ที่เผยแพร่และติ๊กยืนยันแล้วใน CMS ` +
+        `— เปิด /admin แล้วกดเผยแพร่ก่อน หรือเอา CONTENT_SOURCE ออกเพื่อกลับไปใช้ข้อมูลที่ฝังมากับเว็บ`,
+    );
+
+  const result = model.safeParse(value);
+  if (!result.success && result.error) {
+    const problems = result.error.issues
+      .map((issue) => `${issue.path.join('.') || '(ทั้งเอกสาร)'}: ${issue.message}`)
+      .join('; ');
+    throw new Error(
+      `"${label}" ที่เผยแพร่ไว้ยังไม่ครบตามที่เว็บไซต์ต้องใช้ — ${problems}`,
+    );
+  }
+  return model.parse(value);
+}
+
 export const getSiteData = cache(async (): Promise<SiteData> => {
   if (!usesSanity()) return defaultSiteData;
   const result = await queryPublished<{
@@ -60,8 +93,12 @@ export const getSiteData = cache(async (): Promise<SiteData> => {
     "company": *[_type == "company" && approvedForPublication == true && _id == "company"][0]{companyName,legalName,tagline,description,phone,phoneE164,lineId,lineUrl,facebookUrl,businessHours,address,serviceAreas,googleBusinessProfileUrl,googleMapsEmbedUrl},
     "settings": *[_type == "siteSettings" && approvedForPublication == true && _id == "siteSettings"][0]{homepageHeadline,homepageDescription,homepageServiceMessage,primaryCTA,secondaryCTA,footerInformation}
   }`);
-  const c = companyModel.parse(result.company);
-  const s = settingsModel.parse(result.settings);
+  const c = readOrExplain(companyModel, result.company, 'ข้อมูลบริษัท');
+  const s = readOrExplain(
+    settingsModel,
+    result.settings,
+    'หน้าแรกและข้อความหลัก',
+  );
   const addressLines = [
     c.address.street,
     `${c.address.district} จังหวัด${c.address.province} ${c.address.postalCode}`,
