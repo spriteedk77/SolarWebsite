@@ -3,7 +3,7 @@ import { PageHero } from '@/components/layout/PageHero';
 import { Section } from '@/components/ui/Section';
 import { Icon } from '@/components/ui/Icon';
 import { ContactChannels } from '@/components/cta/ContactChannels';
-import { LineCTA, PhoneCTA } from '@/components/cta/ContactCTAs';
+import { LineCTA } from '@/components/cta/ContactCTAs';
 import { FaqSection } from '@/components/sections/FaqSection';
 import { LeadSection } from '@/components/sections/LeadSection';
 import { JsonLd } from '@/components/seo/JsonLd';
@@ -67,9 +67,11 @@ export default async function ContactPage() {
                 </p>
               )}
             </address>
-            <div className="mt-6 flex flex-col flex-wrap gap-3 sm:flex-row">
+            {/* One action. The number directly above is already a tap-to-call
+                link with a full touch target, so a second button repeated the
+                channel rather than adding one. */}
+            <div className="mt-6">
               <LineCTA size="lg" />
-              <PhoneCTA size="lg" label="โทรหาทีมงาน" />
             </div>
           </section>
           <section
@@ -107,17 +109,21 @@ export default async function ContactPage() {
                   กรุณาติดต่อทีมงานก่อนเข้าพบ
                   เพื่อนัดหมายและรับเส้นทางมายังสำนักงาน
                 </p>
-                <a
-                  href={contact.googleBusinessProfileUrl || contact.lineUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex min-h-11 items-center gap-2 font-semibold text-solar-700 underline underline-offset-4"
-                >
-                  {contact.googleBusinessProfileUrl
-                    ? 'เปิดตำแหน่งสำนักงาน'
-                    : 'สอบถามเส้นทางทาง LINE'}
-                  <Icon name="arrow-right" className="h-4 w-4" />
-                </a>
+                {/* Only once the profile is configured. The fallback used to
+                    send people to LINE to ask for directions while the address
+                    sat right above it, and it put LINE on this screen a third
+                    time. */}
+                {contact.googleBusinessProfileUrl && (
+                  <a
+                    href={contact.googleBusinessProfileUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex min-h-11 items-center gap-2 font-semibold text-solar-700 underline underline-offset-4"
+                  >
+                    เปิดตำแหน่งสำนักงาน
+                    <Icon name="arrow-right" className="h-4 w-4" />
+                  </a>
+                )}
               </div>
             )}
           </section>

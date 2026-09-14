@@ -1,10 +1,8 @@
-import Link from 'next/link';
 import { Section, SectionHeading } from '@/components/ui/Section';
 import { Icon } from '@/components/ui/Icon';
 import { ContactChannels } from '@/components/cta/ContactChannels';
 import { ContactActions } from '@/components/cta/ContactCTAs';
 import { LeadForm } from '@/components/forms/LeadForm';
-import { quoteLinks } from '@/lib/site';
 import { getSiteData } from '@/cms/site';
 import type { LeadSegment } from '@/lib/quote-params';
 
@@ -129,15 +127,6 @@ export async function LeadSection({
         </div>
         <div className="lg:col-span-5">
           <ContactActions tone="dark" />
-          <p className="mt-4 text-caption text-navy-200">
-            หรือกรอกรายละเอียดในแบบฟอร์มที่หน้า{' '}
-            <Link
-              href={quoteLinks.general}
-              className="font-semibold text-white underline underline-offset-4"
-            >
-              ประเมินระบบฟรี
-            </Link>
-          </p>
         </div>
       </div>
     </Section>
