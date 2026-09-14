@@ -2,6 +2,8 @@ import { defineConfig } from 'sanity';
 import { structureTool } from 'sanity/structure';
 import { schemaTypes } from '@studio/schemaTypes';
 import { singletons, structure } from '@studio/structure';
+import { np88StudioTheme } from './theme';
+import { StudioLogo } from './StudioLogo';
 
 /**
  * The Studio as it runs inside this website, at /admin.
@@ -30,6 +32,10 @@ export default defineConfig({
   projectId,
   dataset,
   plugins: [structureTool({ structure })],
+  // The admin is part of this website, so it wears the website's colours and
+  // the company's mark rather than Sanity's defaults. See theme.ts.
+  theme: np88StudioTheme,
+  studio: { components: { logo: StudioLogo } },
   schema: {
     types: schemaTypes,
     templates: (templates) =>
