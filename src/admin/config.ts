@@ -2,6 +2,7 @@ import { defineConfig } from 'sanity';
 import { structureTool } from 'sanity/structure';
 import { schemaTypes } from '@studio/schemaTypes';
 import { singletons, structure } from '@studio/structure';
+import { siteInfoTool } from './site-info/plugin';
 import { np88StudioTheme } from './theme';
 import { StudioLogo } from './StudioLogo';
 
@@ -31,7 +32,10 @@ export default defineConfig({
   basePath: adminBasePath,
   projectId,
   dataset,
-  plugins: [structureTool({ structure })],
+  // The short form first: it is what an editor opens the admin to do. The
+  // document editor sits behind it for articles, projects and anything the
+  // form deliberately does not cover.
+  plugins: [siteInfoTool(), structureTool({ structure })],
   // The admin is part of this website, so it wears the website's colours and
   // the company's mark rather than Sanity's defaults. See theme.ts.
   theme: np88StudioTheme,
