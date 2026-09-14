@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { Logo } from '@/components/brand/Logo';
-import { LineIcon } from '@/components/brand/LineIcon';
+import { ContactChannels } from '@/components/cta/ContactChannels';
 import { Container } from '@/components/ui/Container';
 import { Icon } from '@/components/ui/Icon';
 import { copyrightYear, footerNav } from '@/lib/site';
@@ -34,45 +34,12 @@ export async function Footer() {
                   {contact.addressLines[1]}
                 </span>
               </p>
-              <p className="flex items-center gap-2.5">
-                <Icon
-                  name="phone"
-                  className="h-4.5 w-4.5 shrink-0 text-sky-brand"
-                />
-                <a
-                  href={contact.phoneHref}
-                  className="font-semibold text-white hover:underline"
-                >
-                  {contact.phone}
-                </a>
-              </p>
-              <p className="flex items-center gap-2.5">
-                <LineIcon />
-                <a
-                  href={contact.lineUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-semibold text-white hover:underline"
-                >
-                  LINE {contact.lineId}
-                </a>
-              </p>
-              {contact.facebookUrl && (
-                <p className="flex items-center gap-2.5">
-                  <Icon
-                    name="facebook"
-                    className="h-4.5 w-4.5 shrink-0 text-sky-brand"
-                  />
-                  <a
-                    href={contact.facebookUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-semibold text-white hover:underline"
-                  >
-                    Facebook {site.name}
-                  </a>
-                </p>
-              )}
+              <ContactChannels
+                contact={contact}
+                tone="dark"
+                analytics="footer"
+                className="mt-4"
+              />
             </address>
 
             {/* Facebook moved up into the contact rows, so it reads as a

@@ -4,7 +4,7 @@ import { PageHero } from '@/components/layout/PageHero';
 import { Section, SectionHeading } from '@/components/ui/Section';
 import { Figure } from '@/components/ui/Figure';
 import { Icon } from '@/components/ui/Icon';
-import { LineIcon } from '@/components/brand/LineIcon';
+import { ContactChannels } from '@/components/cta/ContactChannels';
 import { Badge } from '@/components/ui/Badge';
 import { ProcessSection } from '@/components/sections/ProcessSection';
 import { EngineeringSection } from '@/components/sections/EngineeringSection';
@@ -130,26 +130,11 @@ export default async function AboutPage() {
                 <p key={line}>{line}</p>
               ))}
             </address>
-            <p className="mt-4 space-y-2 text-body">
-              <a
-                href={contact.phoneHref}
-                className="flex items-center gap-2.5 font-semibold text-navy-900 hover:text-solar-700"
-              >
-                <Icon name="phone" className="h-5 w-5 text-solar-600" />
-                {contact.phone}
-              </a>
-            </p>
-            <p className="mt-2 text-body">
-              <a
-                href={contact.lineUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2.5 font-semibold text-navy-900 hover:text-solar-700"
-              >
-                <LineIcon />
-                LINE {contact.lineId}
-              </a>
-            </p>
+            <ContactChannels
+              contact={contact}
+              analytics="about"
+              className="mt-4"
+            />
           </div>
 
           <div className="rounded-card border border-hairline bg-white p-6 shadow-card">

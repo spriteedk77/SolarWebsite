@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { Section, SectionHeading } from '@/components/ui/Section';
 import { Icon } from '@/components/ui/Icon';
-import { LineIcon } from '@/components/brand/LineIcon';
+import { ContactChannels } from '@/components/cta/ContactChannels';
 import { ContactActions } from '@/components/cta/ContactCTAs';
 import { LeadForm } from '@/components/forms/LeadForm';
 import { quoteLinks } from '@/lib/site';
@@ -88,26 +88,11 @@ export async function LeadSection({
               <h3 className="text-body font-semibold text-navy-900">
                 ติดต่อโดยตรง
               </h3>
-              <p className="mt-3 space-y-2 text-body">
-                <a
-                  href={contact.phoneHref}
-                  className="flex items-center gap-2.5 font-semibold text-navy-900 hover:text-solar-700"
-                >
-                  <Icon name="phone" className="h-5 w-5 text-solar-600" />
-                  {contact.phone}
-                </a>
-              </p>
-              <p className="mt-2 text-body">
-                <a
-                  href={contact.lineUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2.5 font-semibold text-navy-900 hover:text-solar-700"
-                >
-                  <LineIcon />
-                  LINE {contact.lineId}
-                </a>
-              </p>
+              <ContactChannels
+                contact={contact}
+                analytics="lead"
+                className="mt-3"
+              />
               <p className="mt-3 text-caption text-ink-600">
                 ส่งบิลค่าไฟและรูปหลังคาทาง LINE ได้โดยตรงเช่นกัน
               </p>

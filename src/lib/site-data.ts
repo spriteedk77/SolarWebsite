@@ -38,6 +38,26 @@ export const homepageHistory = {
   ],
   historyQuote:
     'แนวคิดของ NP88 Solar ไม่ได้เริ่มจากคำถามว่าต้องติดกี่แผง แต่เริ่มจากการทำความเข้าใจว่าระบบแบบใดเหมาะสมและคุ้มค่ากับการใช้พลังงานของลูกค้า',
+
+  /**
+   * Portrait shown beside the history text.
+   *
+   * `src` is empty until NP88 Solar supplies the photograph: the section then
+   * renders an empty reserved frame rather than a stock or generated stand-in,
+   * and claims nothing about who is in it. To install the real photograph, put
+   * the file in `public/images/about/` and fill in all three fields:
+   *
+   *   src:      '/images/about/executive-portrait.jpg'
+   *   alt:      who is pictured and their role — NP88 Solar must confirm both
+   *   position: object-position, e.g. '50% 30%' to keep a face off the crop
+   *
+   * Supply it as a 4:5 portrait — 1200×1500 or 1600×2000.
+   */
+  historyImage: {
+    src: '',
+    alt: '',
+    position: '50% 50%',
+  },
 } as const;
 
 export type SiteData = {

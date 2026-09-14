@@ -1,7 +1,7 @@
 import { Container } from '@/components/ui/Container';
 import { ButtonLink } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
-import { LineIcon } from '@/components/brand/LineIcon';
+import { ContactChannels } from '@/components/cta/ContactChannels';
 import { quoteLinks } from '@/lib/site';
 import { getSiteData } from '@/cms/site';
 import { TrustStrip } from '@/components/home/TrustStrip';
@@ -18,31 +18,6 @@ import { HeroBackground, type HeroImage } from '@/components/home/HeroBackground
  */
 export async function Hero({ image }: { image?: HeroImage } = {}) {
   const { contact, cta, serviceAreas, homepage } = await getSiteData();
-
-  const channels = [
-    {
-      key: 'facebook' as const,
-      href: contact.facebookUrl,
-      label: 'Facebook NP88 Solar',
-      iconClass: 'text-sky-brand',
-      external: true,
-    },
-    {
-      key: 'line' as const,
-      href: contact.lineUrl,
-      label: `LINE ${contact.lineId}`,
-      // Rendered with the official brand mark, which carries its own colour.
-      iconClass: '',
-      external: true,
-    },
-    {
-      key: 'phone' as const,
-      href: contact.phoneHref,
-      label: contact.phone,
-      iconClass: 'text-sky-brand',
-      external: false,
-    },
-  ].filter((channel) => channel.href);
 
   return (
     <section
@@ -83,33 +58,15 @@ export async function Hero({ image }: { image?: HeroImage } = {}) {
             {homepage.serviceMessage}
           </p>
 
-          {/* One row while there is room, wrapping to stacked rows when there
-              is not. Deliberately not three cards — these are links, not
-              features. */}
-          <ul className="mt-3 flex flex-col gap-x-7 gap-y-1 sm:flex-row sm:flex-wrap sm:items-center">
-            {channels.map((channel) => (
-              <li key={channel.key}>
-                <a
-                  href={channel.href}
-                  {...(channel.external
-                    ? { target: '_blank', rel: 'noopener noreferrer' }
-                    : {})}
-                  data-analytics={`hero-${channel.key}`}
-                  className="inline-flex min-h-11 items-center gap-2.5 text-body font-medium text-white underline-offset-4 hover:underline"
-                >
-                  {channel.key === 'line' ? (
-                    <LineIcon />
-                  ) : (
-                    <Icon
-                      name={channel.key}
-                      className={`h-5 w-5 shrink-0 ${channel.iconClass}`}
-                    />
-                  )}
-                  <span className="break-words">{channel.label}</span>
-                </a>
-              </li>
-            ))}
-          </ul>
+          {/* One row while there is room, wrapping when there is not.
+              Deliberately not three cards — these are links, not features. */}
+          <ContactChannels
+            contact={contact}
+            tone="dark"
+            layout="row"
+            analytics="hero"
+            className="mt-3"
+          />
 
           <p className="mt-5 flex items-start gap-2 text-caption text-navy-200">
             <Icon name="map-pin" className="mt-0.5 h-4 w-4 shrink-0" />

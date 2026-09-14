@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { PageHero } from '@/components/layout/PageHero';
 import { Section } from '@/components/ui/Section';
 import { Icon } from '@/components/ui/Icon';
-import { LineIcon } from '@/components/brand/LineIcon';
+import { ContactChannels } from '@/components/cta/ContactChannels';
 import { LineCTA, PhoneCTA } from '@/components/cta/ContactCTAs';
 import { FaqSection } from '@/components/sections/FaqSection';
 import { LeadSection } from '@/components/sections/LeadSection';
@@ -56,27 +56,11 @@ export default async function ContactPage() {
               <p>
                 จังหวัด{contact.address.province} {contact.address.postalCode}
               </p>
-              <div className="mt-5 space-y-1">
-                <a
-                  className="flex min-h-11 items-center gap-3 font-semibold text-navy-900"
-                  href={contact.phoneHref}
-                >
-                  <Icon
-                    name="phone"
-                    className="h-5 w-5 shrink-0 text-solar-600"
-                  />
-                  {contact.phone}
-                </a>
-                <a
-                  className="flex min-h-11 items-center gap-3 font-semibold text-navy-900"
-                  href={contact.lineUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <LineIcon />
-                  <span className="break-all">LINE {contact.lineId}</span>
-                </a>
-              </div>
+              <ContactChannels
+                contact={contact}
+                analytics="contact"
+                className="mt-5"
+              />
               {contact.businessHours && (
                 <p className="mt-4 text-caption">
                   เวลาทำการ: {contact.businessHours}

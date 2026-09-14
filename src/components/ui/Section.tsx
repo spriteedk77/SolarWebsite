@@ -13,6 +13,20 @@ type SectionProps = {
   /** Ties the section to its heading for assistive technology. */
   labelledBy?: string;
   spacing?: 'default' | 'tight' | 'loose';
+  /**
+   * `major` gives the section a minimum visual frame so it reads as a chapter
+   * of the page rather than a strip after the hero.
+   *
+   * It is a floor, never a fixed height: the content still grows past it, and
+   * the floor drops at each breakpoint so a phone gets natural height with
+   * generous padding instead of a screen of empty space.
+   *
+   * Apply it deliberately. It suits sections carrying a substantial block of
+   * content — about/history, solutions, projects, engineering, the major CTAs.
+   * It does not suit the FAQ, disclaimers, small CTA strips or the footer, and
+   * sections that already read well should be left alone.
+   */
+  frame?: 'none' | 'major';
 };
 
 const tones = {
@@ -28,6 +42,12 @@ const spacings = {
   loose: 'py-20 md:py-32',
 };
 
+/** Minimum frame for a major section. Mobile is deliberately unconstrained. */
+const frames = {
+  none: '',
+  major: 'md:min-h-[34rem] lg:min-h-[42rem]',
+};
+
 export function Section({
   children,
   tone = 'white',
@@ -37,12 +57,19 @@ export function Section({
   as: Tag = 'section',
   labelledBy,
   spacing = 'default',
+  frame = 'none',
 }: SectionProps) {
   return (
     <Tag
       id={id}
       aria-labelledby={labelledBy}
-      className={cn(tones[tone], spacings[spacing], className)}
+      className={cn(
+        tones[tone],
+        spacings[spacing],
+        frames[frame],
+        frame !== 'none' && 'flex flex-col justify-center',
+        className,
+      )}
     >
       <Container width={width}>{children}</Container>
     </Tag>

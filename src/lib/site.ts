@@ -56,6 +56,8 @@ export const contact = {
   facebookUrl:
     process.env.NEXT_PUBLIC_FACEBOOK_URL ||
     'https://www.facebook.com/share/1BMxmsmdZK/?mibextid=wwXIfr',
+  /** Page name shown after "Facebook" in the contact list. */
+  facebookName: 'NP88 Solar',
 } as const;
 
 /**
