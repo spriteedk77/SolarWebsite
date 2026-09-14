@@ -2,22 +2,19 @@ import type { Metadata, Viewport } from 'next';
 import { Prompt } from 'next/font/google';
 import './globals.css';
 
-import { Header } from '@/components/layout/Header';
-import { Footer } from '@/components/layout/Footer';
-import {
-  MobileContactBar,
-  MobileContactBarSpacer,
-} from '@/components/layout/MobileContactBar';
-import { CookieConsent } from '@/components/consent/CookieConsent';
-import { JsonLd } from '@/components/seo/JsonLd';
-import { graph, organizationSchema, websiteSchema } from '@/lib/schema';
 import { site } from '@/lib/site';
-import { getSiteData } from '@/cms/site';
-import { SiteProvider } from '@/components/SiteProvider';
 import { publicAssetPath } from '@/lib/utils';
 import { titleTemplate } from '@/lib/seo';
 import { localeMeta } from '@/lib/i18n';
-import { logPendingRegister } from '@/lib/pending';
+
+/**
+ * The document itself — and nothing else.
+ *
+ * The website's header, footer and contact bar moved down into (site), so
+ * that /admin can render the content Studio full-screen without the site's
+ * chrome around it. Everything that genuinely belongs to every page — the
+ * language, the font, the icons — stays here.
+ */
 
 /** Self-hosted Prompt from Google Fonts; only the four weights used by the site. */
 const prompt = Prompt({
@@ -71,8 +68,6 @@ export const metadata: Metadata = {
   },
 };
 
-export const revalidate = 60;
-
 export const viewport: Viewport = {
   themeColor: '#001D78',
   colorScheme: 'light',
@@ -80,41 +75,18 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  logPendingRegister();
-  const data = await getSiteData();
-
   return (
     <html
       lang={localeMeta.th.htmlLang}
       className={prompt.variable}
       suppressHydrationWarning
     >
-      <body>
-        <SiteProvider value={data}>
-          <a href="#main" className="skip-link">
-            ข้ามไปยังเนื้อหาหลัก
-          </a>
-
-          <Header />
-
-          <main id="main">{children}</main>
-
-          <Footer />
-          <MobileContactBarSpacer />
-          <MobileContactBar />
-          <CookieConsent />
-
-          <JsonLd
-            id="schema-organization"
-            data={graph(organizationSchema(data), websiteSchema(data))}
-          />
-        </SiteProvider>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }

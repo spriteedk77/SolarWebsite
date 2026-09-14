@@ -51,7 +51,7 @@ jobs:
       - run: npm run typecheck
 
       - name: Remove server-only route from the static preview
-        run: rm -rf src/app/api
+        run: rm -rf src/app/api src/app/admin
 
       - name: Build static preview
         run: npm run build
