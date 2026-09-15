@@ -25,7 +25,13 @@ export function AdminShell({
         <Container width="wide">
           <div className="flex min-h-16 flex-wrap items-center justify-between gap-4 py-3">
             <div className="flex items-center gap-3">
-              <Logo className="h-8 sm:h-8 lg:h-8" />
+              <a
+                href="https://np88solar.netlify.app/"
+                aria-label="ไปยังเว็บไซต์ NP88 Solar"
+                className="inline-flex cursor-pointer items-center rounded-lg transition-[opacity,transform,box-shadow] hover:opacity-80 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-solar-500 focus-visible:ring-offset-2"
+              >
+                <Logo className="h-8 sm:h-8 lg:h-8" />
+              </a>
               <span className="text-caption font-semibold tracking-wide text-ink-600 uppercase">
                 จัดการเนื้อหา
               </span>
