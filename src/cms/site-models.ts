@@ -44,7 +44,10 @@ export const settingsModel = z.object({
   footerInformation: text,
   heroImage: imageModel.optional().nullable(),
   historyBackground: imageModel.optional().nullable(),
-  historyImagePosition: z.enum(['left', 'center', 'right']).default('left'),
+  historyImagePosition: z.preprocess(
+    (value) => (value === null || value === '' ? undefined : value),
+    z.enum(['left', 'center', 'right']).default('left'),
+  ),
   /** Kept read-only for a safe migration from the old field name. */
   executivePortrait: imageModel.optional().nullable(),
 });

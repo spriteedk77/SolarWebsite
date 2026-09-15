@@ -4,6 +4,8 @@ import { PageHero } from '@/components/layout/PageHero';
 import { Section } from '@/components/ui/Section';
 import { KnowledgeCard } from '@/components/cards/KnowledgeCard';
 import { Badge } from '@/components/ui/Badge';
+import { ButtonLink } from '@/components/ui/Button';
+import { Icon } from '@/components/ui/Icon';
 import { LeadSection } from '@/components/sections/LeadSection';
 import { JsonLd } from '@/components/seo/JsonLd';
 
@@ -81,27 +83,41 @@ export default async function KnowledgePage() {
       </PageHero>
 
       <Section tone="white" width="wide">
-        <div className="space-y-16">
-          {categoryOrder
-            .filter((category) => categories[category]?.length)
-            .map((category) => (
-              <section
-                key={category}
-                id={encodeURIComponent(category)}
-                aria-labelledby={`cat-${encodeURIComponent(category)}`}
-                className="scroll-mt-20"
-              >
-                <h2 id={`cat-${encodeURIComponent(category)}`} className="text-h2">
-                  {category}
-                </h2>
-                <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                  {categories[category].map((article) => (
-                    <KnowledgeCard key={article.id} article={article} />
-                  ))}
-                </div>
-              </section>
-            ))}
-        </div>
+        {articles.length > 0 ? (
+          <div className="space-y-16">
+            {categoryOrder
+              .filter((category) => categories[category]?.length)
+              .map((category) => (
+                <section
+                  key={category}
+                  id={encodeURIComponent(category)}
+                  aria-labelledby={`cat-${encodeURIComponent(category)}`}
+                  className="scroll-mt-20"
+                >
+                  <h2 id={`cat-${encodeURIComponent(category)}`} className="text-h2">
+                    {category}
+                  </h2>
+                  <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                    {categories[category].map((article) => (
+                      <KnowledgeCard key={article.id} article={article} />
+                    ))}
+                  </div>
+                </section>
+              ))}
+          </div>
+        ) : (
+          <div className="mx-auto max-w-2xl rounded-card border border-hairline bg-paper-soft p-8 text-center sm:p-10">
+            <h2 className="text-h2">กำลังเตรียมบทความที่ตรวจสอบแล้ว</h2>
+            <p className="mt-4 text-body text-ink-700">
+              บทความจะแสดงที่นี่หลังทีมงานตรวจความถูกต้องและอนุมัติให้เผยแพร่
+              หากมีคำถามเรื่องระบบ Solar สามารถส่งรายละเอียดให้ทีมงานช่วยประเมินได้
+            </p>
+            <ButtonLink href="/quote" variant="primary" className="mt-6">
+              ขอประเมินระบบเบื้องต้น
+              <Icon name="arrow-right" className="h-5 w-5" />
+            </ButtonLink>
+          </div>
+        )}
       </Section>
 
       <LeadSection

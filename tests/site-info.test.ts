@@ -175,3 +175,9 @@ test('homepage images use the same alt-text rule in admin publication and public
   assert.equal(settingsModel.safeParse(settings).success, true);
   assert.equal(settingsModel.safeParse({ ...settings, heroImage: { ...image, alt: '' } }).success, false);
 });
+
+test('legacy settings without a history image position use the documented default', () => {
+  const settings = { ...toPatches(good()).settings, historyImagePosition: null };
+  const parsed = settingsModel.parse(settings);
+  assert.equal(parsed.historyImagePosition, 'left');
+});

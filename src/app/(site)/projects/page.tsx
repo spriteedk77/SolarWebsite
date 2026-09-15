@@ -71,17 +71,33 @@ export default async function ProjectsPage() {
           รายการผลงานติดตั้งทั้งหมด
         </h2>
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {projects.map((project, index) => (
-            <ProjectCard
-              key={project.id}
-              project={project}
-              priority={index < 2}
-            />
-          ))}
-        </div>
+        {projects.length > 0 ? (
+          <>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {projects.map((project, index) => (
+                <ProjectCard
+                  key={project.id}
+                  project={project}
+                  priority={index < 2}
+                />
+              ))}
+            </div>
 
-        <Disclaimer className="mt-8">{disclaimers.savings}</Disclaimer>
+            <Disclaimer className="mt-8">{disclaimers.savings}</Disclaimer>
+          </>
+        ) : (
+          <div className="mx-auto max-w-2xl rounded-card border border-hairline bg-paper-soft p-8 text-center sm:p-10">
+            <h2 className="text-h2">กำลังเตรียมเผยแพร่ผลงานที่ตรวจสอบแล้ว</h2>
+            <p className="mt-4 text-body text-ink-700">
+              โครงการจะแสดงที่นี่หลังทีมงานตรวจข้อมูล สเปก และสิทธิ์การใช้ภาพครบถ้วน
+              ระหว่างนี้สามารถส่งข้อมูลพื้นที่ให้เราประเมินระบบของคุณได้
+            </p>
+            <ButtonLink href={quoteLinks.general} variant="primary" className="mt-6">
+              {cta.primary}
+              <Icon name="arrow-right" className="h-5 w-5" />
+            </ButtonLink>
+          </div>
+        )}
       </Section>
 
       <LeadSection

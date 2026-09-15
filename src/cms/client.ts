@@ -1,14 +1,13 @@
 import 'server-only';
 import { createClient } from '@sanity/client';
 import { connection } from 'next/server';
+import { shouldUseSanity } from './source-mode';
 
 export function usesSanity() {
-  // GitHub Pages is deliberately a frozen review copy. Netlify is the live
-  // application and always reads Sanity, so there is no switch that can leave
-  // a successful edit stranded in a second, hidden content source.
-  if (process.env.GITHUB_PAGES === 'true' || process.env.NEXT_PUBLIC_STATIC_PREVIEW === '1')
-    return false;
-  return process.env.NETLIFY === 'true';
+  // GitHub Pages remains a frozen review copy. Everywhere else, explicit
+  // Sanity configuration is authoritative—even when a host-only build flag is
+  // unavailable inside the deployed runtime.
+  return shouldUseSanity(process.env);
 }
 
 export function sanityClient() {

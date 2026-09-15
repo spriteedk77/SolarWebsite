@@ -8,6 +8,8 @@ import type { Project } from '@/content/types';
 
 /** Section 6 — real installations with their full specification. */
 export function FeaturedProjects({ projects }: { projects: Project[] }) {
+  if (projects.length === 0) return null;
+
   return (
     <Section tone="white" labelledBy="projects-title" width="wide">
       <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">

@@ -6,6 +6,8 @@ import type { Article } from '@/content/types';
 
 /** Section 11 — knowledge centre teaser. */
 export function KnowledgeSection({ articles }: { articles: Article[] }) {
+  if (articles.length === 0) return null;
+
   return (
     <Section tone="white" labelledBy="knowledge-title" width="wide">
       <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
