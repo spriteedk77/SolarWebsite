@@ -1,6 +1,5 @@
 import 'server-only';
 import { createClient } from '@sanity/client';
-import { connection } from 'next/server';
 import { shouldUseSanity } from './source-mode';
 
 export function usesSanity() {
@@ -27,10 +26,9 @@ export function sanityClient() {
 
 /** Published content only, cached on the server. New slugs and sitemap refresh too. */
 export async function queryPublished<T>(query: string): Promise<T> {
-  // Live content belongs to the request, not the deployment. This keeps a
-  // content edit from requiring a new build and keeps an empty CMS from
-  // making the application artifact itself impossible to deploy.
-  await connection();
+  // ISR keeps the live CMS current without forcing a request-only API inside
+  // fallback detail routes. Admin publication also invalidates the `cms` tag,
+  // so new slugs and edits do not require another deployment.
   return sanityClient().fetch<T>(
     query,
     {},
