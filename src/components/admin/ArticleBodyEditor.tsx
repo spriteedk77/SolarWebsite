@@ -4,10 +4,12 @@
 import { useState } from 'react';
 import type { EditorBlock, EditorTextBlock } from '@/admin/articles/model';
 import { ImageFileInput } from './ImageFileInput';
+import { RequiredMark } from './RequiredMark';
+import { adminDangerButton, adminInput, adminNeutralButton, adminSecondaryButton } from './styles';
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 
-export function ArticleBodyEditor({ initialBlocks, title = 'เนื้อหาบทความ' }: { initialBlocks: EditorBlock[]; title?: string }) {
+export function ArticleBodyEditor({ initialBlocks, title = 'เนื้อหาบทความ', error }: { initialBlocks: EditorBlock[]; title?: string; error?: string }) {
   const [blocks, setBlocks] = useState<EditorBlock[]>(initialBlocks);
 
   const addText = (style: EditorTextBlock['style'] = 'normal') =>
@@ -25,7 +27,7 @@ export function ArticleBodyEditor({ initialBlocks, title = 'เนื้อห�
 
   return (
     <section className="rounded-card border border-hairline bg-white p-6 sm:p-8" aria-labelledby="article-body-title">
-      <h2 id="article-body-title" className="text-h3">{title}</h2>
+      <h2 id="article-body-title" className="text-h3">{title}<RequiredMark /></h2>
       <p className="mt-1 text-caption text-ink-600">เรียงจากบนลงล่าง เพิ่มรูปตรงตำแหน่งที่ต้องการให้แสดง และใส่คำอธิบายภาพทุกครั้ง</p>
       <div className="mt-6 space-y-4">
         {blocks.map((block, index) => (
@@ -35,24 +37,24 @@ export function ArticleBodyEditor({ initialBlocks, title = 'เนื้อห�
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
               <strong className="text-caption text-navy-900">ส่วนที่ {index + 1} · {block.kind === 'image' ? 'รูปภาพ' : block.kind === 'preserved' ? block.label : 'ข้อความ'}</strong>
               <div className="flex gap-2">
-                <button type="button" onClick={() => move(index, -1)} disabled={index === 0} className="min-h-11 rounded border border-hairline bg-white px-3 py-1 text-caption disabled:opacity-40" aria-label={`เลื่อนส่วนที่ ${index + 1} ขึ้น`}>ขึ้น</button>
-                <button type="button" onClick={() => move(index, 1)} disabled={index === blocks.length - 1} className="min-h-11 rounded border border-hairline bg-white px-3 py-1 text-caption disabled:opacity-40" aria-label={`เลื่อนส่วนที่ ${index + 1} ลง`}>ลง</button>
-                <button type="button" onClick={() => remove(index)} className="min-h-11 rounded border border-red-200 bg-white px-3 py-1 text-caption text-red-700">ลบ</button>
+                <button type="button" onClick={() => move(index, -1)} disabled={index === 0} className={adminNeutralButton} aria-label={`เลื่อนส่วนที่ ${index + 1} ขึ้น`}>ขึ้น</button>
+                <button type="button" onClick={() => move(index, 1)} disabled={index === blocks.length - 1} className={adminNeutralButton} aria-label={`เลื่อนส่วนที่ ${index + 1} ลง`}>ลง</button>
+                <button type="button" onClick={() => remove(index)} className={adminDangerButton}>ลบ</button>
               </div>
             </div>
             {block.kind === 'text' ? (
               <div className="grid gap-3 sm:grid-cols-[11rem_1fr]">
                 {block.raw && <input type="hidden" name={`body.${index}.raw`} value={block.raw} />}
                 <label className="text-caption font-semibold">รูปแบบ
-                  <select name={`body.${index}.style`} defaultValue={block.style} className="mt-1 w-full rounded-lg border border-hairline bg-white px-3 py-2 text-body">
+                  <select name={`body.${index}.style`} defaultValue={block.style} className={`${adminInput} cursor-pointer`}>
                     <option value="normal">ย่อหน้า</option><option value="h2">หัวข้อหลัก</option><option value="h3">หัวข้อย่อย</option><option value="blockquote">ข้อความเน้น</option><option value="bullet">รายการหัวข้อ</option><option value="number">รายการลำดับ</option>
                   </select>
                 </label>
-                <label className="text-caption font-semibold">ข้อความ
-                  <textarea name={`body.${index}.text`} defaultValue={block.text} rows={block.style === 'normal' ? 5 : 2} className="mt-1 w-full rounded-lg border border-hairline bg-white px-4 py-3 text-body" />
+                <label className="text-caption font-semibold">ข้อความ<RequiredMark />
+                  <textarea name={`body.${index}.text`} defaultValue={block.text} rows={block.style === 'normal' ? 5 : 2} className={adminInput} />
                 </label>
                 <label className="text-caption font-semibold sm:col-start-2">ลิงก์ของข้อความนี้ <span className="font-normal text-ink-600">(เว้นว่างได้)</span>
-                  <input name={`body.${index}.link`} defaultValue={block.link ?? ''} placeholder="https://... หรือ /contact" className="mt-1 w-full rounded-lg border border-hairline bg-white px-4 py-3 text-body" />
+                  <input name={`body.${index}.link`} defaultValue={block.link ?? ''} placeholder="https://... หรือ /contact" className={adminInput} />
                 </label>
               </div>
             ) : block.kind === 'image' ? (
@@ -60,14 +62,14 @@ export function ArticleBodyEditor({ initialBlocks, title = 'เนื้อห�
                 {block.src && <img src={block.src} alt="" className="max-h-48 w-full rounded-lg bg-white object-contain" />}
                 <div className="space-y-3">
                   <input type="hidden" name={`body.${index}.assetId`} value={block.assetId ?? ''} />
-                  <label className="block text-caption font-semibold">เลือกรูปใหม่
-                    <ImageFileInput name={`body.${index}.file`} />
-                  </label>
-                  <label className="block text-caption font-semibold">คำอธิบายภาพ <span className="text-red-700">*</span>
-                    <input name={`body.${index}.alt`} defaultValue={block.alt} className="mt-1 w-full rounded-lg border border-hairline bg-white px-3 py-2 text-body" />
+                  <div className="block text-caption font-semibold">รูปภาพ
+                    <ImageFileInput name={`body.${index}.file`} hasImage={Boolean(block.src)} />
+                  </div>
+                  <label className="block text-caption font-semibold">คำอธิบายภาพ<RequiredMark />
+                    <input name={`body.${index}.alt`} defaultValue={block.alt} className={adminInput} aria-required="true" />
                   </label>
                   <label className="block text-caption font-semibold">คำบรรยายใต้ภาพ
-                    <input name={`body.${index}.caption`} defaultValue={block.caption} className="mt-1 w-full rounded-lg border border-hairline bg-white px-3 py-2 text-body" />
+                    <input name={`body.${index}.caption`} defaultValue={block.caption} className={adminInput} />
                   </label>
                 </div>
               </div>
@@ -81,11 +83,12 @@ export function ArticleBodyEditor({ initialBlocks, title = 'เนื้อห�
         ))}
       </div>
       <div className="mt-5 flex flex-wrap gap-3">
-        <button type="button" onClick={() => addText()} className="min-h-11 rounded-lg border border-solar-600 bg-white px-4 font-semibold text-solar-700">+ ย่อหน้า</button>
-        <button type="button" onClick={() => addText('h2')} className="min-h-11 rounded-lg border border-hairline bg-white px-4 font-semibold text-navy-900">+ หัวข้อ</button>
-        <button type="button" onClick={() => addText('bullet')} className="min-h-11 rounded-lg border border-hairline bg-white px-4 font-semibold text-navy-900">+ รายการ</button>
-        <button type="button" onClick={addImage} className="min-h-11 rounded-lg border border-hairline bg-white px-4 font-semibold text-navy-900">+ รูปในบทความ</button>
+        <button type="button" onClick={() => addText()} className={adminSecondaryButton}>+ ย่อหน้า</button>
+        <button type="button" onClick={() => addText('h2')} className={adminNeutralButton}>+ หัวข้อ</button>
+        <button type="button" onClick={() => addText('bullet')} className={adminNeutralButton}>+ รายการ</button>
+        <button type="button" onClick={addImage} className={adminNeutralButton}>+ รูปในบทความ</button>
       </div>
+      {error && <p className="mt-3 text-caption font-medium text-red-700">{error}</p>}
     </section>
   );
 }

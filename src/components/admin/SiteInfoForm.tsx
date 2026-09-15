@@ -5,6 +5,8 @@ import { saveSiteInfoAction, type FormState } from '@/app/admin/actions';
 import { fieldGroups } from '@/admin/site-info/fields';
 import type { SiteInfoValues } from '@/admin/site-info/model';
 import { ServiceAreasEditor } from './ServiceAreasEditor';
+import { RequiredMark } from './RequiredMark';
+import { adminInput, adminPrimaryButton } from './styles';
 
 const initial: FormState = { status: 'idle' };
 
@@ -28,13 +30,13 @@ export function SiteInfoForm({
   const [state, action, pending] = useActionState(saveSiteInfoAction, initial);
 
   return (
-    <form action={action} noValidate>
+    <form action={action} className="min-w-0" noValidate>
       <div className="space-y-8">
         {fieldGroups.map((group) => (
           <section
             key={group.id}
             aria-labelledby={`group-${group.id}`}
-            className="rounded-card border border-hairline bg-white p-6 sm:p-8"
+            className="min-w-0 rounded-card border border-hairline bg-white p-6 sm:p-8"
           >
             <h2 id={`group-${group.id}`} className="text-h3">
               {group.title}
@@ -50,21 +52,21 @@ export function SiteInfoForm({
                 const describedBy =
                   [helpId, errorId].filter(Boolean).join(' ') || undefined;
                 const className = [
-                  'mt-2 w-full rounded-lg border bg-white px-4 py-3 text-body text-ink-900',
-                  'focus:border-solar-600 focus:outline-none',
+                  adminInput,
                   error ? 'border-red-600' : 'border-hairline',
                 ].join(' ');
 
                 return (
-                  <div key={field.name}>
+                  <div key={field.name} className="min-w-0">
                     <label
                       htmlFor={id}
                       className="text-body font-semibold text-navy-900"
                     >
                       {field.label}
+                      {field.required && <RequiredMark />}
                     </label>
                     {field.help && (
-                      <p id={helpId} className="mt-1 text-caption text-ink-600">
+                      <p id={helpId} className="mt-1 break-words text-caption text-ink-600">
                         {field.help}
                       </p>
                     )}
@@ -83,6 +85,7 @@ export function SiteInfoForm({
                         defaultValue={values[field.name]}
                         placeholder={field.placeholder}
                         aria-invalid={error ? true : undefined}
+                        aria-required={field.required || undefined}
                         aria-describedby={describedBy}
                         className={className}
                       />
@@ -94,6 +97,7 @@ export function SiteInfoForm({
                         defaultValue={values[field.name]}
                         placeholder={field.placeholder}
                         aria-invalid={error ? true : undefined}
+                        aria-required={field.required || undefined}
                         aria-describedby={describedBy}
                         className={className}
                       />
@@ -120,9 +124,9 @@ export function SiteInfoForm({
           <button
             type="submit"
             disabled={pending || !canSave}
-            className="inline-flex min-h-12 items-center rounded-lg bg-solar-600 px-7 font-semibold text-white hover:bg-solar-700 disabled:cursor-not-allowed disabled:opacity-60"
+            className={adminPrimaryButton}
           >
-            {pending ? 'กำลังบันทึก…' : 'บันทึก'}
+            {pending ? 'กำลังบันทึก…' : 'บันทึกและอัปเดตเว็บไซต์'}
           </button>
 
           {state.status === 'ok' && state.message && (

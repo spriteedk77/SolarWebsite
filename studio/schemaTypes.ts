@@ -341,7 +341,7 @@ const project = defineType({
       title: 'ภาพหน้าปก',
       type: 'siteImage',
       group: 'images',
-      validation: (r) => r.required(),
+      description: 'ไม่บังคับ หากเพิ่มรูปต้องใส่คำอธิบายภาพให้ครบ',
     }),
     defineField({
       name: 'gallery',
@@ -390,13 +390,13 @@ const article = defineType({
       validation: (r) => r.required(),
     }),
     strings('tags', 'คำสำคัญ', 'details'),
-    requiredString('author', 'ผู้เขียน', 'details'),
+    optionalString('author', 'ผู้เขียน (ไม่บังคับ)', 'details'),
     defineField({
       name: 'featuredImage',
       title: 'ภาพหน้าปก',
       type: 'siteImage',
       group: 'images',
-      validation: (r) => r.required(),
+      description: 'ไม่บังคับ หากเพิ่มรูปต้องใส่คำอธิบายภาพให้ครบ',
     }),
     defineField({
       name: 'related',

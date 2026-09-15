@@ -11,7 +11,7 @@ import { projectProjection } from '@/cms/content';
 import { projectModel } from '@/cms/models';
 import { requireSignedIn } from '@/lib/admin-session';
 
-export type ProjectActionState = { status: 'idle' | 'error'; message?: string; errors?: string[] };
+export type ProjectActionState = { status: 'idle' | 'error'; message?: string; errors?: string[]; fieldErrors?: Record<string, string> };
 type ImageEditorData = { key: string; assetId?: string; src?: string; alt: string; caption: string };
 export type ProjectEditorData = {
   id: string; title: string; slug: string; summary: string; customerName: string; customerType: string;
@@ -19,7 +19,7 @@ export type ProjectEditorData = {
   panelQuantity: string; inverter: string; battery: string; optimizer: string; systemType: string;
   zeroExport: boolean; monitoring: string; estimatedSavings: string; standards: string; servicesIncluded: string;
   warranty: string; publishedAt: string; seoTitle: string; seoDescription: string; featured: boolean;
-  coverImage?: Omit<ImageEditorData, 'key'>; gallery: ImageEditorData[]; blocks: EditorBlock[]; published: boolean;
+  coverImage?: Omit<ImageEditorData, 'key'>; gallery: ImageEditorData[]; blocks: EditorBlock[]; draft: boolean; published: boolean;
 };
 
 type RawDocument = Record<string, unknown> & { _id?: string; content?: RawBlock[] };
@@ -71,7 +71,7 @@ export async function loadProject(id: string): Promise<ProjectEditorData | null>
     monitoring: String(document.monitoring ?? ''), estimatedSavings: document.estimatedSavings === undefined ? '' : String(document.estimatedSavings), standards: arrayText(document.standards), servicesIncluded: arrayText(document.servicesIncluded), warranty: warrantyText(document.warranty),
     publishedAt: String(document.publishedAt ?? new Date().toISOString()).slice(0, 16), seoTitle: String(document.seoTitle ?? ''), seoDescription: String(document.seoDescription ?? ''), featured: document.featured === true,
     coverImage: toImage(document.coverImage), gallery: Array.isArray(document.gallery) ? document.gallery.map((image, index) => ({ key: String((image as Record<string, unknown>)._key ?? `gallery-${index}`), ...toImage(image) })).filter((image): image is ImageEditorData => Boolean(image.assetId && image.src)) : [],
-    blocks: content.map(toEditorBlock).filter((block): block is EditorBlock => Boolean(block)), published: Boolean(published),
+    blocks: content.map(toEditorBlock).filter((block): block is EditorBlock => Boolean(block)), draft: Boolean(draft), published: Boolean(published),
   };
 }
 
@@ -103,30 +103,35 @@ export async function saveProjectAction(_previous: ProjectActionState, formData:
     inverter: formData.get('inverter') || '', battery: formData.get('battery') || '', optimizer: formData.get('optimizer') || '', systemType: formData.get('systemType'), zeroExport: formData.get('zeroExport') === 'yes', monitoring: formData.get('monitoring') || '',
     estimatedSavings: formData.get('estimatedSavings') || '', standards: formData.get('standards') || '', servicesIncluded: formData.get('servicesIncluded') || '', warranty: formData.get('warranty') || '', publishedAt: formData.get('publishedAt'), seoTitle: formData.get('seoTitle') || '', seoDescription: formData.get('seoDescription') || '', featured: formData.get('featured') === 'yes',
   });
-  if (!parsed.success) return { status: 'error', message: 'ยังบันทึกไม่ได้', errors: parsed.error.issues.map((issue) => issue.message) };
+  if (!parsed.success) return validationState(parsed.error.issues);
   const id = baseId(String(formData.get('id') || `project-${randomUUID()}`));
   let slug = parsed.data.slug || automaticSlug(parsed.data.title, id);
   const duplicate = await config.client.fetch<number>(`count(*[_type == "project" && slug.current == $slug && !(_id in [$id,$draftId])])`, { slug, id, draftId: draftId(id) });
   if (duplicate) slug = `${slug}-${id.replace(/[^a-zA-Z0-9]/g, '').slice(-6).toLowerCase()}`;
   const blocks = readEditorBlocks(formData);
   const blockErrors = validateBlocks(blocks);
-  if (blockErrors.length) return { status: 'error', message: 'รายละเอียดโครงการยังไม่ครบ', errors: blockErrors };
+  if (blockErrors.length) return { status: 'error', message: 'กรุณาตรวจช่องที่มีข้อความสีแดง', errors: blockErrors, fieldErrors: { content: blockErrors[0] } };
+  const coverAlt = String(formData.get('coverAlt') || '').trim();
+  if (hasImage(formData.get('coverImageFile'), formData.get('coverAssetId')) && !coverAlt)
+    return { status: 'error', message: 'กรุณาตรวจช่องที่มีข้อความสีแดง', fieldErrors: { coverAlt: 'กรุณากรอกคำอธิบายภาพเมื่อมีภาพหน้าปก' } };
   let destination = '';
   try {
-    const coverImage = await resolveAdminImage(config.client, formData.get('coverImageFile'), String(formData.get('coverAssetId') || ''), String(formData.get('coverAlt') || ''), String(formData.get('coverCaption') || ''));
+    const coverImage = await resolveAdminImage(config.client, formData.get('coverImageFile'), String(formData.get('coverAssetId') || ''), coverAlt, String(formData.get('coverCaption') || ''));
     const content = [];
     for (const block of blocks) {
       if (block.kind === 'text' || block.kind === 'preserved') content.push(portableTextForEditorBlock(block));
       else {
         const image = await resolveAdminImage(config.client, formData.get(`body.file.${block.key}`), block.assetId || '', block.alt, block.caption);
-        if (!image) return { status: 'error', message: `กรุณาเลือกรูปสำหรับส่วน "${block.alt || block.key}"` };
+        if (!image) return { status: 'error', message: 'กรุณาตรวจช่องที่มีข้อความสีแดง', fieldErrors: { content: `กรุณาเลือกรูปสำหรับส่วน "${block.alt || block.key}"` } };
         content.push({ _key: block.key, ...image });
       }
     }
     const gallery = [];
     for (const row of readGallery(formData)) {
+      if (!row.alt.trim())
+        return { status: 'error', message: 'กรุณาตรวจช่องที่มีข้อความสีแดง', fieldErrors: { gallery: 'กรุณากรอกคำอธิบายภาพแกลเลอรีทุกภาพ' } };
       const image = await resolveAdminImage(config.client, formData.get(`gallery.file.${row.key}`), row.assetId, row.alt, row.caption);
-      if (!image) return { status: 'error', message: `กรุณาเลือกรูปแกลเลอรี "${row.alt || row.key}"` };
+      if (!image) return { status: 'error', message: 'กรุณาตรวจช่องที่มีข้อความสีแดง', fieldErrors: { gallery: `กรุณาเลือกรูปแกลเลอรี "${row.alt || row.key}"` } };
       gallery.push({ _key: row.key, ...image });
     }
     const now = new Date().toISOString();
@@ -142,7 +147,7 @@ export async function saveProjectAction(_previous: ProjectActionState, formData:
     await config.client.createOrReplace(document);
     const intent = String(formData.get('intent') || 'save');
     if (intent === 'publish') {
-      if (formData.get('confirm') !== 'yes') return { status: 'error', message: 'ติ๊กยืนยันข้อมูลและสิทธิ์ใช้รูปก่อนเผยแพร่' };
+      if (formData.get('confirm') !== 'yes') return { status: 'error', message: 'กรุณาตรวจช่องที่มีข้อความสีแดง', fieldErrors: { confirm: 'กรุณาติ๊กยืนยันข้อมูลก่อนเผยแพร่' } };
       const projected = await config.client.fetch<unknown>(`*[_id == $id][0] ${projectProjection}`, { id: draftId(id) });
       const checked = projectModel.safeParse(projected);
       if (!checked.success) return { status: 'error', message: 'เว็บไซต์ยังแสดงโครงการนี้ไม่ได้', errors: checked.error.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`) };
@@ -150,7 +155,7 @@ export async function saveProjectAction(_previous: ProjectActionState, formData:
       await config.client.transaction().createOrReplace({ ...document, _id: id, approvedForPublication: true }).delete(draftId(id)).commit();
       refreshProjects(); destination = '/admin/projects?published=1';
     } else destination = `/admin/projects/${id}?saved=1`;
-  } catch (error) { return { status: 'error', message: error instanceof Error ? `บันทึกไม่สำเร็จ: ${error.message}` : 'บันทึกไม่สำเร็จ' }; }
+  } catch { return { status: 'error', message: 'เกิดข้อผิดพลาด กรุณาลองใหม่' }; }
   redirect(destination);
 }
 
@@ -171,11 +176,29 @@ function readGallery(formData: FormData) {
 function automaticSlug(title: string, id: string) { const readable = title.normalize('NFKD').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 56); return readable || `project-${id.replace(/[^a-zA-Z0-9]/g, '').slice(-8).toLowerCase()}`; }
 function refreshProjects() { revalidateTag('cms', 'max'); revalidatePath('/', 'layout'); revalidatePath('/projects', 'layout'); }
 
-export async function deleteProjectAction(formData: FormData) {
+export async function deleteProjectAction(_previous: { status: 'idle' | 'error'; message?: string }, formData: FormData): Promise<{ status: 'idle' | 'error'; message?: string }> {
   await requireSignedIn();
-  if (formData.get('confirmDelete') !== 'yes') throw new Error('กรุณาติ๊กยืนยันก่อนลบโครงการ');
-  const config = adminWriteClient(); if (!config.ready) throw new Error(`ยังตั้งค่าไม่ครบ: ${config.missing.join(', ')}`);
-  const id = baseId(String(formData.get('id') || '')); if (!/^[a-zA-Z0-9][a-zA-Z0-9._-]+$/.test(id)) throw new Error('รหัสโครงการไม่ถูกต้อง');
-  const exists = await config.client.fetch<boolean>(`count(*[_type == "project" && _id in [$id,$draftId]]) > 0`, { id, draftId: draftId(id) }); if (!exists) throw new Error('ไม่พบโครงการที่ต้องการลบ');
-  await config.client.transaction().delete(id).delete(draftId(id)).commit(); refreshProjects(); redirect('/admin/projects?deleted=1');
+  if (formData.get('confirmDelete') !== 'yes') return { status: 'error', message: 'กรุณายืนยันการลบ' };
+  const config = adminWriteClient(); if (!config.ready) return { status: 'error', message: `ยังตั้งค่าไม่ครบ: ${config.missing.join(', ')}` };
+  const id = baseId(String(formData.get('id') || '')); if (!/^[a-zA-Z0-9][a-zA-Z0-9._-]+$/.test(id)) return { status: 'error', message: 'รหัสโครงการไม่ถูกต้อง' };
+  try {
+    const exists = await config.client.fetch<boolean>(`count(*[_type == "project" && _id in [$id,$draftId]]) > 0`, { id, draftId: draftId(id) }); if (!exists) return { status: 'error', message: 'ไม่พบโครงการที่ต้องการลบ' };
+    await config.client.transaction().delete(id).delete(draftId(id)).commit();
+  } catch {
+    return { status: 'error', message: 'เกิดข้อผิดพลาด กรุณาลองใหม่' };
+  }
+  refreshProjects(); redirect('/admin/projects?deleted=1');
+}
+
+function validationState(issues: { path: PropertyKey[]; message: string }[]): ProjectActionState {
+  const fieldErrors: Record<string, string> = {};
+  for (const issue of issues) {
+    const field = String(issue.path[0] || 'form');
+    fieldErrors[field] ||= issue.message;
+  }
+  return { status: 'error', message: 'กรุณาตรวจช่องที่มีข้อความสีแดง', fieldErrors };
+}
+
+function hasImage(file: FormDataEntryValue | null, assetId: FormDataEntryValue | null) {
+  return (typeof assetId === 'string' && assetId.trim() !== '') || (typeof file !== 'string' && Boolean(file?.size));
 }

@@ -130,7 +130,7 @@ export type Article = {
   summary: string;
   category: ArticleCategory;
   tags: string[];
-  featuredImage: ImageAsset;
+  featuredImage?: ImageAsset;
   content: InlineBlock[];
   /** Rendered as an FAQPage block on the article when present. */
   faq?: { question: string; answer: string }[];

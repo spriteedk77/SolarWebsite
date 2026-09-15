@@ -139,7 +139,8 @@ export function articleSchema(article: Article) {
     articleSection: article.category,
     keywords: article.tags.join(', '),
     // Google rejects SVG here, so vector placeholders resolve to the PNG.
-    image: socialImageUrl({ url: article.featuredImage.src }),
+    // Articles without an optional cover use the site's social image.
+    image: socialImageUrl({ url: article.featuredImage?.src ?? DEFAULT_OG_PATH }),
     author: article.author
       ? { '@type': 'Person', name: article.author }
       : { '@id': ORG_ID },

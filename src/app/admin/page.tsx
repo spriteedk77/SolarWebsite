@@ -2,7 +2,6 @@ import { Container } from '@/components/ui/Container';
 import { AdminShell } from '@/components/admin/AdminShell';
 import { LoginForm } from '@/components/admin/LoginForm';
 import { SiteInfoForm } from '@/components/admin/SiteInfoForm';
-import { PublishPanel } from '@/components/admin/PublishPanel';
 import { isSignedIn } from '@/lib/admin-session';
 import { adminConfig } from '@/lib/admin-auth';
 import { loadSiteInfo } from './actions';
@@ -73,7 +72,7 @@ export default async function AdminPage() {
             <h1 className="mt-2 text-h2">ข้อมูลเว็บไซต์</h1>
             <p className="mt-3 max-w-prose text-body text-ink-600">
               แก้ช่องทางติดต่อ ที่อยู่ และข้อความหน้าแรกได้จากหน้านี้
-              เมื่อกดบันทึกจะเก็บเป็นฉบับร่างก่อน ยังไม่ขึ้นเว็บจริง
+              เมื่อกดบันทึก ข้อมูลจะอัปเดตเว็บไซต์จริงผ่านระบบ CMS โดยตรง
             </p>
           </header>
 
@@ -109,7 +108,6 @@ export default async function AdminPage() {
           )}
 
           <SiteInfoForm values={info.values} canSave={info.canSave} />
-          <PublishPanel canSave={info.canSave} />
         </div>
       </Container>
     </AdminShell>

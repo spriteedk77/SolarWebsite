@@ -19,7 +19,7 @@ export const imageProjection = `{
 export const bodyProjection = `content[]{..., _type == "siteImage" => ${imageProjection}}`;
 const shared = `"id": _id, title, "slug": slug.current, summary, publishedAt, "updatedAt": coalesce(updatedAt,_updatedAt), seoTitle,seoDescription,"richContent": ${bodyProjection}`;
 export const articleProjection = `{${shared},category,"tags":coalesce(tags,[]),"featuredImage":featuredImage ${imageProjection},author,featured,"related":related[]->slug.current,faq}`;
-export const projectProjection = `{${shared},customerName,customerType,location,province,"systemCapacityKw":systemCapacity,phase,"solarPanel":solarPanels,panelQuantity,inverter,battery,optimizer,systemType,zeroExport,monitoring,"estimatedSavingsThbPerMonth":estimatedSavings,featured,standards,servicesIncluded,warranty,"gallery":[coverImage ${imageProjection}] + coalesce(gallery[] ${imageProjection},[])}`;
+export const projectProjection = `{${shared},customerName,customerType,location,province,"systemCapacityKw":systemCapacity,phase,"solarPanel":solarPanels,panelQuantity,inverter,battery,optimizer,systemType,zeroExport,monitoring,"estimatedSavingsThbPerMonth":estimatedSavings,featured,standards,servicesIncluded,warranty,"gallery":select(defined(coverImage.asset) || defined(coverImage.legacySrc) => [coverImage ${imageProjection}], []) + coalesce(gallery[] ${imageProjection},[])}`;
 export const getSanityProjects = cache(async (): Promise<Project[]> => {
   const docs = await queryPublished<
     unknown[]

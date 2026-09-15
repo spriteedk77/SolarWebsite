@@ -188,7 +188,7 @@ async function main() {
           : [];
       }),
       content: convertBlocks(a.content),
-      featuredImage: await image(a.featuredImage),
+      ...(a.featuredImage ? { featuredImage: await image(a.featuredImage) } : {}),
       publishedAt: new Date(a.publishedAt).toISOString(),
       updatedAt: new Date(a.updatedAt).toISOString(),
       faq: a.faq?.map((f, i) => ({ ...f, _key: `q${i}` })),

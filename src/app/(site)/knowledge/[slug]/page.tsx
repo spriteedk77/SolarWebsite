@@ -56,12 +56,14 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     publishedTime: article.publishedAt,
     modifiedTime: article.updatedAt,
     keywords: article.tags,
-    image: {
-      url: article.featuredImage.src,
-      width: article.featuredImage.width,
-      height: article.featuredImage.height,
-      alt: article.featuredImage.alt,
-    },
+    image: article.featuredImage
+      ? {
+          url: article.featuredImage.src,
+          width: article.featuredImage.width,
+          height: article.featuredImage.height,
+          alt: article.featuredImage.alt,
+        }
+      : undefined,
   });
 }
 
@@ -111,12 +113,14 @@ export default async function ArticlePage({ params }: Params) {
       <Section tone="white" width="wide">
         <div className="grid gap-10 lg:grid-cols-12 lg:gap-12">
           <article className="lg:col-span-8">
-            <Figure
-              image={article.featuredImage}
-              ratio="16/9"
-              priority
-              sizes="(min-width: 1024px) 66vw, 100vw"
-            />
+            {article.featuredImage && (
+              <Figure
+                image={article.featuredImage}
+                ratio="16/9"
+                priority
+                sizes="(min-width: 1024px) 66vw, 100vw"
+              />
+            )}
 
             <div className="mt-8 lg:hidden">
               {article.richContent ? (

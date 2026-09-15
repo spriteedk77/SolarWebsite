@@ -65,6 +65,36 @@ test('the publish model accepts the same text and inline-image blocks the editor
   assert.equal(result.success, true);
 });
 
+test('an article can be published without an optional cover image', () => {
+  const date = '2026-09-15T08:30:00.000Z';
+  const result = articleModel.safeParse({
+    id: 'article-without-cover',
+    title: fields.title,
+    slug: fields.slug,
+    summary: fields.summary,
+    category: fields.category,
+    tags: [],
+    publishedAt: date,
+    updatedAt: date,
+    featured: false,
+    richContent: [textBlock('intro', 'normal', 'เนื้อหา')],
+  });
+  assert.equal(result.success, true);
+  if (result.success) assert.equal(result.data.featuredImage, undefined);
+});
+
+test('an article cover image requires alt text only when the image exists', () => {
+  const date = '2026-09-15T08:30:00.000Z';
+  const base = {
+    id: 'article-cover-alt', title: fields.title, slug: fields.slug,
+    summary: fields.summary, category: fields.category, tags: [],
+    publishedAt: date, updatedAt: date, featured: false,
+    richContent: [textBlock('intro', 'normal', 'เนื้อหา')],
+  };
+  assert.equal(articleModel.safeParse(base).success, true);
+  assert.equal(articleModel.safeParse({ ...base, featuredImage: { src: '/images/cover.webp', alt: '', width: 1600, height: 900 } }).success, false);
+});
+
 test('saving an untouched migrated block preserves its links and emphasis', () => {
   const original = {
     _type: 'block',

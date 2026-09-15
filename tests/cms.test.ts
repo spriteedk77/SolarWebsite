@@ -68,7 +68,7 @@ test('migration retains rich text emphasis, links, list ordering and table cells
   assert.equal(blocks[3]._type, 'contentTable');
   assert.equal(JSON.stringify(blocks).includes('**'), false);
 });
-test('published project shape rejects missing cover and invalid capacity', () => {
+test('published project shape accepts no image but rejects invalid capacity', () => {
   const project = {
     ...projects[0],
     publishedAt: '2026-01-01T00:00:00Z',
@@ -78,7 +78,7 @@ test('published project shape rejects missing cover and invalid capacity', () =>
   assert.equal(projectModel.safeParse(project).success, true);
   assert.equal(
     projectModel.safeParse({ ...project, gallery: [] }).success,
-    false,
+    true,
   );
   assert.equal(
     projectModel.safeParse({ ...project, systemCapacityKw: -1 }).success,

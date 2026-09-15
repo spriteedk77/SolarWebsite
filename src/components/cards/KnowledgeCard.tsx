@@ -16,7 +16,7 @@ export function KnowledgeCard({
 
   return (
     <Card as="article" interactive className="flex h-full flex-col">
-      {showImage && (
+      {showImage && article.featuredImage && (
         <Figure
           image={article.featuredImage}
           ratio="16/9"

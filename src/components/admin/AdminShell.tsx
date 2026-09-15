@@ -2,6 +2,8 @@ import { Container } from '@/components/ui/Container';
 import { Logo } from '@/components/brand/Logo';
 import { signOutAction } from '@/app/admin/actions';
 import Link from 'next/link';
+import { PendingSubmitButton } from './PendingSubmitButton';
+import { adminNavLink, adminNeutralButton } from './styles';
 
 /**
  * The frame around every admin screen.
@@ -20,7 +22,7 @@ export function AdminShell({
   signedIn?: boolean;
 }) {
   return (
-    <div className="flex min-h-screen flex-col bg-soft">
+    <div className="flex min-h-screen flex-col overflow-x-clip bg-soft">
       <header className="border-b border-hairline bg-white">
         <Container width="wide">
           <div className="flex min-h-16 flex-wrap items-center justify-between gap-4 py-3">
@@ -40,13 +42,13 @@ export function AdminShell({
             {signedIn && (
               <div className="flex flex-wrap items-center gap-2">
                 <nav aria-label="เมนูจัดการเนื้อหา" className="flex flex-wrap gap-1">
-                  <Link href="/admin" className="inline-flex min-h-11 items-center rounded-lg px-3 text-caption font-semibold text-navy-900 hover:bg-soft">ข้อมูลเว็บไซต์</Link>
-                  <Link href="/admin/articles" className="inline-flex min-h-11 items-center rounded-lg px-3 text-caption font-semibold text-navy-900 hover:bg-soft">บทความ</Link>
-                  <Link href="/admin/projects" className="inline-flex min-h-11 items-center rounded-lg px-3 text-caption font-semibold text-navy-900 hover:bg-soft">โครงการ</Link>
-                  <Link href="/admin/images" className="inline-flex min-h-11 items-center rounded-lg px-3 text-caption font-semibold text-navy-900 hover:bg-soft">รูปภาพ</Link>
+                  <Link href="/admin" className={adminNavLink}>ข้อมูลเว็บไซต์</Link>
+                  <Link href="/admin/articles" className={adminNavLink}>บทความ</Link>
+                  <Link href="/admin/projects" className={adminNavLink}>โครงการ</Link>
+                  <Link href="/admin/images" className={adminNavLink}>รูปภาพ</Link>
                 </nav>
                 <form action={signOutAction}>
-                  <button type="submit" className="inline-flex min-h-11 items-center rounded-lg border border-hairline px-4 text-caption font-semibold text-navy-900 hover:border-solar-400">ออกจากระบบ</button>
+                  <PendingSubmitButton idleLabel="ออกจากระบบ" pendingLabel="กำลังออกจากระบบ…" className={adminNeutralButton} />
                 </form>
               </div>
             )}
@@ -60,7 +62,7 @@ export function AdminShell({
         <Container width="wide">
           <p className="py-5 text-caption text-ink-600">
             หน้านี้ใช้สำหรับทีมงาน NP88 Solar เท่านั้น
-            การเปลี่ยนแปลงจะถูกบันทึกเป็นฉบับร่างก่อนเสมอ
+            ข้อมูลเว็บไซต์บันทึกขึ้นเว็บโดยตรง ส่วนบทความและโครงการแยกฉบับร่างกับเผยแพร่
           </p>
         </Container>
       </footer>

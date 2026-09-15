@@ -3,6 +3,8 @@
 import { useActionState } from 'react';
 import { signInAction } from '@/app/admin/actions';
 import type { FormState } from '@/app/admin/actions';
+import { RequiredMark } from './RequiredMark';
+import { adminInput, adminPrimaryButton } from './styles';
 
 const initial: FormState = { status: 'idle' };
 
@@ -23,6 +25,7 @@ export function LoginForm() {
         className="text-body font-semibold text-navy-900"
       >
         รหัสผ่าน
+        <RequiredMark />
       </label>
       <input
         id="admin-password"
@@ -33,7 +36,7 @@ export function LoginForm() {
         autoFocus
         aria-invalid={state.status === 'error' ? true : undefined}
         aria-describedby={state.message ? 'admin-password-error' : undefined}
-        className={`mt-2 w-full rounded-lg border bg-white px-4 py-3 text-body text-ink-900 focus:border-solar-600 focus:outline-none ${
+        className={`${adminInput} ${
           state.status === 'error' ? 'border-red-600' : 'border-hairline'
         }`}
       />
@@ -51,7 +54,7 @@ export function LoginForm() {
       <button
         type="submit"
         disabled={pending}
-        className="mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-lg bg-solar-600 px-6 font-semibold text-white hover:bg-solar-700 disabled:opacity-60"
+        className={`${adminPrimaryButton} mt-6 w-full`}
       >
         {pending ? 'กำลังตรวจสอบ…' : 'เข้าสู่ระบบ'}
       </button>

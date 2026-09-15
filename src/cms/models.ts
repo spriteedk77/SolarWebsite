@@ -68,7 +68,7 @@ export const projectModel = z.object({
     .nullable()
     .optional()
     .transform((v) => v ?? undefined),
-  gallery: z.array(imageModel).min(1),
+  gallery: z.array(imageModel).default([]),
   featured: z.boolean().default(false),
   standards: z
     .array(z.string())
@@ -95,7 +95,7 @@ export const articleModel = z.object({
   ...common,
   category: z.enum(ARTICLE_CATEGORIES),
   tags: z.array(z.string()).default([]),
-  featuredImage: imageModel,
+  featuredImage: imageModel.optional().nullable().transform((value) => value || undefined),
   author: optionalText,
   featured: z.boolean().default(false),
   related: z

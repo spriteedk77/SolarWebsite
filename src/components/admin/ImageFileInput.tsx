@@ -1,16 +1,21 @@
 'use client';
 
-import { useState } from 'react';
+import { useId, useState } from 'react';
+import { adminSecondaryButton } from './styles';
 
 /** Shrinks phone photos before the form is sent, so several images fit safely in one request. */
-export function ImageFileInput({ name }: { name: string }) {
+export function ImageFileInput({ name, hasImage = false }: { name: string; hasImage?: boolean }) {
+  const id = useId();
   const [status, setStatus] = useState('');
-  return <>
+  const [busy, setBusy] = useState(false);
+  return <div className="mt-2 flex flex-wrap items-center gap-3">
     <input
+      id={id}
       type="file"
       name={name}
       accept="image/jpeg,image/png,image/webp"
-      className="mt-2 block w-full text-caption"
+      className="sr-only"
+      disabled={busy}
       onChange={async (event) => {
         const input = event.currentTarget;
         const file = input.files?.[0];
@@ -18,6 +23,7 @@ export function ImageFileInput({ name }: { name: string }) {
           setStatus(file ? `${(file.size / 1_000_000).toFixed(1)} MB` : '');
           return;
         }
+        setBusy(true);
         setStatus('กำลังย่อรูป…');
         try {
           const bitmap = await createImageBitmap(file);
@@ -36,9 +42,16 @@ export function ImageFileInput({ name }: { name: string }) {
           } else setStatus(`${(file.size / 1_000_000).toFixed(1)} MB`);
         } catch {
           setStatus(`${(file.size / 1_000_000).toFixed(1)} MB — ระบบจะตรวจอีกครั้งตอนบันทึก`);
+        } finally {
+          setBusy(false);
         }
       }}
     />
-    {status && <span className="mt-1 block text-caption text-ink-600">{status}</span>}
-  </>;
+    <label htmlFor={id} aria-disabled={busy} className={`${adminSecondaryButton} ${busy ? 'pointer-events-none opacity-50' : ''}`}>
+      {busy ? 'กำลังเตรียมรูป…' : hasImage ? 'เปลี่ยนรูป' : 'เลือกรูป'}
+    </label>
+    <span aria-live="polite" className="text-caption text-ink-600">
+      {status || (hasImage ? 'ใช้รูปเดิมอยู่' : 'ยังไม่ได้เลือกรูป')}
+    </span>
+  </div>;
 }

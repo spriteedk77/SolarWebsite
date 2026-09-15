@@ -9,7 +9,6 @@ import {
   draftId,
 } from '@/cms/admin-write';
 import { defaultSiteData } from '@/lib/site-data';
-import { companyModel, settingsModel } from '@/cms/site';
 import { usesSanity } from '@/cms/client';
 import {
   fromDocuments,
@@ -98,7 +97,7 @@ export async function loadSiteInfo(): Promise<{
     ]);
 
   return {
-    values: fromDocuments(companyDraft ?? company, settingsDraft ?? settings),
+    values: fromDocuments(company ?? companyDraft, settings ?? settingsDraft),
     canSave: true,
     missing: [],
     liveReadsCms: usesSanity(),
@@ -171,131 +170,26 @@ export async function saveSiteInfoAction(
 
   const { company, settings } = toPatches(values);
   try {
-    // Saved as a draft. Nothing here puts text on the live site: that stays a
-    // separate, deliberate step.
     await config.client
       .transaction()
-      .createIfNotExists({ _id: draftId(COMPANY_ID), _type: COMPANY_ID })
-      .createIfNotExists({ _id: draftId(SETTINGS_ID), _type: SETTINGS_ID })
-      .patch(draftId(COMPANY_ID), (patch) =>
+      .createIfNotExists({ _id: COMPANY_ID, _type: 'company' })
+      .createIfNotExists({ _id: SETTINGS_ID, _type: 'siteSettings' })
+      .patch(COMPANY_ID, (patch) =>
         patch
-          // `address` has to exist before a path inside it can be set, and the
-          // two fields the form does not show are restored here if an earlier
-          // save removed them.
           .setIfMissing({ address: {} })
           .setIfMissing(requiredAddressDefaults())
-          .set(company),
+          .set({ ...company, approvedForPublication: true }),
       )
-      .patch(draftId(SETTINGS_ID), (patch) => patch.set(settings))
-      .commit();
-  } catch (error) {
-    return {
-      status: 'error',
-      message:
-        error instanceof Error
-          ? `บันทึกไม่สำเร็จ: ${error.message}`
-          : 'บันทึกไม่สำเร็จ',
-    };
-  }
-
-  revalidatePath('/admin');
-  return {
-    status: 'ok',
-    message: 'บันทึกแล้ว — ยังไม่ขึ้นเว็บจริง กดเผยแพร่ด้านล่างเมื่อพร้อม',
-  };
-}
-
-/**
- * Put the saved draft on the live website.
- *
- * Two documents move together: the company details and the homepage text. The
- * company goes first because the settings document points at it, and a
- * published document may not reference one that does not exist yet.
- *
- * Before anything is written, the result is held to the same rules the website
- * itself applies when it reads the content back — see companyModel and
- * settingsModel. Publishing something the site cannot render would not show up
- * here; it would show up as a site that refuses to build, which is a far worse
- * place to find out.
- */
-export async function publishSiteInfoAction(
-  _previous: FormState,
-  formData: FormData,
-): Promise<FormState> {
-  await requireSignedIn();
-
-  if (formData.get('confirm') !== 'yes')
-    return {
-      status: 'error',
-      message: 'กรุณาติ๊กยืนยันว่าข้อมูลถูกต้องก่อนเผยแพร่',
-    };
-
-  const config = adminWriteClient();
-  if (!config.ready)
-    return {
-      status: 'error',
-      message: `ยังตั้งค่าไม่ครบ: ${config.missing.join(', ')}`,
-    };
-
-  const [companyDraft, companyLive, settingsDraft, settingsLive] =
-    await config.client.getDocuments([
-      draftId(COMPANY_ID),
-      COMPANY_ID,
-      draftId(SETTINGS_ID),
-      SETTINGS_ID,
-    ]);
-
-  const company = companyDraft ?? companyLive;
-  const settings = settingsDraft ?? settingsLive;
-  if (!company || !settings)
-    return {
-      status: 'error',
-      message:
-        'ยังไม่มีข้อมูลให้เผยแพร่ กรุณากดบันทึกก่อนอย่างน้อยหนึ่งครั้ง',
-    };
-
-  // The approval the schema asks for is being given here, by whoever ticked
-  // the box and pressed the button.
-  const publishedCompany = {
-    ...company,
-    _id: COMPANY_ID,
-    _type: 'company',
-    approvedForPublication: true,
-  };
-  const publishedSettings = {
-    ...settings,
-    _id: SETTINGS_ID,
-    _type: 'siteSettings',
-    approvedForPublication: true,
-  };
-
-  const problems = [
-    ...describeIssues('ข้อมูลบริษัท', companyModel.safeParse(publishedCompany)),
-    ...describeIssues('หน้าแรก', settingsModel.safeParse(publishedSettings)),
-  ];
-  if (problems.length)
-    return {
-      status: 'error',
-      message: `ยังเผยแพร่ไม่ได้ เพราะเว็บไซต์จะแสดงข้อมูลนี้ไม่ได้ — ${problems.join(' · ')}`,
-    };
-
-  try {
-    await config.client
-      .transaction()
-      .createOrReplace(publishedCompany)
-      .createOrReplace(publishedSettings)
-      // The drafts have served their purpose; leaving them would make the next
-      // edit start from a copy that is no longer what the site is showing.
+      .patch(SETTINGS_ID, (patch) =>
+        patch.set({ ...settings, approvedForPublication: true }),
+      )
       .delete(draftId(COMPANY_ID))
       .delete(draftId(SETTINGS_ID))
       .commit();
-  } catch (error) {
+  } catch {
     return {
       status: 'error',
-      message:
-        error instanceof Error
-          ? `เผยแพร่ไม่สำเร็จ: ${error.message}`
-          : 'เผยแพร่ไม่สำเร็จ',
+      message: 'เกิดข้อผิดพลาด กรุณาลองใหม่',
     };
   }
 
@@ -304,20 +198,6 @@ export async function publishSiteInfoAction(
   revalidatePath('/', 'layout');
   return {
     status: 'ok',
-    message: 'เผยแพร่แล้ว ข้อมูลนี้คือข้อมูลที่เว็บไซต์ใช้',
+    message: 'บันทึกแล้ว',
   };
-}
-
-/** Field paths a zod failure names, in words rather than as a stack trace. */
-function describeIssues(
-  label: string,
-  result: { success: boolean; error?: { issues: { path: PropertyKey[] }[] } },
-): string[] {
-  if (result.success || !result.error) return [];
-  const fields = [
-    ...new Set(
-      result.error.issues.map((issue) => issue.path.join('.') || '(ทั้งเอกสาร)'),
-    ),
-  ];
-  return [`${label}: ${fields.join(', ')}`];
 }

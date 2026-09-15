@@ -11,7 +11,13 @@ import { requireSignedIn } from '@/lib/admin-session';
 import { resolveAdminImage } from '@/cms/admin-images';
 
 
-export type ArticleActionState = { status: 'idle' | 'error'; message?: string; errors?: string[] };
+export type ArticleActionState = {
+  status: 'idle' | 'error';
+  message?: string;
+  errors?: string[];
+  fieldErrors?: Record<string, string>;
+};
+type DeleteActionState = { status: 'idle' | 'error'; message?: string };
 
 export type ArticleEditorData = {
   id: string;
@@ -29,6 +35,7 @@ export type ArticleEditorData = {
   faq: string;
   featuredImage?: { assetId: string; src: string; alt: string; caption: string };
   blocks: EditorBlock[];
+  draft: boolean;
   published: boolean;
 };
 
@@ -96,6 +103,7 @@ export async function loadArticle(id: string): Promise<ArticleEditorData | null>
     faq: Array.isArray(document.faq) ? document.faq.map((item) => { const row = item as { question?: string; answer?: string }; return `${row.question || ''} | ${row.answer || ''}`; }).join('\n') : '',
     featuredImage: toEditorImage(document.featuredImage),
     blocks: content.map(toEditorBlock).filter((block): block is EditorBlock => Boolean(block)),
+    draft: Boolean(draft),
     published: Boolean(published),
   };
 }
@@ -132,7 +140,7 @@ export async function saveArticleAction(_previous: ArticleActionState, formData:
     seoDescription: formData.get('seoDescription') || '', featured: formData.get('featured') === 'yes',
     related: formData.get('related') || '', faq: formData.get('faq') || '',
   });
-  if (!parsed.success) return { status: 'error', message: 'ยังบันทึกไม่ได้', errors: parsed.error.issues.map((issue) => issue.message) };
+  if (!parsed.success) return validationState(parsed.error.issues);
 
   const id = baseId(String(formData.get('id') || `article-${randomUUID()}`));
   let slug = parsed.data.slug || automaticSlug(parsed.data.title, 'article', id);
@@ -141,17 +149,21 @@ export async function saveArticleAction(_previous: ArticleActionState, formData:
 
   const blocks = readEditorBlocks(formData);
   const blockErrors = validateBlocks(blocks);
-  if (blockErrors.length) return { status: 'error', message: 'เนื้อหาบทความยังไม่ครบ', errors: blockErrors };
+  if (blockErrors.length) return { status: 'error', message: 'กรุณาตรวจช่องที่มีข้อความสีแดง', errors: blockErrors, fieldErrors: { content: blockErrors[0] } };
+
+  const featuredAlt = String(formData.get('featuredAlt') || '').trim();
+  if (hasImage(formData.get('featuredImageFile'), formData.get('featuredAssetId')) && !featuredAlt)
+    return { status: 'error', message: 'กรุณาตรวจช่องที่มีข้อความสีแดง', fieldErrors: { featuredAlt: 'กรุณากรอกคำอธิบายภาพเมื่อมีรูปหน้าปก' } };
 
   let destination = '';
   try {
-    const featuredImage = await resolveAdminImage(config.client, formData.get('featuredImageFile'), String(formData.get('featuredAssetId') || ''), String(formData.get('featuredAlt') || ''), String(formData.get('featuredCaption') || ''));
+    const featuredImage = await resolveAdminImage(config.client, formData.get('featuredImageFile'), String(formData.get('featuredAssetId') || ''), featuredAlt, String(formData.get('featuredCaption') || ''));
     const content = [];
     for (const block of blocks) {
       if (block.kind === 'text' || block.kind === 'preserved') content.push(portableTextForEditorBlock(block));
       else {
         const image = await resolveAdminImage(config.client, formData.get(`body.file.${block.key}`), block.assetId || '', block.alt, block.caption);
-        if (!image) return { status: 'error', message: `กรุณาเลือกรูปสำหรับส่วน "${block.alt || block.key}"` };
+        if (!image) return { status: 'error', message: 'กรุณาตรวจช่องที่มีข้อความสีแดง', fieldErrors: { content: `กรุณาเลือกรูปสำหรับส่วน "${block.alt || block.key}"` } };
         content.push({ _key: block.key, ...image });
       }
     }
@@ -171,7 +183,7 @@ export async function saveArticleAction(_previous: ArticleActionState, formData:
 
     const intent = String(formData.get('intent') || 'save');
     if (intent === 'publish') {
-      if (formData.get('confirm') !== 'yes') return { status: 'error', message: 'ติ๊กยืนยันข้อมูลและสิทธิ์ใช้รูปก่อนเผยแพร่' };
+      if (formData.get('confirm') !== 'yes') return { status: 'error', message: 'กรุณาตรวจช่องที่มีข้อความสีแดง', fieldErrors: { confirm: 'กรุณาติ๊กยืนยันข้อมูลก่อนเผยแพร่' } };
       const projected = await config.client.fetch<unknown>(`*[_id == $id][0] ${articleProjection}`, { id: draftId(id) });
       const checked = articleModel.safeParse(projected);
       if (!checked.success) return { status: 'error', message: 'เว็บไซต์ยังแสดงบทความนี้ไม่ได้', errors: checked.error.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`) };
@@ -183,8 +195,8 @@ export async function saveArticleAction(_previous: ArticleActionState, formData:
     } else {
       destination = `/admin/articles/${id}?saved=1`;
     }
-  } catch (error) {
-    return { status: 'error', message: error instanceof Error ? `บันทึกไม่สำเร็จ: ${error.message}` : 'บันทึกไม่สำเร็จ' };
+  } catch {
+    return { status: 'error', message: 'เกิดข้อผิดพลาด กรุณาลองใหม่' };
   }
   redirect(destination);
 }
@@ -213,17 +225,34 @@ function automaticSlug(title: string, prefix: string, id: string) {
   return readable || `${prefix}-${id.replace(/[^a-zA-Z0-9]/g, '').slice(-8).toLowerCase()}`;
 }
 
-export async function deleteArticleAction(formData: FormData) {
+export async function deleteArticleAction(_previous: DeleteActionState, formData: FormData): Promise<DeleteActionState> {
   await requireSignedIn();
-  if (formData.get('confirmDelete') !== 'yes') throw new Error('กรุณาติ๊กยืนยันก่อนลบบทความ');
+  if (formData.get('confirmDelete') !== 'yes') return { status: 'error', message: 'กรุณายืนยันการลบ' };
   const config = adminWriteClient();
-  if (!config.ready) throw new Error(`ยังตั้งค่าไม่ครบ: ${config.missing.join(', ')}`);
+  if (!config.ready) return { status: 'error', message: `ยังตั้งค่าไม่ครบ: ${config.missing.join(', ')}` };
   const id = baseId(String(formData.get('id') || ''));
-  if (!/^[a-zA-Z0-9][a-zA-Z0-9._-]+$/.test(id)) throw new Error('รหัสบทความไม่ถูกต้อง');
-  const isArticle = await config.client.fetch<boolean>(`count(*[_type == "article" && _id in [$id,$draftId]]) > 0`, { id, draftId: draftId(id) });
-  if (!isArticle) throw new Error('ไม่พบบทความที่ต้องการลบ');
-  await config.client.transaction().delete(id).delete(draftId(id)).commit();
+  if (!/^[a-zA-Z0-9][a-zA-Z0-9._-]+$/.test(id)) return { status: 'error', message: 'รหัสบทความไม่ถูกต้อง' };
+  try {
+    const isArticle = await config.client.fetch<boolean>(`count(*[_type == "article" && _id in [$id,$draftId]]) > 0`, { id, draftId: draftId(id) });
+    if (!isArticle) return { status: 'error', message: 'ไม่พบบทความที่ต้องการลบ' };
+    await config.client.transaction().delete(id).delete(draftId(id)).commit();
+  } catch {
+    return { status: 'error', message: 'เกิดข้อผิดพลาด กรุณาลองใหม่' };
+  }
   revalidateTag('cms', 'max');
   revalidatePath('/knowledge', 'layout');
   redirect('/admin/articles?deleted=1');
+}
+
+function validationState(issues: { path: PropertyKey[]; message: string }[]): ArticleActionState {
+  const fieldErrors: Record<string, string> = {};
+  for (const issue of issues) {
+    const field = String(issue.path[0] || 'form');
+    fieldErrors[field] ||= issue.message;
+  }
+  return { status: 'error', message: 'กรุณาตรวจช่องที่มีข้อความสีแดง', fieldErrors };
+}
+
+function hasImage(file: FormDataEntryValue | null, assetId: FormDataEntryValue | null) {
+  return (typeof assetId === 'string' && assetId.trim() !== '') || (typeof file !== 'string' && Boolean(file?.size));
 }
