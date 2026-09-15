@@ -12,7 +12,7 @@ import { companyModel, settingsModel } from './site-models';
  * publishing it. The alternative is finding out at deploy time, when the
  * failure is a site that will not build rather than a message in a form.
  */
-export const settingsProjection = `{homepageHeadline,homepageDescription,homepageServiceMessage,primaryCTA,secondaryCTA,footerInformation,"heroImage":heroImage ${imageProjection},"executivePortrait":executivePortrait ${imageProjection}}`;
+export const settingsProjection = `{homepageHeadline,homepageDescription,homepageServiceMessage,primaryCTA,secondaryCTA,footerInformation,"heroImage":heroImage ${imageProjection},"historyBackground":historyBackground ${imageProjection},historyImagePosition,"executivePortrait":executivePortrait ${imageProjection}}`;
 
 /**
  * Read one CMS document, or say what is wrong with it in words.
@@ -107,7 +107,8 @@ export const getSiteData = cache(async (): Promise<SiteData> => {
       description: s.homepageDescription,
       serviceMessage: s.homepageServiceMessage,
       heroImage: s.heroImage || undefined,
-      executivePortrait: s.executivePortrait || undefined,
+      historyBackground: s.historyBackground || s.executivePortrait || undefined,
+      historyImagePosition: s.historyImagePosition,
     },
     footerInformation: s.footerInformation,
   };

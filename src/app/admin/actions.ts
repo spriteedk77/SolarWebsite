@@ -1,6 +1,6 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { signIn, signOut, requireSignedIn } from '@/lib/admin-session';
 import {
   adminWriteClient,
@@ -126,6 +126,8 @@ function fromSiteData(): SiteInfoValues {
       lineUrl: contact.lineUrl,
       facebookUrl: contact.facebookUrl,
       businessHours: contact.businessHours,
+      googleBusinessProfileUrl: contact.googleBusinessProfileUrl,
+      googleMapsEmbedUrl: contact.googleMapsEmbedUrl,
       address: contact.address,
       serviceAreas: defaultSiteData.serviceAreas,
     },
@@ -298,6 +300,7 @@ export async function publishSiteInfoAction(
   }
 
   revalidatePath('/admin', 'layout');
+  revalidateTag('cms', 'max');
   revalidatePath('/', 'layout');
   return {
     status: 'ok',

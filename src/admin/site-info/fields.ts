@@ -50,6 +50,8 @@ export const fieldGroups: FieldGroup[] = [
         label: 'เวลาทำการ',
         help: 'เว้นว่างไว้จนกว่าจะยืนยันเวลาจริง ห้ามเดา',
       },
+      { name: 'googleBusinessProfileUrl', label: 'ลิงก์ Google Business Profile', help: 'เว้นว่างได้ ถ้ายังไม่มีลิงก์ที่ยืนยันแล้ว' },
+      { name: 'googleMapsEmbedUrl', label: 'ลิงก์ฝัง Google Maps', help: 'เว้นว่างได้ หรือวาง URL ที่ได้จาก Share → Embed a map เท่านั้น' },
     ],
   },
   {

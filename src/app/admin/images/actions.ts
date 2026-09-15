@@ -20,11 +20,12 @@ export async function loadMediaManager() {
   const config = adminWriteClient();
   if (!config.ready) return { ready: false as const, missing: config.missing, homepage: {}, projects: [] };
   const [settingsDraft, settingsLive, projectDocs] = await Promise.all([
-    config.client.fetch<Record<string, unknown> | null>(`*[_id == $id][0]{"heroImage":heroImage ${imageViewProjection},"executivePortrait":executivePortrait ${imageViewProjection}}`, { id: draftId(SETTINGS_ID) }),
-    config.client.fetch<Record<string, unknown> | null>(`*[_id == $id][0]{"heroImage":heroImage ${imageViewProjection},"executivePortrait":executivePortrait ${imageViewProjection}}`, { id: SETTINGS_ID }),
+    config.client.fetch<Record<string, unknown> | null>(`*[_id == $id][0]{"heroImage":heroImage ${imageViewProjection},"historyBackground":historyBackground ${imageViewProjection},"legacyHistory":executivePortrait ${imageViewProjection},historyImagePosition}`, { id: draftId(SETTINGS_ID) }),
+    config.client.fetch<Record<string, unknown> | null>(`*[_id == $id][0]{"heroImage":heroImage ${imageViewProjection},"historyBackground":historyBackground ${imageViewProjection},"legacyHistory":executivePortrait ${imageViewProjection},historyImagePosition}`, { id: SETTINGS_ID }),
     config.client.fetch<Array<{ _id: string; title?: string; cover?: ImageView }>>(`*[_type == "project"] | order(_updatedAt desc){_id,title,"cover":coverImage ${imageViewProjection}}`),
   ]);
-  const homepage = (settingsDraft ?? settingsLive ?? {}) as { heroImage?: ImageView; executivePortrait?: ImageView };
+  const rawHomepage = (settingsDraft ?? settingsLive ?? {}) as { heroImage?: ImageView; historyBackground?: ImageView; legacyHistory?: ImageView; historyImagePosition?: 'left' | 'center' | 'right' };
+  const homepage = { ...rawHomepage, historyBackground: rawHomepage.historyBackground ?? rawHomepage.legacyHistory };
   const grouped = new Map<string, { id: string; title: string; image?: ImageView; draft: boolean; published: boolean }>();
   for (const document of projectDocs) {
     const id = baseId(document._id);
@@ -45,20 +46,22 @@ export async function saveMediaAction(_previous: MediaActionState, formData: For
   if (!config.ready) return { status: 'error', message: `ยังตั้งค่าไม่ครบ: ${config.missing.join(', ')}` };
   const scope = String(formData.get('scope') || '');
   const intent = String(formData.get('intent') || 'save');
+  if (intent === 'remove' && formData.get('confirmRemove') !== 'yes')
+    return { status: 'error', message: 'ติ๊กยืนยันก่อนลบรูป' };
   if (intent === 'publish' && formData.get('confirm') !== 'yes')
     return { status: 'error', message: 'ติ๊กยืนยันสิทธิ์ใช้รูปก่อนเผยแพร่' };
   try {
-    const image = await resolveAdminImage(
+    const image = intent === 'remove' ? null : await resolveAdminImage(
       config.client,
       formData.get('imageFile'),
       String(formData.get('assetId') || ''),
       String(formData.get('alt') || ''),
       String(formData.get('caption') || ''),
     );
-    if (!image) return { status: 'error', message: 'เลือกรูปและใส่คำอธิบายภาพก่อนบันทึก' };
+    if (!image && intent !== 'remove') return { status: 'error', message: 'เลือกรูปและใส่คำอธิบายภาพก่อนบันทึก' };
     if (scope === 'homepage')
-      return saveHomepageImage(config.client, String(formData.get('field') || ''), image, intent === 'publish');
-    if (scope === 'project')
+      return saveHomepageImage(config.client, String(formData.get('field') || ''), image, intent !== 'save', String(formData.get('position') || 'left'));
+    if (scope === 'project' && image)
       return saveProjectCover(config.client, String(formData.get('id') || ''), image, intent === 'publish');
     return { status: 'error', message: 'ไม่รู้ว่ารูปนี้อยู่ส่วนใดของเว็บไซต์' };
   } catch (error) {
@@ -68,12 +71,13 @@ export async function saveMediaAction(_previous: MediaActionState, formData: For
 
 type SanityClient = Extract<ReturnType<typeof adminWriteClient>, { ready: true }>['client'];
 
-async function saveHomepageImage(client: SanityClient, field: string, image: Record<string, unknown>, publish: boolean): Promise<MediaActionState> {
-  if (!['heroImage', 'executivePortrait'].includes(field)) return { status: 'error', message: 'ตำแหน่งรูปหน้าแรกไม่ถูกต้อง' };
+async function saveHomepageImage(client: SanityClient, field: string, image: Record<string, unknown> | null, publish: boolean, position: string): Promise<MediaActionState> {
+  if (!['heroImage', 'historyBackground'].includes(field)) return { status: 'error', message: 'ตำแหน่งรูปหน้าแรกไม่ถูกต้อง' };
   const [draft, live] = await client.getDocuments([draftId(SETTINGS_ID), SETTINGS_ID]);
   const source = draft ?? live;
   if (!source) return { status: 'error', message: 'กรุณาบันทึกข้อมูลเว็บไซต์ก่อนเพิ่มรูปหน้าแรก' };
-  const document = { ...withoutSystemFields(source), _id: draftId(SETTINGS_ID), _type: 'siteSettings', [field]: image, approvedForPublication: false };
+  const safePosition = ['left', 'center', 'right'].includes(position) ? position : 'left';
+  const document = { ...withoutSystemFields(source), _id: draftId(SETTINGS_ID), _type: 'siteSettings', [field]: image, ...(field === 'historyBackground' ? { historyImagePosition: safePosition } : {}), approvedForPublication: false };
   await client.createOrReplace(document);
   if (!publish) {
     revalidatePath('/admin/images');

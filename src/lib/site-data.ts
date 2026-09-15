@@ -41,18 +41,18 @@ export const homepageHistory = {
     'แนวคิดของ NP88 Solar ไม่ได้เริ่มจากคำถามว่าต้องติดกี่แผง แต่เริ่มจากการทำความเข้าใจว่าระบบแบบใดเหมาะสมและคุ้มค่ากับการใช้พลังงานของลูกค้า',
 
   /**
-   * Portrait shown beside the history text.
+   * Legacy repository fallback for the full-width history background.
    *
    * `src` is empty until NP88 Solar supplies the photograph: the section then
-   * renders an empty reserved frame rather than a stock or generated stand-in,
-   * and claims nothing about who is in it. To install the real photograph, put
+   * renders a branded navy/green background rather than an empty image frame.
+   * To install a repository snapshot photograph, put
    * the file in `public/images/about/` and fill in all three fields:
    *
-   *   src:      '/images/about/executive-portrait.jpg'
-   *   alt:      who is pictured and their role — NP88 Solar must confirm both
-   *   position: object-position, e.g. '50% 30%' to keep a face off the crop
+   *   src:      '/images/about/history-background.jpg'
+   *   alt:      what is pictured — NP88 Solar must confirm it
+   *   position: object-position, e.g. '25% 50%' to keep the subject left
    *
-   * Supply it as a 4:5 portrait — 1200×1500 or 1600×2000.
+   * Supply it as a 16:9 image — 2400×1350 or larger.
    */
   historyImage: {
     src: '',
@@ -71,7 +71,8 @@ export type SiteData = {
     description: string;
     serviceMessage: string;
     heroImage?: ImageAsset;
-    executivePortrait?: ImageAsset;
+    historyBackground?: ImageAsset;
+    historyImagePosition: 'left' | 'center' | 'right';
   };
   footerInformation: string;
 };
@@ -92,6 +93,7 @@ export const defaultSiteData: SiteData = {
     description:
       'พร้อมสำรวจ ออกแบบ และติดตั้ง Solar Rooftop สำหรับบ้าน ธุรกิจ และโรงงาน เลือกระบบให้เหมาะกับการใช้ไฟและพื้นที่ติดตั้ง',
     serviceMessage: 'CONTACT',
+    historyImagePosition: 'left',
   },
   footerInformation:
     'ให้บริการสำรวจ ออกแบบ ติดตั้ง และดูแลระบบ Solar Rooftop สำหรับบ้าน ธุรกิจ และโรงงานในภาคเหนือ',

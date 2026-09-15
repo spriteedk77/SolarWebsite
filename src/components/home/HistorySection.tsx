@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import { Section } from '@/components/ui/Section';
+import { Container } from '@/components/ui/Container';
 import { homepageHistory } from '@/lib/site-data';
 import { publicAssetPath } from '@/lib/utils';
 import { getSiteData } from '@/cms/site';
@@ -7,12 +7,13 @@ import { getSiteData } from '@/cms/site';
 /**
  * "ประวัติและความเป็นมา" — the company statement directly under the hero.
  *
- * Editorial split: a portrait holds the left column and the whole of the text
+ * Editorial split: a full-section image holds the left/left-centre and the text
  * runs down the right, the way a company profile reads on paper. Deliberately
  * not a row of cards, and deliberately no timeline — NP88 Solar has not
  * confirmed a founding year or any milestone, so there is nothing to plot.
  *
- * All copy and the portrait live in `homepageHistory` (src/lib/site-data.ts).
+ * Copy and the repository fallback live in `homepageHistory`; the production
+ * background comes from siteSettings through `getSiteData()`.
  * Nothing is written inline here, so editing the section never means editing
  * markup.
  */
@@ -25,76 +26,66 @@ export async function HistorySection() {
     historyImage,
   } = homepageHistory;
   const { homepage } = await getSiteData();
-  const cmsPortrait = homepage.executivePortrait;
-
-  const portrait = cmsPortrait ?? (historyImage.src && historyImage.alt ? { ...historyImage, width: 1200, height: 1500 } : undefined);
-  const portraitPosition = cmsPortrait ? '50% 50%' : historyImage.position;
+  const background = homepage.historyBackground ?? (historyImage.src && historyImage.alt ? { ...historyImage, width: 2400, height: 1350 } : undefined);
+  const positions = { left: '25% 50%', center: '50% 50%', right: '75% 50%' } as const;
+  const backgroundPosition = background
+    ? (homepage.historyBackground ? positions[homepage.historyImagePosition] : historyImage.position)
+    : undefined;
 
   return (
-    <Section
-      tone="soft"
-      labelledBy="history-title"
-      width="wide"
-      frame="major"
-    >
-      {/* 5/12 and 7/12 — the portrait takes ~42% and the text ~58%. The
-          portrait comes first in the source, so it stacks above the text on a
-          phone without any order juggling. */}
-      <div className="grid items-center gap-10 md:grid-cols-12 md:gap-x-12 lg:gap-x-16">
-        <div className="md:col-span-5">
-          {/* Reserved 4:5 portrait frame. Until NP88 Solar supplies the
-              photograph this stays empty on purpose: no stock image, no
-              generated stand-in, and no caption claiming who it will be. */}
-          <div className="relative aspect-4/5 w-full overflow-hidden rounded-card border border-hairline bg-white">
-            {portrait && (
-              <Image
-                src={publicAssetPath(portrait.src)}
-                alt={portrait.alt}
-                fill
-                sizes="(min-width: 768px) 42vw, 100vw"
-                style={{ objectPosition: portraitPosition }}
-                className="object-cover"
-              />
-            )}
+    <section className="relative isolate overflow-hidden bg-navy-950 py-20 sm:py-24 lg:py-32" aria-labelledby="history-title">
+      {background ? (
+        <Image
+          src={publicAssetPath(background.src)}
+          alt={background.alt}
+          fill
+          sizes="100vw"
+          style={{ objectPosition: backgroundPosition }}
+          className="-z-20 object-cover"
+        />
+      ) : (
+        <div className="absolute inset-0 -z-20 bg-[radial-gradient(circle_at_22%_48%,rgba(22,163,74,0.22),transparent_30%),linear-gradient(135deg,#071a32_0%,#0a2948_52%,#071a32_100%)]" aria-hidden="true" />
+      )}
+      <div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgba(4,20,39,0.18)_0%,rgba(4,20,39,0.72)_48%,rgba(4,20,39,0.96)_100%)] max-md:bg-[linear-gradient(180deg,rgba(4,20,39,0.66)_0%,rgba(4,20,39,0.97)_55%)]" aria-hidden="true" />
+      <Container width="wide">
+        <div className="grid min-h-[34rem] items-center md:grid-cols-12">
+          <div className="md:col-start-6 md:col-span-7 lg:col-start-7 lg:col-span-6">
+            <p className="text-caption font-semibold tracking-wide text-solar-300 uppercase">
+              {historyEyebrow}
+            </p>
+            <h2 id="history-title" className="mt-3 text-h2 text-white">
+              {historyTitle}
+            </h2>
+
+            {/* Capped so long Thai paragraphs keep a readable measure instead of
+                running the full width of the column on a wide screen. */}
+            <div className="mt-6 max-w-prose">
+              {historyParagraphs.map((paragraph, index) => (
+                <p
+                  key={paragraph}
+                  className={
+                    // The opening paragraph carries the section, so it is set a
+                    // step larger than the ones that follow it.
+                    index === 0
+                      ? 'text-body-lg text-white/90'
+                      : 'mt-5 text-body text-white/78'
+                  }
+                >
+                  {paragraph}
+                </p>
+              ))}
+
+              {/* The one orange accent in the section: a rule against the pull
+                  quote, not a background, badge or icon. */}
+              <blockquote className="mt-8 border-l-2 border-flare-500 pl-5 sm:pl-6">
+                <p className="text-body-lg font-medium text-white">
+                  {historyQuote}
+                </p>
+              </blockquote>
+            </div>
           </div>
         </div>
-
-        <div className="md:col-span-7">
-          <p className="text-caption font-semibold tracking-wide text-solar-700 uppercase">
-            {historyEyebrow}
-          </p>
-          <h2 id="history-title" className="mt-3 text-h2">
-            {historyTitle}
-          </h2>
-
-          {/* Capped so long Thai paragraphs keep a readable measure instead of
-              running the full width of the column on a wide screen. */}
-          <div className="mt-6 max-w-prose">
-            {historyParagraphs.map((paragraph, index) => (
-              <p
-                key={paragraph}
-                className={
-                  // The opening paragraph carries the section, so it is set a
-                  // step larger than the ones that follow it.
-                  index === 0
-                    ? 'text-body-lg text-ink-700'
-                    : 'mt-5 text-body text-ink-700'
-                }
-              >
-                {paragraph}
-              </p>
-            ))}
-
-            {/* The one orange accent in the section: a rule against the pull
-                quote, not a background, badge or icon. */}
-            <blockquote className="mt-8 border-l-2 border-flare-500 pl-5 sm:pl-6">
-              <p className="text-body-lg font-medium text-navy-900">
-                {historyQuote}
-              </p>
-            </blockquote>
-          </div>
-        </div>
-      </div>
-    </Section>
+      </Container>
+    </section>
   );
 }

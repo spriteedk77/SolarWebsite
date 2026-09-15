@@ -1,32 +1,37 @@
 # NP88 Solar — handover
 
-## What works now
+## ระบบตอนนี้
 
-- Content admin: `https://np88solar.netlify.app/admin`. Sign in, edit the company/contact/homepage fields, save a draft, tick the confirmation, then publish. Netlify reads the published Sanity document directly and refreshes the site within about one minute.
-- Articles: open **บทความ**, create or edit an article, arrange paragraphs/headings/images in order, add alt text to every image, then save or publish. A publish is refused if the exact public-site schema cannot render it. Draft and published copies are shown separately in the status line, and deletion removes both only after confirmation.
-- Images: open **รูปภาพ** to replace the homepage hero, executive portrait, or a project cover. Large phone photos are resized in the browser before upload; Sanity stores and delivers the original asset through its image CDN. The server accepts only real JPG/PNG/WebP files up to 3 MB after resizing.
-- The production Netlify build performs a one-time, explicit bootstrap of the existing `company` and `siteSettings` drafts when their published versions do not yet exist. It fills only the previously dropped country/service-area fields from the repository's existing snapshot, validates both documents, publishes them together, and never auto-publishes an article or project.
-- Local development and GitHub Pages remain a frozen review copy. Netlify always uses Sanity; there is no `CONTENT_SOURCE` switch and no silent fallback.
+- เว็บไซต์จริงบน Netlify อ่านเฉพาะข้อมูลที่ “เผยแพร่แล้ว” จาก Sanity และรีเฟรชภายในประมาณ 1 นาที ส่วน local/GitHub Pages เป็นสำเนาสำหรับตรวจงาน
+- เข้า `https://np88solar.netlify.app/admin` เพื่อแก้ข้อมูลบริษัท ช่องทางติดต่อ หน้าแรก บทความ โครงการ และรูปภาพ โดยบันทึกร่างกับเผยแพร่แยกกัน
+- ทุกการเผยแพร่ตรวจข้อมูลด้วยกติกาเดียวกับหน้า public ถ้าข้อมูลหรือภาพไม่ครบ ระบบจะบอกช่องที่ต้องแก้และไม่ปล่อยหน้าเสียขึ้นเว็บ
+- URL ของจังหวัด บทความ และโครงการสร้างอัตโนมัติ ทีมงานไม่ต้องคิดหรือพิมพ์ slug เอง
 
-## Decisions I made
+## วิธีทำงานปกติ
 
-- Kept Sanity because image upload, resizing metadata, CDN delivery, drafts, and minute-scale live updates already fit the project and environment; replacing it would add another store and migration without solving a product problem.
-- Built the editor inside `/admin` with the site's Prompt typography, colours, spacing, labels, and shared-password session so staff do not need to learn Sanity Studio.
-- Kept saving and publishing separate: staff can pause safely in a draft, while publication requires an explicit truth/image-rights confirmation and the same Zod models the public site executes.
-- Made Netlify the deterministic live-CMS boundary and GitHub Pages the deterministic snapshot boundary. A successful edit can no longer be stranded by a stale content-source variable.
-- Uploads pass through server actions so `SANITY_WRITE_TOKEN` never reaches browser code. Client-side resizing lets a normal article carry multiple phone photos without exceeding the host request limit.
-- Did not publish migrated articles/projects automatically because they still require a human check for factual accuracy and image rights.
+1. เข้าสู่ระบบ `/admin` ด้วยรหัสของทีม
+2. เลือก **ข้อมูลเว็บไซต์**, **บทความ**, **โครงการ** หรือ **รูปภาพ**
+3. กด **บันทึกฉบับร่าง** ได้ตลอด ลูกค้ายังไม่เห็น
+4. ตรวจข้อความ ตัวเลข สิทธิ์ใช้ภาพ และคำอธิบายภาพ แล้วติ๊กยืนยันก่อนกด **เผยแพร่**
+5. รอประมาณ 1 นาที แล้วเปิดหน้า public ตรวจอีกครั้ง
 
-## Owner must do
+บทความรองรับย่อหน้า หัวข้อ quote รายการ ลิงก์ รูปแทรก รูปปก FAQ และบทความเกี่ยวข้อง โครงการรองรับข้อมูลระบบ/อุปกรณ์ ผลประหยัด มาตรฐาน ขอบเขตงาน ประกัน ภาพปก แกลเลอรี รายละเอียด SEO และสถานะแนะนำ ทั้งสองชนิดสร้าง แก้ บันทึกร่าง เผยแพร่ และลบได้จาก Admin
 
-- In Netlify → **Site configuration → Environment variables**, keep `ADMIN_PASSWORD_HASH`, `ADMIN_SESSION_SECRET`, `SANITY_PROJECT_ID`, `SANITY_DATASET`, and `SANITY_WRITE_TOKEN` set for production. The screenshot supplied for this task shows all five names present. Never paste their values into the repo, chat, email, or screenshots.
-- Remove `CONTENT_SOURCE` if it exists in another Netlify scope or context; the application no longer reads it.
-- After the deploy, sign in at `/admin`, change one harmless field and publish it, then confirm the public page updates. This proves the owner-held password and the host-held write token work together without exposing either.
-- Before attaching the real company domain, set the launch-only lead and anti-spam variables named in `.env.example`: `LEAD_WEBHOOK_URL`, `TURNSTILE_SECRET_KEY`, and `NEXT_PUBLIC_TURNSTILE_SITE_KEY`. The launch guard deliberately blocks a real domain without them.
+หน้า **รูปภาพ** เป็นทางลัดสำหรับเปลี่ยน Hero, “ภาพพื้นหลังส่วนประวัติ” และปกโครงการ ภาพประวัติเลือกจุดสำคัญซ้าย/กลาง/ขวาได้ ถ้ายังไม่มีภาพ ส่วนนี้ใช้พื้นหลังแบรนด์เต็ม section โดยไม่มีกรอบรูปว่าง
 
-## Not done
+## สิ่งที่ต้องตั้งค่าใน Netlify
 
-- Hero background, executive portrait, and real article photos are empty until the client supplies the requested files. The admin now has the exact upload places and size guidance. No stock or generated substitute was added.
-- Migrated article and project drafts are not published. Review each for facts and rights, replace any placeholder cover with a real image, then publish from the admin.
-- The ten unconfirmed items in `src/lib/pending.ts` remain unfilled. They need client answers; the 600+/700+ installation-count conflict remains off the site.
-- A mark-only square favicon still needs the client's real logo asset.
+เก็บ environment variables เหล่านี้ใน Production: `ADMIN_PASSWORD_HASH`, `ADMIN_SESSION_SECRET`, `SANITY_PROJECT_ID`, `SANITY_DATASET`, `SANITY_WRITE_TOKEN` ห้ามนำค่าจริงลง Git, แชต, อีเมล หรือ screenshot
+
+ก่อนผูกโดเมนจริง ต้องตั้ง `LEAD_WEBHOOK_URL`, `TURNSTILE_SECRET_KEY`, `NEXT_PUBLIC_TURNSTILE_SITE_KEY` ด้วย launch guard จะบล็อกโดเมนจริงหากระบบรับ lead/anti-spam ยังไม่พร้อม
+
+## สิ่งที่ยังต้องได้จากเจ้าของ
+
+- ภาพถ่ายจริงของ Hero, History, โครงการ บทความ และสินค้า พร้อมสิทธิ์เผยแพร่; ดู `docs/photo-brief.md`
+- การยืนยันตัวเลขประหยัด เงื่อนไขประกัน ราคา/วันหมดอายุโปรโมชั่น ชื่อลูกค้า และ claims อื่นใน `src/lib/pending.ts`
+- เวลาทำการ, Google Business/แผนที่, ข้อมูลนิติบุคคล/PDPA และหลักฐานใบอนุญาตหรือใบรับรองก่อนนำขึ้นเว็บ
+- favicon แบบ mark-only จากไฟล์โลโก้จริง
+
+โปรโมชั่นไม่อยู่ใน custom Admin โดยตั้งใจ เพราะเป็นข้อมูลราคาและช่วงเวลาที่ต้องควบคุมเพิ่ม ขณะนี้แก้ผ่าน Sanity Studio (advanced/debug) เท่านั้น และหน้าเว็บจะแสดงเฉพาะรายการที่ยืนยัน เปิดใช้งาน และอยู่ในช่วงวันที่กำหนด หากไม่มีจะซ่อนทั้งส่วน
+
+รายละเอียดว่าแต่ละช่องไปแสดงตรงไหนอยู่ใน `docs/cms-field-map.md`

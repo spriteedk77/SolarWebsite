@@ -18,6 +18,8 @@ const good = (): SiteInfoValues => ({
   lineUrl: 'https://line.me/R/ti/p/@np88solar',
   facebookUrl: 'https://www.facebook.com/np88solar',
   businessHours: '',
+  googleBusinessProfileUrl: '',
+  googleMapsEmbedUrl: '',
   companyName: 'NP88 Solar',
   legalName: 'NP88 Engineering Co., Ltd.',
   tagline: 'ออกแบบระบบพลังงาน',
@@ -70,8 +72,6 @@ test('saving touches only the fields the form owns', () => {
   // Everything this form does not show must be absent from the patch, so a
   // save cannot wipe it.
   for (const key of [
-    'googleBusinessProfileUrl',
-    'googleMapsEmbedUrl',
     'approvedForPublication',
     '_id',
     '_type',

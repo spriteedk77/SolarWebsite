@@ -1,4 +1,5 @@
 import { ImageResponse } from 'next/og';
+import { defaultSiteData } from '@/lib/site-data';
 
 export const dynamic = 'force-static';
 
@@ -19,6 +20,8 @@ export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
 export default function OpengraphImage() {
+  const { serviceAreas } = defaultSiteData;
+  const areaNames = serviceAreas.map((area) => area.nameEn).join(' · ');
   return new ImageResponse(
     <div
       style={{
@@ -106,10 +109,10 @@ export default function OpengraphImage() {
         }}
       >
         <div style={{ display: 'flex' }}>
-          Chiang Mai · Lamphun · Chiang Rai · Lampang · Phayao
+          {areaNames}
         </div>
         <div style={{ display: 'flex', color: '#ffffff', fontWeight: 600 }}>
-          095-697-1915 · LINE @np88solar
+          Solar Rooftop · Northern Thailand
         </div>
       </div>
     </div>,

@@ -7,7 +7,7 @@ import { ImageFileInput } from './ImageFileInput';
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 
-export function ArticleBodyEditor({ initialBlocks }: { initialBlocks: EditorBlock[] }) {
+export function ArticleBodyEditor({ initialBlocks, title = 'เนื้อหาบทความ' }: { initialBlocks: EditorBlock[]; title?: string }) {
   const [blocks, setBlocks] = useState<EditorBlock[]>(initialBlocks);
 
   const addText = (style: EditorTextBlock['style'] = 'normal') =>
@@ -25,7 +25,7 @@ export function ArticleBodyEditor({ initialBlocks }: { initialBlocks: EditorBloc
 
   return (
     <section className="rounded-card border border-hairline bg-white p-6 sm:p-8" aria-labelledby="article-body-title">
-      <h2 id="article-body-title" className="text-h3">เนื้อหาบทความ</h2>
+      <h2 id="article-body-title" className="text-h3">{title}</h2>
       <p className="mt-1 text-caption text-ink-600">เรียงจากบนลงล่าง เพิ่มรูปตรงตำแหน่งที่ต้องการให้แสดง และใส่คำอธิบายภาพทุกครั้ง</p>
       <div className="mt-6 space-y-4">
         {blocks.map((block, index) => (
@@ -35,9 +35,9 @@ export function ArticleBodyEditor({ initialBlocks }: { initialBlocks: EditorBloc
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
               <strong className="text-caption text-navy-900">ส่วนที่ {index + 1} · {block.kind === 'image' ? 'รูปภาพ' : block.kind === 'preserved' ? block.label : 'ข้อความ'}</strong>
               <div className="flex gap-2">
-                <button type="button" onClick={() => move(index, -1)} disabled={index === 0} className="rounded border border-hairline bg-white px-3 py-1 text-caption disabled:opacity-40" aria-label={`เลื่อนส่วนที่ ${index + 1} ขึ้น`}>ขึ้น</button>
-                <button type="button" onClick={() => move(index, 1)} disabled={index === blocks.length - 1} className="rounded border border-hairline bg-white px-3 py-1 text-caption disabled:opacity-40" aria-label={`เลื่อนส่วนที่ ${index + 1} ลง`}>ลง</button>
-                <button type="button" onClick={() => remove(index)} className="rounded border border-red-200 bg-white px-3 py-1 text-caption text-red-700">ลบ</button>
+                <button type="button" onClick={() => move(index, -1)} disabled={index === 0} className="min-h-11 rounded border border-hairline bg-white px-3 py-1 text-caption disabled:opacity-40" aria-label={`เลื่อนส่วนที่ ${index + 1} ขึ้น`}>ขึ้น</button>
+                <button type="button" onClick={() => move(index, 1)} disabled={index === blocks.length - 1} className="min-h-11 rounded border border-hairline bg-white px-3 py-1 text-caption disabled:opacity-40" aria-label={`เลื่อนส่วนที่ ${index + 1} ลง`}>ลง</button>
+                <button type="button" onClick={() => remove(index)} className="min-h-11 rounded border border-red-200 bg-white px-3 py-1 text-caption text-red-700">ลบ</button>
               </div>
             </div>
             {block.kind === 'text' ? (
@@ -45,11 +45,14 @@ export function ArticleBodyEditor({ initialBlocks }: { initialBlocks: EditorBloc
                 {block.raw && <input type="hidden" name={`body.${index}.raw`} value={block.raw} />}
                 <label className="text-caption font-semibold">รูปแบบ
                   <select name={`body.${index}.style`} defaultValue={block.style} className="mt-1 w-full rounded-lg border border-hairline bg-white px-3 py-2 text-body">
-                    <option value="normal">ย่อหน้า</option><option value="h2">หัวข้อหลัก</option><option value="h3">หัวข้อย่อย</option><option value="blockquote">ข้อความเน้น</option>
+                    <option value="normal">ย่อหน้า</option><option value="h2">หัวข้อหลัก</option><option value="h3">หัวข้อย่อย</option><option value="blockquote">ข้อความเน้น</option><option value="bullet">รายการหัวข้อ</option><option value="number">รายการลำดับ</option>
                   </select>
                 </label>
                 <label className="text-caption font-semibold">ข้อความ
                   <textarea name={`body.${index}.text`} defaultValue={block.text} rows={block.style === 'normal' ? 5 : 2} className="mt-1 w-full rounded-lg border border-hairline bg-white px-4 py-3 text-body" />
+                </label>
+                <label className="text-caption font-semibold sm:col-start-2">ลิงก์ของข้อความนี้ <span className="font-normal text-ink-600">(เว้นว่างได้)</span>
+                  <input name={`body.${index}.link`} defaultValue={block.link ?? ''} placeholder="https://... หรือ /contact" className="mt-1 w-full rounded-lg border border-hairline bg-white px-4 py-3 text-body" />
                 </label>
               </div>
             ) : block.kind === 'image' ? (
@@ -80,6 +83,7 @@ export function ArticleBodyEditor({ initialBlocks }: { initialBlocks: EditorBloc
       <div className="mt-5 flex flex-wrap gap-3">
         <button type="button" onClick={() => addText()} className="min-h-11 rounded-lg border border-solar-600 bg-white px-4 font-semibold text-solar-700">+ ย่อหน้า</button>
         <button type="button" onClick={() => addText('h2')} className="min-h-11 rounded-lg border border-hairline bg-white px-4 font-semibold text-navy-900">+ หัวข้อ</button>
+        <button type="button" onClick={() => addText('bullet')} className="min-h-11 rounded-lg border border-hairline bg-white px-4 font-semibold text-navy-900">+ รายการ</button>
         <button type="button" onClick={addImage} className="min-h-11 rounded-lg border border-hairline bg-white px-4 font-semibold text-navy-900">+ รูปในบทความ</button>
       </div>
     </section>

@@ -13,7 +13,7 @@
 export type ConfirmationStatus =
   /** Value is shown on the site but must be signed off before production. */
   | 'confirm-before-production'
-  /** No value exists yet — a visible placeholder is rendered instead. */
+  /** No value exists yet — the field is hidden or an intentional branded fallback is used. */
   | 'missing';
 
 export type PendingItem = {
@@ -82,7 +82,7 @@ export const pendingRegister: PendingItem[] = [
     where: '/contact',
     note:
       'ต้องการลิงก์ Google Business Profile และพิกัดแผนที่ที่ยืนยันแล้ว ' +
-      '(ตั้งค่าผ่าน NEXT_PUBLIC_GBP_URL และ NEXT_PUBLIC_MAPS_EMBED_URL)',
+      '(กรอกผ่าน /admin ในส่วนช่องทางติดต่อ)',
   },
   {
     id: 'company-registration',
@@ -105,7 +105,7 @@ export const pendingRegister: PendingItem[] = [
     where: 'ทั้งเว็บไซต์',
     note:
       'ต้องการภาพถ่ายงานติดตั้งจริงความละเอียดสูง (ดู docs/photo-brief.md) ' +
-      'ระหว่างนี้ใช้ภาพ placeholder ที่ระบุชัดเจนว่ารอไฟล์จริง',
+      'ระหว่างนี้ใช้ภาพประกอบแบรนด์ที่ไม่อ้างว่าเป็นภาพถ่าย และส่วน History ใช้พื้นหลังแบรนด์เต็ม section',
   },
 ];
 

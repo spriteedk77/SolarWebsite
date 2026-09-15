@@ -4,9 +4,8 @@ import { defaultSiteData } from '@/lib/site-data';
 /**
  * The fields NP88 actually changes, and the rules they have to satisfy.
  *
- * Deliberately not every field in the schema: this is the short form for the
- * things that move — who to call, where to find them, what the homepage says.
- * Anything longer-form stays in the document editor, where it belongs.
+ * The short form owns every company/contact/homepage field used publicly;
+ * longer editorial content stays in its dedicated article/project editor.
  *
  * The shape below is the same one src/cms/site.ts validates when the website
  * reads it back, so a value this form accepts cannot be one the site then
@@ -35,6 +34,12 @@ export const siteInfoSchema = z.object({
   }),
   facebookUrl: httpsUrl('ลิงก์ Facebook'),
   businessHours: z.string().trim(),
+  googleBusinessProfileUrl: httpsUrl('ลิงก์ Google Business'),
+  googleMapsEmbedUrl: httpsUrl('ลิงก์แผนที่ฝัง').refine((value) => {
+    if (!value) return true;
+    try { const url = new URL(value); return ['www.google.com', 'maps.google.com'].includes(url.hostname) && url.pathname.startsWith('/maps/embed'); }
+    catch { return false; }
+  }, 'ต้องใช้ลิงก์ Embed map จาก Google Maps'),
 
   // — ชื่อและคำอธิบาย —
   companyName: required('ชื่อบริษัทที่แสดง'),
@@ -100,6 +105,8 @@ const COMPANY_FIELDS = [
   'lineUrl',
   'facebookUrl',
   'businessHours',
+  'googleBusinessProfileUrl',
+  'googleMapsEmbedUrl',
   'companyName',
   'legalName',
   'tagline',
@@ -137,7 +144,7 @@ export function fromDocuments(company: Doc, settings: Doc): SiteInfoValues {
  * What to write back, split by document.
  *
  * Only the fields this form owns are returned. Everything else on those
- * documents — service areas, the Google Business links, the approval flag — is
+ * documents — images, country metadata and the approval flag — is
  * left exactly as it is, so editing a phone number cannot quietly drop a field
  * this form does not show.
  */
@@ -146,7 +153,10 @@ export function toPatches(values: SiteInfoValues): {
   settings: Record<string, unknown>;
 } {
   const company: Record<string, unknown> = {};
-  for (const key of COMPANY_FIELDS) company[key] = values[key].trim();
+  for (const key of COMPANY_FIELDS) {
+    const value = values[key].trim();
+    company[key] = ['facebookUrl', 'googleBusinessProfileUrl', 'googleMapsEmbedUrl'].includes(key) && !value ? null : value;
+  }
   // One key per address line rather than one `address` object. Writing the
   // object would replace it, and it holds two fields this form does not show —
   // the country code and its name — which the website requires and which a

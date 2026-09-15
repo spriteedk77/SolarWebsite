@@ -15,6 +15,7 @@ export function ArticleForm({ article }: { article: ArticleEditorData }) {
   return (
     <form action={action} className="space-y-8">
       <input type="hidden" name="id" value={article.id} />
+      <input type="hidden" name="slug" value={article.slug} />
       {state.status === 'error' && (
         <div role="alert" className="rounded-card border border-red-300 bg-red-50 p-5 text-body text-red-800">
           <strong>{state.message}</strong>
@@ -25,12 +26,14 @@ export function ArticleForm({ article }: { article: ArticleEditorData }) {
         <h2 className="text-h3">ข้อมูลบทความ</h2>
         <div className="mt-6 grid gap-5 sm:grid-cols-2">
           <label className="text-body font-semibold sm:col-span-2">ชื่อบทความ<input name="title" defaultValue={article.title} className={input} required /></label>
-          <label className="text-body font-semibold">ชื่อใน URL<input name="slug" defaultValue={article.slug} placeholder="how-to-choose-solar" className={input} required /></label>
+          <div className="text-body font-semibold">URL ของบทความ<p className="mt-1 rounded-lg bg-soft px-4 py-3 font-normal text-ink-600">{article.slug ? `/knowledge/${article.slug}` : 'ระบบจะสร้างให้อัตโนมัติเมื่อบันทึก'}</p></div>
           <label className="text-body font-semibold">หมวดหมู่<select name="category" defaultValue={article.category} className={input}>{ARTICLE_CATEGORIES.map((category) => <option key={category}>{category}</option>)}</select></label>
           <label className="text-body font-semibold sm:col-span-2">คำอธิบายย่อ<textarea name="summary" defaultValue={article.summary} rows={3} className={input} required /></label>
           <label className="text-body font-semibold">ผู้เขียน<input name="author" defaultValue={article.author} className={input} /></label>
           <label className="text-body font-semibold">วันที่เผยแพร่<input name="publishedAt" type="datetime-local" defaultValue={article.publishedAt} className={input} required /></label>
           <label className="text-body font-semibold sm:col-span-2">คำสำคัญ <span className="font-normal text-ink-600">(คั่นด้วยเครื่องหมายจุลภาค)</span><input name="tags" defaultValue={article.tags} className={input} /></label>
+          <label className="text-body font-semibold sm:col-span-2">บทความเกี่ยวข้อง <span className="font-normal text-ink-600">(ใส่ URL ท้ายบทความ เช่น how-to-choose-solar คั่นด้วยจุลภาค)</span><input name="related" defaultValue={article.related} className={input} /></label>
+          <label className="text-body font-semibold sm:col-span-2">คำถามท้ายบทความ <span className="font-normal text-ink-600">(คำถาม | คำตอบ หนึ่งคู่ต่อบรรทัด)</span><textarea name="faq" defaultValue={article.faq} rows={4} className={input} /></label>
           <label className="flex items-center gap-3 text-body font-semibold sm:col-span-2"><input type="checkbox" name="featured" value="yes" defaultChecked={article.featured} className="h-5 w-5" /> แนะนำบทความนี้บนหน้าแรก</label>
         </div>
       </section>
@@ -41,7 +44,7 @@ export function ArticleForm({ article }: { article: ArticleEditorData }) {
         <input type="hidden" name="featuredAssetId" value={article.featuredImage?.assetId ?? ''} />
         <div className="mt-5 grid gap-5 sm:grid-cols-2">
           <label className="text-body font-semibold">เลือกรูปใหม่<ImageFileInput name="featuredImageFile" /></label>
-          <label className="text-body font-semibold">คำอธิบายภาพ<input name="featuredAlt" defaultValue={article.featuredImage?.alt ?? ''} className={input} required /></label>
+          <label className="text-body font-semibold">คำอธิบายภาพ<input name="featuredAlt" defaultValue={article.featuredImage?.alt ?? ''} className={input} /></label>
           <label className="text-body font-semibold sm:col-span-2">คำบรรยายใต้ภาพ<input name="featuredCaption" defaultValue={article.featuredImage?.caption ?? ''} className={input} /></label>
         </div>
       </section>

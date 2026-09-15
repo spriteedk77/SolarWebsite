@@ -326,6 +326,7 @@ const project = defineType({
       group: 'equipment',
       of: [
         {
+          name: 'warrantyItem',
           type: 'object',
           fields: [
             requiredString('label', 'หัวข้อ'),
@@ -411,6 +412,7 @@ const article = defineType({
       group: 'details',
       of: [
         {
+          name: 'faqItem',
           type: 'object',
           fields: [
             requiredString('question', 'คำถาม'),
@@ -539,9 +541,16 @@ const siteSettings = defineType({
       type: 'siteImage',
     }),
     defineField({
-      name: 'executivePortrait',
-      title: 'ภาพผู้บริหาร (แนวตั้ง 4:5, 1200 × 1500 ขึ้นไป)',
+      name: 'historyBackground',
+      title: 'ภาพพื้นหลังส่วนประวัติ (แนวนอน 2400 × 1350 ขึ้นไป)',
       type: 'siteImage',
+    }),
+    defineField({
+      name: 'historyImagePosition',
+      title: 'ตำแหน่งจุดสำคัญในภาพประวัติ',
+      type: 'string',
+      options: { list: [{ title: 'ซ้าย', value: 'left' }, { title: 'กลาง', value: 'center' }, { title: 'ขวา', value: 'right' }], layout: 'radio' },
+      initialValue: 'left',
     }),
     defineField({
       name: 'contactInformation',

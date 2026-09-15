@@ -20,6 +20,8 @@ const fields = {
   seoTitle: '',
   seoDescription: '',
   featured: false,
+  related: '',
+  faq: '',
 };
 
 test('article fields reject a URL the public router cannot serve', () => {

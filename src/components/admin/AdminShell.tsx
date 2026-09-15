@@ -36,6 +36,7 @@ export function AdminShell({
                 <nav aria-label="เมนูจัดการเนื้อหา" className="flex flex-wrap gap-1">
                   <Link href="/admin" className="inline-flex min-h-11 items-center rounded-lg px-3 text-caption font-semibold text-navy-900 hover:bg-soft">ข้อมูลเว็บไซต์</Link>
                   <Link href="/admin/articles" className="inline-flex min-h-11 items-center rounded-lg px-3 text-caption font-semibold text-navy-900 hover:bg-soft">บทความ</Link>
+                  <Link href="/admin/projects" className="inline-flex min-h-11 items-center rounded-lg px-3 text-caption font-semibold text-navy-900 hover:bg-soft">โครงการ</Link>
                   <Link href="/admin/images" className="inline-flex min-h-11 items-center rounded-lg px-3 text-caption font-semibold text-navy-900 hover:bg-soft">รูปภาพ</Link>
                 </nav>
                 <form action={signOutAction}>
