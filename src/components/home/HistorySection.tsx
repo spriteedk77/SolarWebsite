@@ -49,7 +49,7 @@ export async function HistorySection() {
       <div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgba(4,20,39,0.18)_0%,rgba(4,20,39,0.72)_48%,rgba(4,20,39,0.96)_100%)] max-md:bg-[linear-gradient(180deg,rgba(4,20,39,0.66)_0%,rgba(4,20,39,0.97)_55%)]" aria-hidden="true" />
       <Container width="wide">
         <div className="grid min-h-[34rem] items-center md:grid-cols-12">
-          <div className="md:col-start-6 md:col-span-7 lg:col-start-7 lg:col-span-6">
+          <div data-scroll-reveal="" className="md:col-start-6 md:col-span-7 lg:col-start-7 lg:col-span-6">
             <p className="text-caption font-semibold tracking-wide text-solar-300 uppercase">
               {historyEyebrow}
             </p>

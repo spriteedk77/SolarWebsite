@@ -27,6 +27,7 @@ export function ProcessSteps({
       {steps.map((step) => (
         <li
           key={step.number}
+          data-scroll-reveal=""
           className={cn(
             'relative flex flex-col rounded-card border p-6',
             dark ? 'border-white/10 bg-navy-800' : 'border-hairline bg-white shadow-card',

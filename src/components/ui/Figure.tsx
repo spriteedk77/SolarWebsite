@@ -41,7 +41,7 @@ export function Figure({
   const imageSrc = publicAssetPath(image.src);
 
   return (
-    <figure className={cn('relative', className)}>
+    <figure data-scroll-reveal="" className={cn('relative', className)}>
       <div
         className={cn(
           'relative w-full overflow-hidden bg-navy-50',

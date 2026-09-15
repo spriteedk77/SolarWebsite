@@ -10,6 +10,7 @@ import { graph, organizationSchema, websiteSchema } from '@/lib/schema';
 import { getSiteData } from '@/cms/site';
 import { SiteProvider } from '@/components/SiteProvider';
 import { logPendingRegister } from '@/lib/pending';
+import { ScrollEffects } from './ScrollEffects';
 
 /**
  * Everything a visitor sees around a page: header, footer, mobile contact bar,
@@ -33,7 +34,7 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
 
       <Header />
 
-      <main id="main">{children}</main>
+      <ScrollEffects>{children}</ScrollEffects>
 
       <Footer />
       <MobileContactBarSpacer />

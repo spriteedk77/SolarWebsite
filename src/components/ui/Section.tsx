@@ -102,6 +102,7 @@ export function SectionHeading({
   const dark = tone === 'dark';
   return (
     <div
+      data-scroll-reveal=""
       className={cn(
         'max-w-3xl',
         align === 'center' && 'mx-auto text-center',

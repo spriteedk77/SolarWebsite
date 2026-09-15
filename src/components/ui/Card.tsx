@@ -42,6 +42,7 @@ export function Card({
   return (
     <Tag
       id={id}
+      data-scroll-reveal=""
       className={cn(
         'relative overflow-hidden rounded-card border shadow-card',
         tones[tone],
