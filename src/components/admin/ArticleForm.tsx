@@ -8,6 +8,7 @@ import { ArticleBodyEditor } from './ArticleBodyEditor';
 import { ContentStatusBadge } from './ContentStatusBadge';
 import { ImageFileInput } from './ImageFileInput';
 import { RequiredMark } from './RequiredMark';
+import { PreviewButton } from './PreviewButton';
 import { adminCheckbox, adminInput, adminPublishButton, adminSecondaryButton } from './styles';
 
 const initialState: ArticleActionState = { status: 'idle' };
@@ -71,6 +72,7 @@ export function ArticleForm({ article }: { article: ArticleEditorData }) {
         <label className="flex cursor-pointer items-start gap-3 text-caption text-ink-700"><input type="checkbox" name="confirm" value="yes" className={`${adminCheckbox} mt-1`} /> ยืนยันว่าข้อมูลเป็นจริงและมีสิทธิ์ใช้รูปภาพทั้งหมด (ต้องติ๊กเมื่อเผยแพร่)</label>
         <FieldError message={error('confirm')} />
         <div className="mt-4 flex flex-wrap gap-3">
+          <PreviewButton kind="articles" id={article.id} />
           <button name="intent" value="save" disabled={pending} onClick={() => setPendingIntent('save')} className={adminSecondaryButton}>{pending && pendingIntent === 'save' ? 'กำลังบันทึก…' : 'บันทึกฉบับร่าง'}</button>
           <button name="intent" value="publish" disabled={pending} onClick={() => setPendingIntent('publish')} className={adminPublishButton}>{pending && pendingIntent === 'publish' ? 'กำลังเผยแพร่…' : article.published ? 'เผยแพร่การแก้ไข' : 'เผยแพร่บทความ'}</button>
         </div>
